@@ -207,9 +207,30 @@ details.help[open] summary { margin-bottom: 8px; }
 .transport { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--line); flex-wrap: wrap; }
 .transport input[type="range"] { flex: 1 1 160px; min-width: 120px; }
 .time { font-family: var(--f-mono); font-size: 0.82rem; font-variant-numeric: tabular-nums; color: var(--muted); min-width: 11ch; text-align: right; }
-.trimbar { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; padding: 10px 12px; border-top: 1px solid var(--line); font-size: 0.84rem; }
-.trimbar b { font-size: 0.82rem; }
-.trimbar output { font-family: var(--f-mono); font-size: 0.8rem; color: var(--muted); min-width: 6ch; text-align: right; }
+.trimbar { padding: 10px 12px 12px; border-top: 1px solid var(--line); font-size: 0.84rem; display: grid; gap: 6px; }
+.trim-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.trim-head b { font-size: 0.82rem; }
+.trim-head .keep { margin-left: auto; font-family: var(--f-mono); font-size: 0.8rem; color: var(--ink); font-weight: 600; }
+/* One timeline, two handles: the coloured middle is the part that's kept */
+.trim-track { position: relative; height: 34px; }
+.trim-rail, .trim-fill, .trim-play { position: absolute; top: 50%; transform: translateY(-50%); pointer-events: none; }
+.trim-rail { left: 7px; right: 7px; height: 14px; border-radius: 4px; border: 1px solid var(--line-strong);
+  background: repeating-linear-gradient(135deg, var(--sunk) 0 6px, color-mix(in srgb, var(--line) 70%, var(--sunk)) 6px 12px); }
+.trim-fill { height: 14px; border-radius: 3px; background: color-mix(in srgb, var(--accent) 45%, var(--panel)); border: 1px solid var(--accent); }
+:root[data-a11y-theme="contrast"] .trim-fill { background: var(--accent); }
+.trim-play { width: 2px; height: 22px; background: var(--ink); border-radius: 1px; }
+.trim-track input[type="range"] { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; background: none; -webkit-appearance: none; appearance: none; pointer-events: none; }
+.trim-track input[type="range"]::-webkit-slider-runnable-track { background: none; height: 100%; }
+.trim-track input[type="range"]::-moz-range-track { background: none; }
+.trim-track input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; pointer-events: auto; cursor: ew-resize; width: 14px; height: 30px; margin-top: 2px; border-radius: 4px; background: var(--accent); border: 2px solid var(--panel); box-shadow: 0 1px 3px rgba(15, 23, 42, 0.35); }
+.trim-track input[type="range"]::-moz-range-thumb { pointer-events: auto; cursor: ew-resize; width: 10px; height: 26px; border-radius: 4px; background: var(--accent); border: 2px solid var(--panel); }
+.trim-track input[type="range"]:focus-visible { outline: none; }
+.trim-track input[type="range"]:focus-visible::-webkit-slider-thumb { outline: 3px solid var(--cyan); outline-offset: 2px; }
+.trim-track input[type="range"]:focus-visible::-moz-range-thumb { outline: 3px solid var(--cyan); outline-offset: 2px; }
+.trim-track input[type="range"]:disabled::-webkit-slider-thumb { background: var(--line-strong); cursor: default; }
+.trim-track input[type="range"]:disabled::-moz-range-thumb { background: var(--line-strong); cursor: default; }
+.trim-times { position: relative; height: 18px; font-family: var(--f-mono); font-size: 0.78rem; color: var(--muted); }
+.trim-times output { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
 .skinbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--line); font-size: 0.86rem; }
 .skinbar .spacer { margin-left: auto; }
 
@@ -363,9 +384,13 @@ details.help[open] summary { margin-bottom: 8px; }
       <button class="btn ghost" type="button" id="reset-view" data-tip="Put the camera back where it started." data-i18n>Reset view</button>
     </div>
     <div class="trimbar" role="group" aria-labelledby="trim-h">
-      <b id="trim-h" data-i18n>Trim</b><span class="muted" style="grid-column:2/4;font-size:.8rem" data-i18n>Cut extra time off the start and end.</span>
-      <span data-i18n>Start</span><input type="range" id="trim-start" min="0" max="1" step="0.05" value="0" disabled aria-label="Trim start" data-i18n-attr="aria-label"><output id="trim-start-out">0.00 s</output>
-      <span data-i18n>End</span><input type="range" id="trim-end" min="0" max="1" step="0.05" value="1" disabled aria-label="Trim end" data-i18n-attr="aria-label"><output id="trim-end-out">0.00 s</output>
+      <div class="trim-head"><b id="trim-h" data-i18n>Trim</b><span class="muted" style="font-size:.8rem" data-i18n>Drag the two handles. The colored part is kept.</span><span class="keep" id="trim-keep" aria-live="polite"></span></div>
+      <div class="trim-track" id="trim-track">
+        <div class="trim-rail"></div><div class="trim-fill" id="trim-fill"></div><div class="trim-play" id="trim-play" hidden></div>
+        <input type="range" id="trim-start" min="0" max="1" step="0.05" value="0" disabled aria-label="Trim start" data-i18n-attr="aria-label">
+        <input type="range" id="trim-end" min="0" max="1" step="0.05" value="1" disabled aria-label="Trim end" data-i18n-attr="aria-label">
+      </div>
+      <div class="trim-times"><output id="trim-start-out">0.00 s</output><output id="trim-end-out">0.00 s</output></div>
     </div>
     <div class="skinbar">
       <span class="muted" data-i18n>Preview skin</span>
@@ -438,6 +463,7 @@ details.help[open] summary { margin-bottom: 8px; }
           <div class="seg seg-wrap" role="group" aria-label="When it plays" data-i18n-attr="aria-label">
             <button type="button" data-loop="false" aria-pressed="true" data-tip="Plays one time, then stops." data-i18n>Once</button>
             <button type="button" data-loop="true" aria-pressed="false" data-tip="Repeats until the player moves." data-i18n>Loop</button>
+            <button type="button" data-loop="pingpong" aria-pressed="false" data-tip="Plays forward, then backward, and repeats until the player moves." data-i18n>Back and forth</button>
             <button type="button" data-loop="hold_on_last_frame" aria-pressed="false" data-tip="Plays once and stays in the last pose." data-i18n>Hold last pose</button>
           </div></div>
         <button class="btn primary big" type="button" id="download" disabled data-tip="Save the animation file to your computer." data-i18n>Download animation</button>
@@ -1152,7 +1178,20 @@ details.help[open] summary { margin-bottom: 8px; }
     const times = frames.map((_, k) => k / fps);
     const clip = { times, length: times[times.length - 1], bones, pos, moves, feet, calib: cache.data.calib, legsSeen: legsSeen / frames.length };
     if (o.plant !== false) plantLegs(clip, feet, fps);
+    if (o.loop === 'pingpong') backAndForth(clip, fps);
     return clip;
+  }
+  /** Back and forth: the kept part plays forward, then in reverse, and the game loops it.
+   *  The turnaround frames aren't doubled, so there's no stutter at either end. */
+  function backAndForth(clip, fps) {
+    const n = clip.times.length; if (n < 3) return;
+    const back = (arr) => arr.concat(arr.slice(1, n - 1).reverse(), [arr[0]]);
+    for (const b in clip.bones) clip.bones[b] = back(clip.bones[b]);
+    for (const b in clip.pos) clip.pos[b] = back(clip.pos[b]);
+    clip.moves = back(clip.moves); clip.feet = back(clip.feet);
+    clip.forward = clip.length;
+    clip.times = clip.bones.head.map((_, k) => k / fps);
+    clip.length = clip.times[clip.times.length - 1];
   }
 
   function reduceKeys(times, vals, tol) {
@@ -1192,7 +1231,7 @@ details.help[open] summary { margin-bottom: 8px; }
       }
       bones[b === 'body' && o.lean === 'waist' ? 'waist' : b] = track;
     }
-    const loop = o.loop === 'true' ? true : o.loop === 'false' ? false : o.loop;
+    const loop = o.loop === 'true' || o.loop === 'pingpong' ? true : o.loop === 'false' ? false : o.loop;
     return { json: { format_version: '1.8.0', animations: { [o.id]: { loop, animation_length: +clip.length.toFixed(4), bones } } }, keyCount };
   }
   function sampleClip(clip, t) {
@@ -1269,7 +1308,6 @@ window.MocapStrings = {
 "Drag to turn · scroll to zoom": "Arrastra para girar · desplaza para hacer zoom",
 "Reset view": "Restablecer vista",
 "Trim": "Recortar",
-"Cut extra time off the start and end.": "Quita el tiempo de más al principio y al final.",
 "Start": "Inicio",
 "End": "Final",
 "Preview skin": "Skin de la vista previa",
@@ -1415,7 +1453,11 @@ window.MocapStrings = {
 "Straight leg: points at the foot, like a kick. Bent knee: the leg lifts up, like a knee raise.": "Pierna recta: apunta al pie, como una patada. Rodilla doblada: la pierna sube, como al levantar la rodilla.",
 "Slide bent arms and legs": "Deslizar brazos y piernas doblados",
 "Like Minecraft animations: a raised knee lifts the whole leg, and a pulled-back fist slides the arm back.": "Como en las animaciones de Minecraft: al subir la rodilla se levanta toda la pierna, y al echar el puño atrás el brazo se desliza hacia atrás.",
-"Captured {s} s. Your legs were mostly out of view, so they stay standing still.": "Se capturaron {s} s. Tus piernas casi no se veían, así que se quedan quietas de pie."
+"Captured {s} s. Your legs were mostly out of view, so they stay standing still.": "Se capturaron {s} s. Tus piernas casi no se veían, así que se quedan quietas de pie.",
+"Drag the two handles. The colored part is kept.": "Arrastra los dos controles. La parte de color es la que se guarda.",
+"Keeping {s} s": "Se guardan {s} s",
+"Back and forth": "Ida y vuelta",
+"Plays forward, then backward, and repeats until the player moves.": "Se reproduce hacia delante, luego hacia atrás, y se repite hasta que el jugador se mueva."
 },
 "fr": {
 "Skip to the camera": "Aller à la caméra",
@@ -1472,7 +1514,6 @@ window.MocapStrings = {
 "Drag to turn · scroll to zoom": "Fais glisser pour tourner · fais défiler pour zoomer",
 "Reset view": "Réinitialiser la vue",
 "Trim": "Couper",
-"Cut extra time off the start and end.": "Coupe le temps en trop au début et à la fin.",
 "Start": "Début",
 "End": "Fin",
 "Preview skin": "Skin de l'aperçu",
@@ -1618,7 +1659,11 @@ window.MocapStrings = {
 "Straight leg: points at the foot, like a kick. Bent knee: the leg lifts up, like a knee raise.": "Jambe tendue : elle pointe vers le pied, comme un coup de pied. Genou plié : la jambe monte, comme une montée de genou.",
 "Slide bent arms and legs": "Faire glisser bras et jambes pliés",
 "Like Minecraft animations: a raised knee lifts the whole leg, and a pulled-back fist slides the arm back.": "Comme dans les animations Minecraft : un genou levé soulève toute la jambe, et un poing armé fait glisser le bras vers l’arrière.",
-"Captured {s} s. Your legs were mostly out of view, so they stay standing still.": "{s} s enregistrées. Tes jambes étaient presque toujours hors du cadre, elles restent donc immobiles, debout."
+"Captured {s} s. Your legs were mostly out of view, so they stay standing still.": "{s} s enregistrées. Tes jambes étaient presque toujours hors du cadre, elles restent donc immobiles, debout.",
+"Drag the two handles. The colored part is kept.": "Fais glisser les deux poignées. La partie en couleur est conservée.",
+"Keeping {s} s": "{s} s conservées",
+"Back and forth": "Aller-retour",
+"Plays forward, then backward, and repeats until the player moves.": "Se joue vers l’avant, puis à l’envers, et recommence jusqu’à ce que le joueur bouge."
 },
 "pt": {
 "Skip to the camera": "Pular para a câmera",
@@ -1675,7 +1720,6 @@ window.MocapStrings = {
 "Drag to turn · scroll to zoom": "Arraste para girar · role para dar zoom",
 "Reset view": "Redefinir visualização",
 "Trim": "Cortar",
-"Cut extra time off the start and end.": "Corte o tempo extra do início e do fim.",
 "Start": "Início",
 "End": "Fim",
 "Preview skin": "Skin da pré-visualização",
@@ -1821,7 +1865,11 @@ window.MocapStrings = {
 "Straight leg: points at the foot, like a kick. Bent knee: the leg lifts up, like a knee raise.": "Perna esticada: aponta para o pé, como um chute. Joelho dobrado: a perna sobe, como ao levantar o joelho.",
 "Slide bent arms and legs": "Deslizar braços e pernas dobrados",
 "Like Minecraft animations: a raised knee lifts the whole leg, and a pulled-back fist slides the arm back.": "Como nas animações do Minecraft: um joelho levantado ergue a perna inteira, e um punho puxado para trás desliza o braço para trás.",
-"Captured {s} s. Your legs were mostly out of view, so they stay standing still.": "{s} s capturados. Suas pernas ficaram quase sempre fora da imagem, então elas ficam paradas em pé."
+"Captured {s} s. Your legs were mostly out of view, so they stay standing still.": "{s} s capturados. Suas pernas ficaram quase sempre fora da imagem, então elas ficam paradas em pé.",
+"Drag the two handles. The colored part is kept.": "Arraste as duas alças. A parte colorida é a que fica.",
+"Keeping {s} s": "Mantendo {s} s",
+"Back and forth": "Vai e volta",
+"Plays forward, then backward, and repeats until the player moves.": "Toca para a frente, depois de trás para a frente, e repete até o jogador se mexer."
 },
 "de": {
 "Skip to the camera": "Zur Kamera springen",
@@ -1878,7 +1926,6 @@ window.MocapStrings = {
 "Drag to turn · scroll to zoom": "Ziehen zum Drehen · Scrollen zum Zoomen",
 "Reset view": "Ansicht zurücksetzen",
 "Trim": "Kürzen",
-"Cut extra time off the start and end.": "Schneide überflüssige Zeit am Anfang und Ende weg.",
 "Start": "Anfang",
 "End": "Ende",
 "Preview skin": "Vorschau-Skin",
@@ -2024,7 +2071,11 @@ window.MocapStrings = {
 "Straight leg: points at the foot, like a kick. Bent knee: the leg lifts up, like a knee raise.": "Gestrecktes Bein: zeigt auf den Fuß, wie bei einem Tritt. Gebeugtes Knie: das Bein geht nach oben, wie beim Knieheben.",
 "Slide bent arms and legs": "Gebeugte Arme und Beine verschieben",
 "Like Minecraft animations: a raised knee lifts the whole leg, and a pulled-back fist slides the arm back.": "Wie in Minecraft-Animationen: Ein gehobenes Knie hebt das ganze Bein, und eine zurückgezogene Faust schiebt den Arm nach hinten.",
-"Captured {s} s. Your legs were mostly out of view, so they stay standing still.": "{s} s aufgenommen. Deine Beine waren meist nicht im Bild, deshalb bleiben sie ruhig stehen."
+"Captured {s} s. Your legs were mostly out of view, so they stay standing still.": "{s} s aufgenommen. Deine Beine waren meist nicht im Bild, deshalb bleiben sie ruhig stehen.",
+"Drag the two handles. The colored part is kept.": "Zieh die beiden Griffe. Der farbige Teil bleibt erhalten.",
+"Keeping {s} s": "{s} s bleiben",
+"Back and forth": "Hin und zurück",
+"Plays forward, then backward, and repeats until the player moves.": "Läuft vorwärts, dann rückwärts, und wiederholt sich, bis der Spieler sich bewegt."
 },
 "zh": {
 "Skip to the camera": "跳到摄像头",
@@ -2081,7 +2132,6 @@ window.MocapStrings = {
 "Drag to turn · scroll to zoom": "拖动旋转 · 滚动缩放",
 "Reset view": "重置视角",
 "Trim": "裁剪",
-"Cut extra time off the start and end.": "剪掉开头和结尾多余的时间。",
 "Start": "开始",
 "End": "结束",
 "Preview skin": "预览皮肤",
@@ -2227,7 +2277,11 @@ window.MocapStrings = {
 "Straight leg: points at the foot, like a kick. Bent knee: the leg lifts up, like a knee raise.": "腿伸直时指向脚，像踢腿；膝盖弯曲时整条腿向上抬，像抬膝。",
 "Slide bent arms and legs": "弯曲的手臂和腿会滑动",
 "Like Minecraft animations: a raised knee lifts the whole leg, and a pulled-back fist slides the arm back.": "像 Minecraft 动画那样：抬膝时整条腿抬起，拳头后拉时手臂向后滑动。",
-"Captured {s} s. Your legs were mostly out of view, so they stay standing still.": "已录制 {s} 秒。你的腿大部分时间不在画面里，所以腿会保持站立不动。"
+"Captured {s} s. Your legs were mostly out of view, so they stay standing still.": "已录制 {s} 秒。你的腿大部分时间不在画面里，所以腿会保持站立不动。",
+"Drag the two handles. The colored part is kept.": "拖动两个手柄，彩色部分会被保留。",
+"Keeping {s} s": "保留 {s} 秒",
+"Back and forth": "来回播放",
+"Plays forward, then backward, and repeats until the player moves.": "先正向播放，再倒着播放，一直重复，直到玩家移动。"
 }
 };
 </script>
@@ -2793,6 +2847,7 @@ function rebuild() {
   if (S.recording || !S.samples.length || (S.mode !== "playback" && !S.clip)) return;
   const t0 = +$("trim-start").value, t1 = +$("trim-end").value;
   for (const [id, v] of [["trim-start", t0], ["trim-end", t1]]) { $(id + "-out").textContent = secs(v); $(id).setAttribute("aria-valuetext", t("{s} seconds", { s: v.toFixed(2) })); }
+  drawTrim();
   const o = exportOptions();
   S.clip = M.buildClip(S.samples, t0, Math.max(t0 + 0.1, t1), o);
   S.playT = Math.min(S.playT, S.clip.length);
@@ -2819,8 +2874,31 @@ for (const [id, out, fmt] of [["opt-smooth", "smooth-out", (v) => v], ["opt-tol"
   $(id).addEventListener("input", () => { upd(); queueRebuild(); }); upd();
 }
 document.querySelectorAll("#bone-checks input").forEach((c) => c.addEventListener("change", queueRebuild));
-$("trim-start").oninput = () => { const e = +$("trim-end").value; if (+$("trim-start").value > e - 0.2) $("trim-start").value = e - 0.2; S.playT = 0; queueRebuild(); };
-$("trim-end").oninput = () => { const s = +$("trim-start").value; if (+$("trim-end").value < s + 0.2) $("trim-end").value = s + 0.2; queueRebuild(); };
+$("trim-start").oninput = () => { const e = +$("trim-end").value; if (+$("trim-start").value > e - 0.2) $("trim-start").value = e - 0.2; S.playT = 0; drawTrim(); queueRebuild(); };
+$("trim-end").oninput = () => { const s = +$("trim-start").value; if (+$("trim-end").value < s + 0.2) $("trim-end").value = s + 0.2; drawTrim(); queueRebuild(); };
+/* One timeline with two handles. The kept middle is coloured; the playhead shows where playback is. */
+const HANDLE = 7;   // half a handle's width, so the colour lines up with the handle centres
+function trimX(v) { const max = +$("trim-start").max || 1; return `calc(${HANDLE}px + (100% - ${2 * HANDLE}px) * ${Math.max(0, Math.min(1, v / max))})`; }
+function drawTrim() {
+  const s = +$("trim-start").value, e = +$("trim-end").value, fill = $("trim-fill");
+  fill.style.left = trimX(s); fill.style.width = `calc((100% - ${2 * HANDLE}px) * ${Math.max(0, (e - s) / (+$("trim-start").max || 1))})`;
+  // whichever handle is nearer the right end sits on top, so the two can always be pulled apart
+  $("trim-start").style.zIndex = s > (+$("trim-start").max || 1) * 0.5 ? 3 : 1;
+  $("trim-end").style.zIndex = 2;
+  // time labels sit under their handles (kept apart and inside the bar)
+  const max = +$("trim-start").max || 1, track = $("trim-track").clientWidth || 300, lab = 64 / track * max;
+  const ls = Math.min(Math.max(s, lab / 2), max - lab * 1.5), le = Math.max(Math.min(e, max - lab / 2), ls + lab);
+  $("trim-start-out").style.left = trimX(ls); $("trim-end-out").style.left = trimX(le);
+  $("trim-keep").textContent = $("trim-start").disabled ? "" : t("Keeping {s} s", { s: (e - s).toFixed(2) });
+}
+// clicking the bar moves whichever handle is closer
+$("trim-track").addEventListener("pointerdown", (ev) => {
+  if ($("trim-start").disabled || ev.target !== $("trim-track")) return;   // the handles drag themselves
+  const r = $("trim-track").getBoundingClientRect(), max = +$("trim-start").max;
+  const v = Math.max(0, Math.min(max, ((ev.clientX - r.left - HANDLE) / (r.width - 2 * HANDLE)) * max));
+  const near = Math.abs(v - $("trim-start").value) <= Math.abs(v - $("trim-end").value) ? "trim-start" : "trim-end";
+  $(near).value = v; $(near).dispatchEvent(new Event("input")); $(near).focus();
+});
 function segGroup(attr, key) {
   const btns = document.querySelectorAll(`[data-${attr}]`);
   btns.forEach((b) => b.addEventListener("click", () => {
@@ -2853,7 +2931,7 @@ function setStage() {
   const pill = $("stage-pill");
   if (live && S.recording) { pill.className = "pill rec"; pill.textContent = t("Recording"); }
   else if (live) { pill.className = "pill"; pill.textContent = t(S.source ? "Copies you live" : "Waiting for the camera"); }
-  else { pill.className = "pill ok"; pill.textContent = t({ false: "Once", true: "Loop", hold_on_last_frame: "Hold last pose" }[S.loop]); }
+  else { pill.className = "pill ok"; pill.textContent = t({ false: "Once", true: "Loop", pingpong: "Back and forth", hold_on_last_frame: "Hold last pose" }[S.loop]); }
   $("live-btn").disabled = live || !S.source;
   setPlayButton();
 }
@@ -2896,11 +2974,14 @@ preview.onFrame((dt) => {
     }
     const tt = Math.min(S.playT, S.clip.length);
     $("scrub").value = tt;
+    const half = S.clip.forward ?? S.clip.length, src = tt <= half ? tt : 2 * half - tt;   // back-and-forth plays the kept part in reverse
+    const ph = $("trim-play"); ph.hidden = false; ph.style.left = trimX(+$("trim-start").value + src);
     const txt = `${tt.toFixed(2)} / ${S.clip.length.toFixed(2)} s`;
     if (txt !== lastTimeText) { $("time").textContent = txt; lastTimeText = txt; $("scrub").setAttribute("aria-valuetext", t("{a} of {b} seconds", { a: tt.toFixed(1), b: S.clip.length.toFixed(1) })); }
     pose = M.sampleClip(S.clip, tt);
   } else {
     pose = S.livePose;
+    $("trim-play").hidden = true;
     if (lastTimeText !== "live") { $("time").textContent = t("live"); lastTimeText = "live"; }
   }
   showMove(pose && pose.moves);
