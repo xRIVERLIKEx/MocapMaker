@@ -124,6 +124,15 @@ kbd { font: 600 0.72rem var(--f-mono); border: 1px solid currentColor; border-ra
   .topbar { flex: none; }
   .workspace { flex: 1; min-height: 0; align-items: stretch; grid-template-rows: minmax(0, 1fr); }
   .col { min-height: 0; overflow: auto; }
+  /* right column: Download stays pinned in view; Clean up scrolls inside its own panel */
+  .col-right { overflow: hidden; }
+  .clip-pane { flex: 0 1 auto; min-height: 140px; display: flex; flex-direction: column; }
+  .clip-pane > .fields { overflow: auto; min-height: 0; overscroll-behavior: contain;
+    /* soft shadows at the top/bottom edge appear only when there's more to scroll to */
+    background: linear-gradient(var(--panel) 30%, transparent) center top, linear-gradient(transparent, var(--panel) 70%) center bottom,
+      radial-gradient(farthest-side at 50% 0, rgba(15, 23, 42, 0.28), transparent) center top, radial-gradient(farthest-side at 50% 100%, rgba(15, 23, 42, 0.28), transparent) center bottom;
+    background-repeat: no-repeat; background-size: 100% 36px, 100% 36px, 100% 12px, 100% 12px; background-attachment: local, local, scroll, scroll; }
+  .export-pane { flex: none; }
   .stage { display: flex; flex-direction: column; min-height: 0; }
   .stage .stage-wrap { flex: 1; height: auto; min-height: 260px; }
 }
@@ -230,7 +239,8 @@ details.help[open] summary { margin-bottom: 8px; }
 .trim-track input[type="range"]:disabled::-webkit-slider-thumb { background: var(--line-strong); cursor: default; }
 .trim-track input[type="range"]:disabled::-moz-range-thumb { background: var(--line-strong); cursor: default; }
 .trim-times { position: relative; height: 18px; font-family: var(--f-mono); font-size: 0.78rem; color: var(--muted); }
-.trim-times output { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
+.trim-times output { position: absolute; top: 0; left: 0; white-space: nowrap; }
+.trim-times #trim-end-out { left: auto; right: 0; }
 .skinbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--line); font-size: 0.86rem; }
 .skinbar .spacer { margin-left: auto; }
 
@@ -239,6 +249,14 @@ details.help[open] summary { margin-bottom: 8px; }
 .id-line { margin: 0; font-size: 0.78rem; color: var(--muted); display: flex; gap: 6px; flex-wrap: wrap; }
 .id-line .mono { color: var(--soft); overflow-wrap: anywhere; }
 .row-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.dl-row .btn.big { flex: 2 1 170px; width: auto; }
+.dl-row #copy { flex: 1 1 100px; }
+details.more { border-top: 1px solid var(--line); padding-top: 10px; }
+details.more > summary { cursor: pointer; font-weight: 800; font-size: 0.9rem; list-style: none; display: flex; align-items: center; gap: 8px; }
+details.more > summary::-webkit-details-marker { display: none; }
+details.more > summary::before { content: "▸"; color: var(--accent); transition: transform 0.12s; }
+details.more[open] > summary::before { transform: rotate(90deg); }
+.more-body { display: grid; gap: 12px; padding-top: 12px; }
 .row-btns .btn { flex: 1 1 auto; }
 
 /* ---------- display & language panel ---------- */
@@ -413,35 +431,9 @@ details.help[open] summary { margin-bottom: 8px; }
       <div class="fields">
         <label class="field"><span class="field-head"><span data-i18n>Smoothing</span><output id="smooth-out">6</output></span>
           <input type="range" id="opt-smooth" min="0" max="12" step="0.5" value="6" data-tip="Higher removes shaking but softens fast moves."></label>
-        <label class="field"><span class="field-head"><span data-i18n>Simplify keyframes</span><output id="tol-out">1°</output></span>
-          <input type="range" id="opt-tol" min="0" max="5" step="0.5" value="1" data-tip="Drops keyframes that change less than this. Makes the file smaller."></label>
         <label class="field"><span class="field-head"><span data-i18n>Head nod strength</span><output id="nod-out">1.5×</output></span>
           <input type="range" id="opt-nod" min="0.5" max="3" step="0.1" value="1.5" data-tip="Makes looking up and down bigger or smaller."></label>
-        <label class="field"><span class="field-head"><span data-i18n>Head tilt fix</span><output id="pitch-out">0°</output></span>
-          <input type="range" id="opt-pitch" min="-20" max="20" step="1" value="0" data-tip="Raise this if the model looks down when you look straight ahead."></label>
-        <label class="field"><span data-i18n>Keyframes per second</span>
-          <select id="opt-fps"><option value="10">10</option><option value="20" selected data-i18n>20 (one per game tick)</option><option value="30">30</option></select></label>
-        <div class="field"><span data-i18n>Arms point at</span>
-          <div class="seg" role="group" aria-label="Arms point at" data-i18n-attr="aria-label">
-            <button type="button" data-arm="auto" aria-pressed="true" data-tip="Straight arm: points at the hand. Bent elbow: follows the forearm and slides back, like a punch wind-up." data-i18n>Auto</button>
-            <button type="button" data-arm="wrist" aria-pressed="false" data-tip="Best for waves and gestures." data-i18n>Hands</button>
-            <button type="button" data-arm="elbow" aria-pressed="false" data-tip="Follow the upper arm instead." data-i18n>Elbows</button>
-          </div></div>
-        <div class="field"><span data-i18n>Legs point at</span>
-          <div class="seg" role="group" aria-label="Legs point at" data-i18n-attr="aria-label">
-            <button type="button" data-leg="auto" aria-pressed="true" data-tip="Straight leg: points at the foot, like a kick. Bent knee: the leg lifts up, like a knee raise." data-i18n>Auto</button>
-            <button type="button" data-leg="end" aria-pressed="false" data-tip="The leg always points at the foot." data-i18n>Feet</button>
-            <button type="button" data-leg="mid" aria-pressed="false" data-tip="The leg always points at the knee." data-i18n>Knees</button>
-          </div></div>
-        <div class="field"><span data-i18n>Lean from</span>
-          <div class="seg" role="group" aria-label="Lean from" data-i18n-attr="aria-label">
-            <button type="button" data-lean="body" aria-pressed="false" data-tip="Moves the body bone, like most Minecraft animations." data-i18n>Neck</button>
-            <button type="button" data-lean="waist" aria-pressed="true" data-tip="Moves the waist bone, so bows and leans bend at the hips." data-i18n>Hips</button>
-          </div></div>
-        <label class="switch"><input type="checkbox" role="switch" id="opt-slide" checked><span><b data-i18n>Slide bent arms and legs</b><small data-i18n>Like Minecraft animations: a raised knee lifts the whole leg, and a pulled-back fist slides the arm back.</small></span></label>
-        <label class="switch"><input type="checkbox" role="switch" id="opt-plant" checked><span><b data-i18n>Plant feet</b><small data-i18n>A leg that isn't lifted stays still on the ground.</small></span></label>
         <label class="switch"><input type="checkbox" role="switch" id="opt-mirror" checked><span><b data-i18n>Mirror</b><small data-i18n>Swap left and right.</small></span></label>
-        <label class="switch"><input type="checkbox" role="switch" id="opt-flip"><span><b data-i18n>Flip head turns</b><small data-i18n>Use this if the head turns the wrong way in the game.</small></span></label>
         <fieldset class="field"><legend data-i18n>Body parts to include</legend>
           <div class="checks" id="bone-checks">
             <label><input type="checkbox" data-bone="head" checked><span data-i18n>Head</span></label>
@@ -451,6 +443,37 @@ details.help[open] summary { margin-bottom: 8px; }
             <label><input type="checkbox" data-bone="rightLeg" checked><span data-i18n>Right leg</span></label>
             <label><input type="checkbox" data-bone="leftLeg" checked><span data-i18n>Left leg</span></label>
           </div></fieldset>
+        <details class="more" id="more-settings">
+          <summary data-i18n>More settings</summary>
+          <div class="more-body">
+          <label class="field"><span class="field-head"><span data-i18n>Simplify keyframes</span><output id="tol-out">1°</output></span>
+            <input type="range" id="opt-tol" min="0" max="5" step="0.5" value="1" data-tip="Drops keyframes that change less than this. Makes the file smaller."></label>
+          <label class="field"><span class="field-head"><span data-i18n>Head tilt fix</span><output id="pitch-out">0°</output></span>
+            <input type="range" id="opt-pitch" min="-20" max="20" step="1" value="0" data-tip="Raise this if the model looks down when you look straight ahead."></label>
+          <label class="field"><span data-i18n>Keyframes per second</span>
+            <select id="opt-fps"><option value="10">10</option><option value="20" selected data-i18n>20 (one per game tick)</option><option value="30">30</option></select></label>
+          <div class="field"><span data-i18n>Arms point at</span>
+            <div class="seg" role="group" aria-label="Arms point at" data-i18n-attr="aria-label">
+              <button type="button" data-arm="auto" aria-pressed="true" data-tip="Straight arm: points at the hand. Bent elbow: follows the forearm and slides back, like a punch wind-up." data-i18n>Auto</button>
+              <button type="button" data-arm="wrist" aria-pressed="false" data-tip="Best for waves and gestures." data-i18n>Hands</button>
+              <button type="button" data-arm="elbow" aria-pressed="false" data-tip="Follow the upper arm instead." data-i18n>Elbows</button>
+            </div></div>
+          <div class="field"><span data-i18n>Legs point at</span>
+            <div class="seg" role="group" aria-label="Legs point at" data-i18n-attr="aria-label">
+              <button type="button" data-leg="auto" aria-pressed="true" data-tip="Straight leg: points at the foot, like a kick. Bent knee: the leg lifts up, like a knee raise." data-i18n>Auto</button>
+              <button type="button" data-leg="end" aria-pressed="false" data-tip="The leg always points at the foot." data-i18n>Feet</button>
+              <button type="button" data-leg="mid" aria-pressed="false" data-tip="The leg always points at the knee." data-i18n>Knees</button>
+            </div></div>
+          <div class="field"><span data-i18n>Lean from</span>
+            <div class="seg" role="group" aria-label="Lean from" data-i18n-attr="aria-label">
+              <button type="button" data-lean="body" aria-pressed="false" data-tip="Moves the body bone, like most Minecraft animations." data-i18n>Neck</button>
+              <button type="button" data-lean="waist" aria-pressed="true" data-tip="Moves the waist bone, so bows and leans bend at the hips." data-i18n>Hips</button>
+            </div></div>
+          <label class="switch"><input type="checkbox" role="switch" id="opt-slide" checked><span><b data-i18n>Slide bent arms and legs</b><small data-i18n>Like Minecraft animations: a raised knee lifts the whole leg, and a pulled-back fist slides the arm back.</small></span></label>
+          <label class="switch"><input type="checkbox" role="switch" id="opt-plant" checked><span><b data-i18n>Plant feet</b><small data-i18n>A leg that isn't lifted stays still on the ground.</small></span></label>
+          <label class="switch"><input type="checkbox" role="switch" id="opt-flip"><span><b data-i18n>Flip head turns</b><small data-i18n>Use this if the head turns the wrong way in the game.</small></span></label>
+          </div>
+        </details>
       </div>
     </section>
 
@@ -466,10 +489,12 @@ details.help[open] summary { margin-bottom: 8px; }
             <button type="button" data-loop="pingpong" aria-pressed="false" data-tip="Plays forward, then backward, and repeats until the player moves." data-i18n>Back and forth</button>
             <button type="button" data-loop="hold_on_last_frame" aria-pressed="false" data-tip="Plays once and stays in the last pose." data-i18n>Hold last pose</button>
           </div></div>
-        <button class="btn primary big" type="button" id="download" disabled data-tip="Save the animation file to your computer." data-i18n>Download animation</button>
-        <div class="row-btns"><button class="btn" type="button" id="copy" disabled data-tip="Copy the animation's code to paste somewhere else." data-i18n>Copy JSON</button></div>
+        <div class="row-btns dl-row">
+          <button class="btn primary big" type="button" id="download" disabled data-tip="Save the animation file to your computer." data-i18n>Download animation</button>
+          <button class="btn" type="button" id="copy" disabled data-tip="Copy the animation's code to paste somewhere else." data-i18n>Copy JSON</button>
+        </div>
         <p class="muted" id="export-stats" style="margin:0;font-size:.82rem" aria-live="polite" data-i18n>Record a move first.</p>
-        <details class="help" open>
+        <details class="help">
           <summary data-i18n>Use it in Minecraft Education</summary>
           <ol class="steps">
             <li data-i18n="html"><b>Download</b> the <span class="mono">.animation.json</span> file.</li>
@@ -1457,7 +1482,8 @@ window.MocapStrings = {
 "Drag the two handles. The colored part is kept.": "Arrastra los dos controles. La parte de color es la que se guarda.",
 "Keeping {s} s": "Se guardan {s} s",
 "Back and forth": "Ida y vuelta",
-"Plays forward, then backward, and repeats until the player moves.": "Se reproduce hacia delante, luego hacia atrás, y se repite hasta que el jugador se mueva."
+"Plays forward, then backward, and repeats until the player moves.": "Se reproduce hacia delante, luego hacia atrás, y se repite hasta que el jugador se mueva.",
+"More settings": "Más ajustes"
 },
 "fr": {
 "Skip to the camera": "Aller à la caméra",
@@ -1663,7 +1689,8 @@ window.MocapStrings = {
 "Drag the two handles. The colored part is kept.": "Fais glisser les deux poignées. La partie en couleur est conservée.",
 "Keeping {s} s": "{s} s conservées",
 "Back and forth": "Aller-retour",
-"Plays forward, then backward, and repeats until the player moves.": "Se joue vers l’avant, puis à l’envers, et recommence jusqu’à ce que le joueur bouge."
+"Plays forward, then backward, and repeats until the player moves.": "Se joue vers l’avant, puis à l’envers, et recommence jusqu’à ce que le joueur bouge.",
+"More settings": "Plus de réglages"
 },
 "pt": {
 "Skip to the camera": "Pular para a câmera",
@@ -1869,7 +1896,8 @@ window.MocapStrings = {
 "Drag the two handles. The colored part is kept.": "Arraste as duas alças. A parte colorida é a que fica.",
 "Keeping {s} s": "Mantendo {s} s",
 "Back and forth": "Vai e volta",
-"Plays forward, then backward, and repeats until the player moves.": "Toca para a frente, depois de trás para a frente, e repete até o jogador se mexer."
+"Plays forward, then backward, and repeats until the player moves.": "Toca para a frente, depois de trás para a frente, e repete até o jogador se mexer.",
+"More settings": "Mais configurações"
 },
 "de": {
 "Skip to the camera": "Zur Kamera springen",
@@ -2075,7 +2103,8 @@ window.MocapStrings = {
 "Drag the two handles. The colored part is kept.": "Zieh die beiden Griffe. Der farbige Teil bleibt erhalten.",
 "Keeping {s} s": "{s} s bleiben",
 "Back and forth": "Hin und zurück",
-"Plays forward, then backward, and repeats until the player moves.": "Läuft vorwärts, dann rückwärts, und wiederholt sich, bis der Spieler sich bewegt."
+"Plays forward, then backward, and repeats until the player moves.": "Läuft vorwärts, dann rückwärts, und wiederholt sich, bis der Spieler sich bewegt.",
+"More settings": "Weitere Einstellungen"
 },
 "zh": {
 "Skip to the camera": "跳到摄像头",
@@ -2281,7 +2310,8 @@ window.MocapStrings = {
 "Drag the two handles. The colored part is kept.": "拖动两个手柄，彩色部分会被保留。",
 "Keeping {s} s": "保留 {s} 秒",
 "Back and forth": "来回播放",
-"Plays forward, then backward, and repeats until the player moves.": "先正向播放，再倒着播放，一直重复，直到玩家移动。"
+"Plays forward, then backward, and repeats until the player moves.": "先正向播放，再倒着播放，一直重复，直到玩家移动。",
+"More settings": "更多设置"
 }
 };
 </script>
@@ -2885,10 +2915,14 @@ function drawTrim() {
   // whichever handle is nearer the right end sits on top, so the two can always be pulled apart
   $("trim-start").style.zIndex = s > (+$("trim-start").max || 1) * 0.5 ? 3 : 1;
   $("trim-end").style.zIndex = 2;
-  // time labels sit under their handles (kept apart and inside the bar)
-  const max = +$("trim-start").max || 1, track = $("trim-track").clientWidth || 300, lab = 64 / track * max;
-  const ls = Math.min(Math.max(s, lab / 2), max - lab * 1.5), le = Math.max(Math.min(e, max - lab / 2), ls + lab);
-  $("trim-start-out").style.left = trimX(ls); $("trim-end-out").style.left = trimX(le);
+  // time labels sit under their handles, never past the ends of the bar and never on top of each other
+  const max = +$("trim-start").max || 1, W = $("trim-track").clientWidth, so = $("trim-start-out"), eo = $("trim-end-out");
+  if (W) {
+    const ws = so.offsetWidth, we = eo.offsetWidth, gap = 8, cx = (v) => HANDLE + (W - 2 * HANDLE) * Math.max(0, Math.min(1, v / max));
+    let ls = Math.max(0, Math.min(W - ws - gap - we, cx(s) - ws / 2));
+    let le = Math.max(ls + ws + gap, Math.min(W - we, cx(e) - we / 2));
+    so.style.left = ls + "px"; eo.style.left = le + "px"; eo.style.right = "auto";
+  }
   $("trim-keep").textContent = $("trim-start").disabled ? "" : t("Keeping {s} s", { s: (e - s).toFixed(2) });
 }
 // clicking the bar moves whichever handle is closer
@@ -3060,6 +3094,13 @@ document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("pref
 document.addEventListener("pointerdown", (e) => { if (!$("prefs").hidden && !e.target.closest("#prefs, #prefs-btn")) { $("prefs").hidden = true; $("prefs-btn").setAttribute("aria-expanded", "false"); } });
 // another tab (e.g. the Emote Tool) changed the shared settings
 addEventListener("storage", (e) => { if (e.key !== PREFS) return; try { Object.assign(prefs, JSON.parse(e.newValue || "{}")); } catch { return; } applyPrefs(); applyLanguage(); });
+
+drawTrim();                                                     // place the labels before anything is recorded
+new ResizeObserver(drawTrim).observe($("trim-track"));          // and keep them in place when the window changes size
+
+/* "More settings" remembers whether you left it open (this browser only) */
+try { if (localStorage.getItem("mocap.moreOpen") === "1") $("more-settings").open = true; } catch { /* storage unavailable */ }
+$("more-settings").addEventListener("toggle", () => { try { localStorage.setItem("mocap.moreOpen", $("more-settings").open ? "1" : "0"); } catch { /* not kept */ } });
 
 /* ---------------- boot ---------------- */
 applyPrefs();
