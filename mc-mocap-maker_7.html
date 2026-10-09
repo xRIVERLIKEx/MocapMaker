@@ -1,0 +1,2994 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cleverlike Mocap Maker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Cleverlike Mocap Maker — same workbench look as the Cleverlike Emote Tool:
+   camera + capture | live 3D stage | clean-up + download, under the Cleverlike navy bar. */
+[hidden] { display: none !important; }
+:root {
+  --bg: #dde2e9; --panel: #eceff3; --sunk: #e0e5eb; --ink: #1d293d; --muted: #55667e; --soft: #4a5565;
+  --line: #cbd3dd; --line-strong: #aeb9c9; --sunk-hover: #d8e3f3;
+  --nav: #10499c; --nav-ink: #ffffff; --nav-soft: #b8d0f2; --cyan: #00aef0;
+  --accent: #1665e8; --accent-hover: #1253c4; /* a step darker than the Emote Tool's #2b7fff so white text passes WCAG AA */ --accent-ink: #ffffff; --accent-soft: #dce8fb;
+  --stripe-blue: #174fa2; --stripe-yellow: #febd01; --stripe-pink: #ed287f;
+  --ok: #15803d; --ok-soft: #dcfce7; --warn: #a16207; --warn-soft: #fef3c7; --bad: #c81e1e; --bad-soft: #fee2e2;
+  --rec: #e11d48;
+  --stage: #cdd5e0; --stage-line: #a9b5c6;
+  --shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.05);
+  --f-body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --hover: #d3e0f4; --hover-line: #7fa6e3; --hover-ink: var(--ink); --field: #f6f8fa;
+  --r: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-a11y-theme]) {
+    --bg: #0b1120; --panel: #111a2e; --sunk: #1a2540; --ink: #e2e8f0; --muted: #94a3b8; --soft: #cbd5e1; --line: #24324d; --line-strong: #3a4b6b; --sunk-hover: #22305a;
+    --nav: #0c3a7d; --nav-soft: #a9c4ee; --accent: #4d94ff; --accent-hover: #75acff; --accent-ink: #06122a; --accent-soft: #15284a;
+    --ok: #4ade80; --ok-soft: #12301f; --warn: #fbbf24; --warn-soft: #33270b; --bad: #f87171; --bad-soft: #3b1515; --rec: #fb7185;
+    --stage: #0a1324; --stage-line: #2b3b58; --shadow: 0 1px 3px rgba(0, 0, 0, 0.4); --hover: #26396a; --hover-line: #5b86cf; --tip-bg: #e2e8f0; --tip-ink: #0b1120; --field: var(--panel);
+    color-scheme: dark;
+  }
+}
+:root[data-a11y-theme="dark"] {
+  --bg: #0b1120; --panel: #111a2e; --sunk: #1a2540; --ink: #e2e8f0; --muted: #94a3b8; --soft: #cbd5e1; --line: #24324d; --line-strong: #3a4b6b; --sunk-hover: #22305a;
+  --nav: #0c3a7d; --nav-soft: #a9c4ee; --accent: #4d94ff; --accent-hover: #75acff; --accent-ink: #06122a; --accent-soft: #15284a;
+  --ok: #4ade80; --ok-soft: #12301f; --warn: #fbbf24; --warn-soft: #33270b; --bad: #f87171; --bad-soft: #3b1515; --rec: #fb7185;
+  --stage: #0a1324; --stage-line: #2b3b58; --shadow: 0 1px 3px rgba(0, 0, 0, 0.4); --hover: #26396a; --hover-line: #5b86cf; --tip-bg: #e2e8f0; --tip-ink: #0b1120; --field: var(--panel);
+  color-scheme: dark;
+}
+:root[data-a11y-theme="light"] { color-scheme: light; }
+/* High contrast: pure black and white, bright yellow actions, thick borders, strong focus */
+:root[data-a11y-theme="contrast"] {
+  --bg: #000000; --panel: #000000; --sunk: #000000; --ink: #ffffff; --muted: #ffffff; --soft: #ffffff;
+  --line: #ffffff; --line-strong: #ffffff; --sunk-hover: #1a1a1a;
+  --nav: #000000; --nav-ink: #ffffff; --nav-soft: #ffffff; --cyan: #00e5ff;
+  --accent: #ffe600; --accent-hover: #fff27a; --accent-ink: #000000; --accent-soft: #000000;
+  --ok: #7dff9a; --ok-soft: #000000; --warn: #ffe600; --warn-soft: #000000; --bad: #ff8a8a; --bad-soft: #000000; --rec: #ff8a8a;
+  --stage: #000000; --stage-line: #ffffff; --shadow: none;
+  --hover: #3a3a3a; --hover-line: #ffe600; --hover-ink: #ffffff; --field: #000000; --tip-bg: #ffffff; --tip-ink: #000000;
+  color-scheme: dark;
+}
+:root[data-a11y-theme="contrast"] .pane, :root[data-a11y-theme="contrast"] .btn, :root[data-a11y-theme="contrast"] input[type="text"],
+:root[data-a11y-theme="contrast"] select, :root[data-a11y-theme="contrast"] .seg, :root[data-a11y-theme="contrast"] .note,
+:root[data-a11y-theme="contrast"] .pill, :root[data-a11y-theme="contrast"] .cam-wrap { border: 2px solid var(--line); }
+:root[data-a11y-theme="contrast"] .topbar { border-bottom: 2px solid #ffffff; box-shadow: none; }
+:root[data-a11y-theme="contrast"] :focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
+:root[data-a11y-theme="contrast"] .seg button[aria-pressed="true"], :root[data-a11y-theme="contrast"] .seg button[aria-checked="true"] { text-decoration: underline; text-underline-offset: 3px; }
+:root[data-a11y-theme="contrast"] .stripe { display: none; }
+:root[data-a11y-theme="contrast"] .tip { border: 2px solid var(--accent); box-shadow: none; }
+:root[data-a11y-theme="contrast"] .muted, :root[data-a11y-theme="contrast"] small { color: var(--ink); }
+:root[data-text="large"] { font-size: 118.75%; }
+
+* { box-sizing: border-box; }
+html, body { min-height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 0.9375rem/1.5 var(--f-body); }
+h1, h2, h3 { text-wrap: balance; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.mono { font-family: var(--f-mono); font-size: 0.86em; }
+.muted { color: var(--muted); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.skip { position: absolute; left: 12px; top: -60px; z-index: 50; background: var(--accent); color: var(--accent-ink); padding: 8px 14px; border-radius: var(--r); font-weight: 800; text-decoration: none; }
+.skip:focus { top: 12px; }
+kbd { font: 600 0.72rem var(--f-mono); border: 1px solid currentColor; border-radius: 4px; padding: 0 4px; opacity: 0.75; }
+
+/* ---------- top bar ---------- */
+.topbar { background: var(--nav); color: var(--nav-ink); box-shadow: 0 2px 10px rgba(15, 23, 42, 0.18); position: relative; z-index: 1; }
+.topbar-inner { max-width: 1760px; margin-inline: auto; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 12px 20px; }
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; margin-right: auto; }
+.brand svg { width: 36px; height: 36px; flex: none; }
+.brand h1 { font: 800 1.3rem/1.1 var(--f-body); margin: 0; letter-spacing: 0.005em; }
+.brand h1 span { color: var(--cyan); }
+.brand p { margin: 2px 0 0; color: var(--nav-soft); font-size: 0.86rem; font-weight: 600; }
+.topbar .btn { background: transparent; color: var(--nav-ink); border-color: rgba(255, 255, 255, 0.45); }
+.topbar .btn:hover:not(:disabled) { color: var(--nav-ink); background: rgba(255, 255, 255, 0.12); border-color: #ffffff; }
+
+/* ---------- buttons ---------- */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--line); background: var(--sunk); color: var(--ink); border-radius: var(--r); padding: 8px 14px; cursor: pointer; font-weight: 700; font-size: 0.9rem; line-height: 1.2; text-decoration: none; transition: background 0.12s, border-color 0.12s; }
+.btn:hover:not(:disabled) { border-color: var(--hover-line); background: var(--hover); color: var(--hover-ink); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary:hover:not(:disabled) { color: var(--accent-ink); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn.rec { background: var(--rec); border-color: var(--rec); color: #ffffff; }
+:root[data-a11y-theme="contrast"] .btn.rec { color: #000000; }
+.btn.rec:hover:not(:disabled) { background: var(--rec); color: #ffffff; box-shadow: 0 0 0 3px color-mix(in srgb, var(--rec) 30%, transparent); }
+.btn.big { padding: 12px 16px; font-size: 1rem; width: 100%; }
+.btn.ghost { border-color: transparent; background: transparent; }
+.btn.ghost:hover:not(:disabled) { background: var(--hover); border-color: transparent; }
+.btn.icon { padding: 6px 10px; min-width: 40px; }
+.tip { position: fixed; z-index: 1000; max-width: min(280px, calc(100vw - 12px)); padding: 7px 10px; border-radius: 6px; background: var(--tip-bg, #1d293d); color: var(--tip-ink, #ffffff); font-size: 0.8rem; font-weight: 600; line-height: 1.35; pointer-events: none; box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25); animation: tip-in 0.12s ease-out; }
+.tip::after { content: ""; position: absolute; left: var(--arrow-x, 50%); width: 8px; height: 8px; background: inherit; transform: translateX(-50%) rotate(45deg); }
+.tip[data-side="above"]::after { bottom: -4px; } .tip[data-side="below"]::after { top: -4px; }
+@keyframes tip-in { from { opacity: 0; transform: translateY(2px); } }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.seg button { all: unset; cursor: pointer; padding: 5px 10px; font-size: 0.82rem; font-weight: 700; }
+.seg button:not([aria-pressed="true"]):not([aria-checked="true"]):hover { background: var(--hover); color: var(--hover-ink); }
+.seg button[aria-pressed="true"], .seg button[aria-checked="true"] { background: var(--accent); color: var(--accent-ink); }
+.seg button:focus-visible { outline: 2px solid var(--cyan); outline-offset: -2px; }
+.seg-wrap { display: flex; flex-wrap: wrap; }
+
+/* ---------- workspace grid ---------- */
+.workspace { max-width: 1760px; margin-inline: auto; width: 100%; display: grid; gap: 16px; padding: 16px 20px 24px;
+  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr) minmax(300px, 360px); grid-template-areas: "left stage right"; align-items: start; }
+.col-left { grid-area: left; } .stage { grid-area: stage; } .col-right { grid-area: right; }
+.col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+@media (min-width: 1181px) and (min-height: 700px) {
+  html, body { height: 100%; }
+  body { display: flex; flex-direction: column; }
+  .topbar { flex: none; }
+  .workspace { flex: 1; min-height: 0; align-items: stretch; grid-template-rows: minmax(0, 1fr); }
+  .col { min-height: 0; overflow: auto; }
+  .stage { display: flex; flex-direction: column; min-height: 0; }
+  .stage .stage-wrap { flex: 1; height: auto; min-height: 260px; }
+}
+@media (max-width: 1180px) {
+  .workspace { grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); grid-template-areas: "left stage" "left right"; }
+}
+@media (max-width: 760px) {
+  .workspace { grid-template-columns: minmax(0, 1fr); grid-template-areas: none; padding-inline: 16px; }
+  .workspace > .col { display: contents; }
+  .stage, .col > .pane { grid-area: auto; }
+  .capture-pane { order: 1; } .stage { order: 2; } .clip-pane { order: 3; } .export-pane { order: 4; }
+  .topbar-inner { padding-inline: 16px; }
+}
+.pane { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); min-width: 0; box-shadow: var(--shadow); }
+.pane > header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 16px; padding: 16px 2px 12px; border-bottom: 1px solid var(--line); }
+.label { font: 800 1.15rem/1.2 var(--f-body); color: var(--ink); margin: 0; }
+.eyebrow { font: 800 0.74rem/1 var(--f-body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 0; }
+
+/* ---------- fields ---------- */
+.fields { display: grid; gap: 12px; padding: 12px 16px 16px; }
+.field { display: grid; gap: 5px; min-width: 0; border: 0; padding: 0; margin: 0; }
+.field > span, .field > legend, .field-head { font-size: 0.82rem; font-weight: 700; padding: 0; }
+.field-head { display: flex; justify-content: space-between; gap: 8px; }
+.field-head output { font-family: var(--f-mono); font-weight: 600; color: var(--muted); font-size: 0.78rem; }
+.field small { color: var(--muted); font-size: 0.78rem; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+input[type="text"], select { width: 100%; min-width: 0; background: var(--field, var(--panel)); border: 1px solid var(--line); border-radius: var(--r); padding: 7px 10px; }
+input[type="text"]:focus, select:focus { border-color: var(--accent); }
+input[type="range"] { width: 100%; accent-color: var(--accent); margin: 2px 0; }
+.switch { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+.switch input { appearance: none; flex: none; width: 38px; height: 22px; border-radius: 99px; background: var(--line-strong); position: relative; cursor: pointer; margin: 1px 0 0; transition: background 0.15s; }
+.switch input::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--panel); transition: transform 0.15s; }
+.switch input:checked { background: var(--accent); }
+.switch input:checked::after { transform: translateX(16px); }
+:root[data-a11y-theme="contrast"] .switch input { border: 2px solid #ffffff; }
+.switch b { display: block; font-size: 0.9rem; }
+.switch small { color: var(--muted); font-size: 0.8rem; }
+.checks { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; font-size: 0.88rem; }
+.checks label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+input[type="checkbox"]:not([role="switch"]) { accent-color: var(--accent); width: 17px; height: 17px; margin: 0; }
+.pill { display: inline-flex; align-items: center; gap: 5px; padding: 1px 8px; border-radius: 99px; font-size: 0.74rem; font-weight: 700; white-space: nowrap; background: var(--sunk); color: var(--muted); }
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); }
+.pill.rec { background: var(--rec); color: #fff; }
+:root[data-a11y-theme="contrast"] .pill.rec { color: #000; }
+.pill.move { background: var(--stripe-yellow); color: #1d293d; }
+:root[data-a11y-theme="contrast"] .pill.move { background: var(--accent); color: #000; }
+.pill .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.note { border-radius: var(--r); padding: 9px 11px; font-size: 0.84rem; margin: 0; }
+.note.info { background: var(--accent-soft); color: var(--ink); border-left: 3px solid var(--accent); }
+.note.warn { background: var(--warn-soft); color: var(--ink); border-left: 3px solid var(--warn); }
+.note.bad { background: var(--bad-soft); color: var(--ink); border-left: 3px solid var(--bad); }
+details.help summary { cursor: pointer; font-weight: 700; font-size: 0.86rem; }
+details.help[open] summary { margin-bottom: 8px; }
+.steps { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 0.84rem; color: var(--muted); }
+.steps b { color: var(--ink); }
+
+/* ---------- camera ---------- */
+.cam-wrap { position: relative; aspect-ratio: 4 / 3; background: #0b1120; border-radius: var(--r); overflow: hidden; }
+.cam-wrap video, .cam-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.cam-wrap.mirror video, .cam-wrap.mirror canvas { transform: scaleX(-1); }
+.cam-empty { position: absolute; inset: 0; display: grid; place-content: center; gap: 6px; text-align: center; padding: 16px; color: #cbd5e1; font-size: 0.86rem; }
+.cam-empty svg { width: 56px; height: 56px; margin-inline: auto; opacity: 0.8; }
+.cam-badges { position: absolute; left: 8px; right: 8px; top: 8px; display: flex; justify-content: space-between; gap: 6px; pointer-events: none; }
+.cam-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.cam-actions .btn { flex: 1 1 auto; }
+.status { margin: 0; font-size: 0.84rem; }
+
+/* ---------- stage ---------- */
+.stage-wrap { position: relative; height: clamp(340px, 58vh, 640px); border-radius: var(--r) var(--r) 0 0; overflow: hidden; background: var(--stage); }
+.stage-wrap canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.stage-wrap canvas:active { cursor: grabbing; }
+.stage-title { position: absolute; left: 14px; top: 12px; right: 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; pointer-events: none; }
+.stage-title strong { font: 800 1.3rem/1.1 var(--f-body); color: var(--ink); overflow-wrap: anywhere; }
+.stage-hint { position: absolute; right: 12px; bottom: 10px; font-size: 0.75rem; color: var(--muted); pointer-events: none; text-align: right; }
+.countdown { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; font: 800 clamp(96px, 22vh, 220px)/1 var(--f-body); color: var(--accent); text-shadow: 0 4px 0 var(--stripe-blue); }
+:root[data-a11y-theme="contrast"] .countdown { text-shadow: none; -webkit-text-stroke: 3px #ffffff; }
+.cam-wrap .countdown { color: #ffffff; font-size: 96px; text-shadow: 0 3px 16px #000; -webkit-text-stroke: 0; }
+.stripe { height: 7px; background: linear-gradient(100deg, var(--stripe-blue) 0 63.5%, var(--stripe-yellow) 63.5% 81%, var(--stripe-pink) 81% 100%); }
+.transport { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.transport input[type="range"] { flex: 1 1 160px; min-width: 120px; }
+.time { font-family: var(--f-mono); font-size: 0.82rem; font-variant-numeric: tabular-nums; color: var(--muted); min-width: 11ch; text-align: right; }
+.trimbar { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; padding: 10px 12px; border-top: 1px solid var(--line); font-size: 0.84rem; }
+.trimbar b { font-size: 0.82rem; }
+.trimbar output { font-family: var(--f-mono); font-size: 0.8rem; color: var(--muted); min-width: 6ch; text-align: right; }
+.skinbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--line); font-size: 0.86rem; }
+.skinbar .spacer { margin-left: auto; }
+
+/* ---------- export ---------- */
+.export { padding: 12px 16px 16px; display: grid; gap: 10px; }
+.id-line { margin: 0; font-size: 0.78rem; color: var(--muted); display: flex; gap: 6px; flex-wrap: wrap; }
+.id-line .mono { color: var(--soft); overflow-wrap: anywhere; }
+.row-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.row-btns .btn { flex: 1 1 auto; }
+
+/* ---------- display & language panel ---------- */
+.prefs-glyph { font-weight: 800; letter-spacing: -0.02em; }
+.prefs { position: absolute; z-index: 20; top: calc(64px + env(safe-area-inset-top, 0px)); right: max(16px, calc((100% - 1760px) / 2 + 20px)); width: min(360px, calc(100% - 32px));
+  background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 16px 40px rgba(15, 23, 42, 0.25); padding: 14px 16px 16px; display: grid; gap: 12px; }
+.prefs-head { display: flex; align-items: center; justify-content: space-between; }
+.prefs fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.prefs legend { font-size: 0.82rem; font-weight: 700; padding: 0; margin-bottom: 5px; }
+.prefs-note { margin: 0; font-size: 0.8rem; }
+.keys { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; font-size: 0.82rem; }
+.keys dt { white-space: nowrap; }
+.keys dd { margin: 0; color: var(--muted); }
+
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: #1d293d; color: #ffffff; border: 1px solid #334155; padding: 10px 14px; border-radius: 8px; font-size: 0.88rem; max-width: calc(100% - 32px); box-shadow: 0 6px 24px rgba(0,0,0,0.25); z-index: 10; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+<a class="skip" href="#capture-h" data-i18n>Skip to the camera</a>
+
+<header class="topbar">
+ <div class="topbar-inner">
+  <div class="brand">
+    <svg viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges">
+      <rect x="6" y="1" width="4" height="4" fill="#d9a47e"/><rect x="6" y="1" width="4" height="1" fill="#4a2f22"/>
+      <rect x="7" y="3" width="1" height="1" fill="#1d293d"/><rect x="9" y="3" width="1" height="1" fill="#1d293d"/>
+      <rect x="6" y="5" width="4" height="5" fill="#00aef0"/>
+      <rect x="10" y="4" width="1" height="2" fill="#00aef0"/><rect x="11" y="2" width="1" height="3" fill="#d9a47e"/>
+      <rect x="4" y="5" width="2" height="2" fill="#00aef0"/><rect x="3" y="7" width="2" height="2" fill="#d9a47e"/>
+      <rect x="6" y="10" width="2" height="5" fill="#36395c"/><rect x="8" y="10" width="2" height="4" fill="#36395c"/><rect x="10" y="13" width="2" height="2" fill="#36395c"/>
+      <rect x="11" y="1" width="2" height="2" fill="#ed287f"/><rect x="2" y="8" width="2" height="2" fill="#ed287f"/>
+      <rect x="7" y="9" width="2" height="2" fill="#febd01"/><rect x="11" y="14" width="2" height="2" fill="#ed287f"/>
+    </svg>
+    <div>
+      <h1>Cleverlike <span>Mocap Maker</span></h1>
+      <p data-i18n>Act it out on camera, get a Minecraft Education animation</p>
+    </div>
+  </div>
+  <button class="btn" id="prefs-btn" data-tip="Change the language, colors and text size." type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="prefs"><span aria-hidden="true" class="prefs-glyph">Aa</span> <span data-i18n>Display &amp; language</span></button>
+  <a class="btn" id="emote-link" href="https://xriverlikex.github.io/CleverlikeEmotes/" target="_blank" rel="noopener" data-tip="Turn your animations into an emote add-on." data-i18n>Open the Emote Tool</a>
+ </div>
+</header>
+
+<div class="prefs" id="prefs" role="dialog" aria-modal="false" aria-labelledby="prefs-h" hidden>
+  <div class="prefs-head"><h2 class="label" id="prefs-h" data-i18n>Display &amp; language</h2>
+    <button class="btn ghost icon" type="button" id="prefs-close" data-tip="Close this panel." aria-label="Close" data-i18n-attr="aria-label">✕</button></div>
+  <label class="field"><span data-i18n>Language</span><select id="pref-lang"></select></label>
+  <fieldset class="field"><legend data-i18n>Theme</legend>
+    <div class="seg seg-wrap" role="radiogroup" id="pref-theme">
+      <button type="button" role="radio" data-theme-opt="system" data-tip="Match your device's light or dark setting." data-i18n>System</button>
+      <button type="button" role="radio" data-theme-opt="light" data-tip="Soft light gray background." data-i18n>Light</button>
+      <button type="button" role="radio" data-theme-opt="dark" data-tip="Dark background, easier on the eyes in a dim room." data-i18n>Dark</button>
+      <button type="button" role="radio" data-theme-opt="contrast" data-tip="Black and white with bold outlines, the easiest to read." data-i18n>High contrast</button>
+    </div>
+  </fieldset>
+  <fieldset class="field"><legend data-i18n>Text size</legend>
+    <div class="seg" role="radiogroup" id="pref-text">
+      <button type="button" role="radio" data-text-opt="normal" data-tip="Standard text size." data-i18n>Normal</button>
+      <button type="button" role="radio" data-text-opt="large" data-tip="Make all text bigger." data-i18n>Large</button>
+    </div>
+  </fieldset>
+  <fieldset class="field"><legend data-i18n>Sound</legend>
+    <label class="switch"><input type="checkbox" role="switch" id="pref-beep" checked>
+      <span><b data-i18n>Countdown beeps</b><small data-i18n>Hear when recording starts, even from across the room.</small></span></label>
+  </fieldset>
+  <fieldset class="field"><legend data-i18n>Keyboard shortcuts</legend>
+    <dl class="keys">
+      <dt><kbd>R</kbd></dt><dd data-i18n>Start or stop recording</dd>
+      <dt><kbd>Space</kbd></dt><dd data-i18n>Play or pause the preview</dd>
+      <dt><kbd>←</kbd> <kbd>→</kbd></dt><dd data-i18n>Turn the 3D model (when it has focus)</dd>
+      <dt><kbd>+</kbd> <kbd>−</kbd></dt><dd data-i18n>Zoom the 3D model</dd>
+    </dl>
+  </fieldset>
+  <p class="muted prefs-note" data-i18n>These settings are shared with the Cleverlike Emote Tool.</p>
+</div>
+
+<main class="workspace">
+  <!-- ======== Left: camera ======== -->
+  <div class="col col-left">
+    <section class="pane capture-pane" aria-labelledby="capture-h">
+      <header><h2 class="label" id="capture-h" tabindex="-1" data-i18n>Camera</h2><span class="pill" id="track-pill" aria-live="polite"><span class="dot" aria-hidden="true"></span><span id="track-text" data-i18n>Off</span></span></header>
+      <div class="fields">
+        <div class="cam-wrap" id="cam-wrap">
+          <video id="video" playsinline muted aria-label="Camera view with your tracked body" data-i18n-attr="aria-label"></video>
+          <canvas id="overlay" aria-hidden="true"></canvas>
+          <div class="cam-empty" id="cam-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2.5" y="6" width="14" height="12" rx="2"/><path d="M16.5 10.5 21.5 7.5v9l-5-3"/></svg>
+            <span data-i18n>Start your camera or load a video.</span>
+            <span data-i18n>Stand back so your whole body is in the picture.</span>
+          </div>
+          <div class="cam-badges"><span></span><span class="pill rec" id="rec-pill" hidden><span class="dot" aria-hidden="true"></span><span id="rec-time">REC 0.0 s</span></span></div>
+          <div class="countdown" id="cam-countdown" aria-hidden="true" hidden></div>
+        </div>
+        <div class="cam-actions">
+          <button class="btn" type="button" id="cam-btn" data-tip="Turn on your webcam." data-i18n>Start camera</button>
+          <button class="btn" type="button" id="file-btn" data-tip="Use a video you filmed before, like one from a phone." data-i18n>Load a video</button>
+          <input type="file" id="file-input" accept="video/*" hidden>
+        </div>
+        <button class="btn primary big" type="button" id="rec-btn" disabled aria-keyshortcuts="R" data-tip="Count down, then record your move."><span id="rec-label" data-i18n>Record</span> <kbd aria-hidden="true">R</kbd></button>
+        <p class="status muted" id="status" role="status"></p>
+        <div class="two">
+          <label class="field"><span data-i18n>Countdown</span>
+            <select id="opt-countdown"><option value="0" data-i18n>None</option><option value="3" selected data-i18n>3 seconds</option><option value="5" data-i18n>5 seconds</option><option value="10" data-i18n>10 seconds</option></select></label>
+          <label class="field"><span data-i18n>Record for</span>
+            <select id="opt-duration"><option value="2" data-i18n>2 seconds</option><option value="3" data-i18n>3 seconds</option><option value="5" selected data-i18n>5 seconds</option><option value="8" data-i18n>8 seconds</option><option value="12" data-i18n>12 seconds</option><option value="0" data-i18n>Until I press Stop</option></select></label>
+        </div>
+        <div class="two">
+          <label class="field"><span data-i18n>Tracking</span>
+            <select id="opt-model" data-tip="Accurate is smoother but needs a faster computer."><option value="lite" data-i18n>Fast</option><option value="full" selected data-i18n>Balanced</option><option value="heavy" data-i18n>Accurate</option></select></label>
+          <label class="field"><span data-i18n>Video speed</span>
+            <select id="opt-rate" data-tip="Slower playback lets the tracker see more frames of a loaded video."><option value="1">1×</option><option value="0.5" selected>0.5×</option><option value="0.25">0.25×</option></select></label>
+        </div>
+        <details class="help">
+          <summary data-i18n>Tips for a clean capture</summary>
+          <ul class="steps">
+            <li data-i18n="html">Stand <b>2–3 meters</b> from the camera, facing it, with your whole body in the picture.</li>
+            <li data-i18n>Bright, even light and a plain background help the most. Baggy clothes can hide your elbows and knees.</li>
+            <li data-i18n>Minecraft arms and legs have no elbows or knees, so a bent arm becomes one straight arm pointing at your hand.</li>
+            <li data-i18n>Act in place. Walking, jumping and turning all the way around are not recorded.</li>
+            <li data-i18n>For kicks and knee-ups, turning about 45° from the camera lets it see how high your leg goes.</li>
+            <li data-i18n>Start and end with your arms relaxed at your sides so the move blends in smoothly.</li>
+          </ul>
+        </details>
+      </div>
+    </section>
+  </div>
+
+  <!-- ======== Stage: 3D preview ======== -->
+  <section class="stage pane" aria-labelledby="stage-name">
+    <div class="stage-wrap">
+      <canvas id="stage" tabindex="0" aria-label="3D player model. It copies your moves, then plays your recording. Arrow keys turn it." data-i18n-attr="aria-label"></canvas>
+      <div class="stage-title"><strong id="stage-name" data-i18n>Live view</strong><span class="pill" id="stage-pill"></span><span class="pill move" id="move-pill" hidden></span></div>
+      <div class="countdown" id="stage-countdown" aria-hidden="true" hidden></div>
+      <span class="stage-hint" data-i18n>Drag to turn · scroll to zoom</span>
+    </div>
+    <div class="stripe" aria-hidden="true"></div>
+    <div class="transport">
+      <button class="btn icon" type="button" id="play" disabled data-tip="Play or pause the preview." aria-label="Play" aria-keyshortcuts="Space">▶</button>
+      <input type="range" id="scrub" min="0" max="1" step="0.01" value="0" disabled aria-label="Animation time" data-i18n-attr="aria-label">
+      <span class="time" id="time" aria-hidden="true">–</span>
+      <button class="btn ghost" type="button" id="reset-view" data-tip="Put the camera back where it started." data-i18n>Reset view</button>
+    </div>
+    <div class="trimbar" role="group" aria-labelledby="trim-h">
+      <b id="trim-h" data-i18n>Trim</b><span class="muted" style="grid-column:2/4;font-size:.8rem" data-i18n>Cut extra time off the start and end.</span>
+      <span data-i18n>Start</span><input type="range" id="trim-start" min="0" max="1" step="0.05" value="0" disabled aria-label="Trim start" data-i18n-attr="aria-label"><output id="trim-start-out">0.00 s</output>
+      <span data-i18n>End</span><input type="range" id="trim-end" min="0" max="1" step="0.05" value="1" disabled aria-label="Trim end" data-i18n-attr="aria-label"><output id="trim-end-out">0.00 s</output>
+    </div>
+    <div class="skinbar">
+      <span class="muted" data-i18n>Preview skin</span>
+      <div class="seg" role="group" aria-label="Arm width" data-i18n-attr="aria-label">
+        <button type="button" id="arms-classic" data-tip="Preview with wide arms, like Steve." aria-pressed="true" data-i18n>Classic arms</button>
+        <button type="button" id="arms-slim" data-tip="Preview with slim arms, like Alex." aria-pressed="false" data-i18n>Slim arms</button>
+      </div>
+      <div class="seg" role="group" aria-label="Camera side" data-i18n-attr="aria-label">
+        <button type="button" id="view-front" aria-pressed="true" data-tip="Look at the model's face." data-i18n>Front</button>
+        <button type="button" id="view-back" aria-pressed="false" data-tip="Look from behind, so the model moves the same way you do." data-i18n>Behind</button>
+      </div>
+      <button class="btn spacer" type="button" id="live-btn" disabled data-tip="Let the model copy your camera again. Your recording is kept." data-i18n>Back to live view</button>
+    </div>
+  </section>
+
+  <!-- ======== Right: clean-up + download ======== -->
+  <div class="col col-right">
+    <section class="pane clip-pane" aria-labelledby="clip-h">
+      <header><h2 class="label" id="clip-h" data-i18n>Clean up</h2></header>
+      <div class="fields">
+        <label class="field"><span class="field-head"><span data-i18n>Smoothing</span><output id="smooth-out">6</output></span>
+          <input type="range" id="opt-smooth" min="0" max="12" step="0.5" value="6" data-tip="Higher removes shaking but softens fast moves."></label>
+        <label class="field"><span class="field-head"><span data-i18n>Simplify keyframes</span><output id="tol-out">1°</output></span>
+          <input type="range" id="opt-tol" min="0" max="5" step="0.5" value="1" data-tip="Drops keyframes that change less than this. Makes the file smaller."></label>
+        <label class="field"><span class="field-head"><span data-i18n>Head nod strength</span><output id="nod-out">1.5×</output></span>
+          <input type="range" id="opt-nod" min="0.5" max="3" step="0.1" value="1.5" data-tip="Makes looking up and down bigger or smaller."></label>
+        <label class="field"><span class="field-head"><span data-i18n>Head tilt fix</span><output id="pitch-out">0°</output></span>
+          <input type="range" id="opt-pitch" min="-20" max="20" step="1" value="0" data-tip="Raise this if the model looks down when you look straight ahead."></label>
+        <label class="field"><span data-i18n>Keyframes per second</span>
+          <select id="opt-fps"><option value="10">10</option><option value="20" selected data-i18n>20 (one per game tick)</option><option value="30">30</option></select></label>
+        <div class="field"><span data-i18n>Arms point at</span>
+          <div class="seg" role="group" aria-label="Arms point at" data-i18n-attr="aria-label">
+            <button type="button" data-arm="auto" aria-pressed="true" data-tip="Straight arm: points at the hand. Bent elbow: follows the forearm and slides back, like a punch wind-up." data-i18n>Auto</button>
+            <button type="button" data-arm="wrist" aria-pressed="false" data-tip="Best for waves and gestures." data-i18n>Hands</button>
+            <button type="button" data-arm="elbow" aria-pressed="false" data-tip="Follow the upper arm instead." data-i18n>Elbows</button>
+          </div></div>
+        <div class="field"><span data-i18n>Legs point at</span>
+          <div class="seg" role="group" aria-label="Legs point at" data-i18n-attr="aria-label">
+            <button type="button" data-leg="auto" aria-pressed="true" data-tip="Straight leg: points at the foot, like a kick. Bent knee: the leg lifts up, like a knee raise." data-i18n>Auto</button>
+            <button type="button" data-leg="end" aria-pressed="false" data-tip="The leg always points at the foot." data-i18n>Feet</button>
+            <button type="button" data-leg="mid" aria-pressed="false" data-tip="The leg always points at the knee." data-i18n>Knees</button>
+          </div></div>
+        <div class="field"><span data-i18n>Lean from</span>
+          <div class="seg" role="group" aria-label="Lean from" data-i18n-attr="aria-label">
+            <button type="button" data-lean="body" aria-pressed="false" data-tip="Moves the body bone, like most Minecraft animations." data-i18n>Neck</button>
+            <button type="button" data-lean="waist" aria-pressed="true" data-tip="Moves the waist bone, so bows and leans bend at the hips." data-i18n>Hips</button>
+          </div></div>
+        <label class="switch"><input type="checkbox" role="switch" id="opt-slide" checked><span><b data-i18n>Slide bent arms and legs</b><small data-i18n>Like Minecraft animations: a raised knee lifts the whole leg, and a pulled-back fist slides the arm back.</small></span></label>
+        <label class="switch"><input type="checkbox" role="switch" id="opt-plant" checked><span><b data-i18n>Plant feet</b><small data-i18n>A leg that isn't lifted stays still on the ground.</small></span></label>
+        <label class="switch"><input type="checkbox" role="switch" id="opt-mirror" checked><span><b data-i18n>Mirror</b><small data-i18n>Swap left and right.</small></span></label>
+        <label class="switch"><input type="checkbox" role="switch" id="opt-flip"><span><b data-i18n>Flip head turns</b><small data-i18n>Use this if the head turns the wrong way in the game.</small></span></label>
+        <fieldset class="field"><legend data-i18n>Body parts to include</legend>
+          <div class="checks" id="bone-checks">
+            <label><input type="checkbox" data-bone="head" checked><span data-i18n>Head</span></label>
+            <label><input type="checkbox" data-bone="body" checked><span data-i18n>Body</span></label>
+            <label><input type="checkbox" data-bone="rightArm" checked><span data-i18n>Right arm</span></label>
+            <label><input type="checkbox" data-bone="leftArm" checked><span data-i18n>Left arm</span></label>
+            <label><input type="checkbox" data-bone="rightLeg" checked><span data-i18n>Right leg</span></label>
+            <label><input type="checkbox" data-bone="leftLeg" checked><span data-i18n>Left leg</span></label>
+          </div></fieldset>
+      </div>
+    </section>
+
+    <section class="pane export-pane" aria-labelledby="export-h">
+      <header><h2 class="label" id="export-h" data-i18n>Download</h2></header>
+      <div class="export">
+        <label class="field"><span data-i18n>Animation name</span><input type="text" id="opt-name" maxlength="40" autocomplete="off" spellcheck="false" value="my_move" data-tip="Letters, numbers and underscores. Also used for the file name."></label>
+        <p class="id-line"><span data-i18n>ID</span> <span class="mono" id="anim-id">animation.mocap.my_move</span></p>
+        <div class="field"><span data-i18n>When it plays</span>
+          <div class="seg seg-wrap" role="group" aria-label="When it plays" data-i18n-attr="aria-label">
+            <button type="button" data-loop="false" aria-pressed="true" data-tip="Plays one time, then stops." data-i18n>Once</button>
+            <button type="button" data-loop="true" aria-pressed="false" data-tip="Repeats until the player moves." data-i18n>Loop</button>
+            <button type="button" data-loop="hold_on_last_frame" aria-pressed="false" data-tip="Plays once and stays in the last pose." data-i18n>Hold last pose</button>
+          </div></div>
+        <button class="btn primary big" type="button" id="download" disabled data-tip="Save the animation file to your computer." data-i18n>Download animation</button>
+        <div class="row-btns"><button class="btn" type="button" id="copy" disabled data-tip="Copy the animation's code to paste somewhere else." data-i18n>Copy JSON</button></div>
+        <p class="muted" id="export-stats" style="margin:0;font-size:.82rem" aria-live="polite" data-i18n>Record a move first.</p>
+        <details class="help" open>
+          <summary data-i18n>Use it in Minecraft Education</summary>
+          <ol class="steps">
+            <li data-i18n="html"><b>Download</b> the <span class="mono">.animation.json</span> file.</li>
+            <li data-i18n="html">Open the <b>Cleverlike Emote Tool</b> and choose <b>Add animation files</b>.</li>
+            <li data-i18n>Name your emote, then download the add-on and open it on the Minecraft Education computer.</li>
+          </ol>
+        </details>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div class="sr-only" id="announcer" aria-live="assertive"></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script id="mocap-math">
+/* Cleverlike Mocap Maker — motion math (no DOM, testable in Node)
+ *
+ * Pipeline for a recording:
+ *   raw tracker frames → fix left/right swaps → fill low-visibility gaps → remove outlier spikes
+ *   → keep every bone the same length (and recover depth from foreshortening)
+ *   → adaptive zero-lag smoothing (One Euro, run forwards and backwards)
+ *   → resample to the keyframe rate → solve bone rotations → joint limits → keyframes.
+ *
+ * Body frames use the Minecraft model axes: X = own left, Y = down, Z = back (front = -Z),
+ * the right-handed space Bedrock/Java bone rotations are defined in. R = Rz·Ry·Rx (X first).
+ */
+(function (G) {
+  const I = { nose: 0, lEar: 7, rEar: 8, lSh: 11, rSh: 12, lEl: 13, rEl: 14, lWr: 15, rWr: 16,
+              lHip: 23, rHip: 24, lKnee: 25, rKnee: 26, lAnk: 27, rAnk: 28 };
+  const PAIRS = [[1,4],[2,5],[3,6],[7,8],[9,10],[11,12],[13,14],[15,16],[17,18],[19,20],
+                 [21,22],[23,24],[25,26],[27,28],[29,30],[31,32]];
+  const ARM_PAIRS = [[13,14],[15,16],[17,18],[19,20],[21,22]];
+  const LEG_PAIRS = [[25,26],[27,28],[29,30],[31,32]];
+  const CHAINS = [[11,13,15],[12,14,16],[23,25,27],[24,26,28]];
+  const LIMB_IDX = [13,14,15,16,25,26,27,28];
+  // Joints that move quickly and need peak-keeping smoothing: arms, legs and the face points (for nods).
+  const FAST_IDX = [0,1,2,3,4,5,6,9,10,13,14,15,16,17,18,19,20,21,22,25,26,27,28,29,30,31,32];
+  const FACE = [0, 2, 5, 9, 10];
+  const FAST_SET = new Set(FAST_IDX);
+  const BONES = ['head','body','rightArm','leftArm','rightLeg','leftLeg'];
+  const R2D = 180 / Math.PI;
+
+  /* ---------- vectors ---------- */
+  const P = (w, i) => [w[i*3], w[i*3+1], w[i*3+2]];
+  const setP = (w, i, p) => { w[i*3] = p[0]; w[i*3+1] = p[1]; w[i*3+2] = p[2]; };
+  const sub = (a, b) => [a[0]-b[0], a[1]-b[1], a[2]-b[2]];
+  const add = (a, b) => [a[0]+b[0], a[1]+b[1], a[2]+b[2]];
+  const mid = (a, b) => [(a[0]+b[0])/2, (a[1]+b[1])/2, (a[2]+b[2])/2];
+  const scale = (a, s) => [a[0]*s, a[1]*s, a[2]*s];
+  const dot = (a, b) => a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+  const cross = (a, b) => [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+  const len = (a) => Math.hypot(a[0], a[1], a[2]);
+  const norm = (a) => scale(a, 1 / (len(a) || 1e-9));
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const clamp1 = (v) => clamp(v, -1, 1);
+  const smoothstep = (e0, e1, x) => { const t = clamp((x - e0) / (e1 - e0), 0, 1); return t * t * (3 - 2 * t); };
+  const angleBetween = (a, b) => Math.acos(clamp1(dot(norm(a), norm(b)))) * R2D;
+  const dist = (w, i, u, j) => Math.hypot(w[i*3]-u[j*3], w[i*3+1]-u[j*3+1], w[i*3+2]-u[j*3+2]);
+
+  /* ---------- frames + rotations ---------- */
+  function frameLD(L, Dhint) {            // from a left vector + a rough down vector
+    L = norm(L);
+    const D = norm(sub(Dhint, scale(L, dot(Dhint, L))));
+    return [L, D, cross(L, D)];
+  }
+  function frameLB(L, Bhint) {            // from a left vector + a rough back vector
+    L = norm(L);
+    const B = norm(sub(Bhint, scale(L, dot(Bhint, L))));
+    return [L, cross(B, L), B];
+  }
+  const rel = (Pf, Cf) => [0,1,2].map(i => [0,1,2].map(j => dot(Pf[i], Cf[j])));
+  const local = (F, v) => [dot(F[0], v), dot(F[1], v), dot(F[2], v)];
+  function eulerZYX(R) {
+    return [Math.atan2(R[2][1], R[2][2]) * R2D, Math.asin(clamp1(-R[2][0])) * R2D, Math.atan2(R[1][0], R[0][0]) * R2D];
+  }
+  /** Shortest (twist-free) rotation that turns a limb hanging straight down (+Y) toward d. */
+  function swingEuler(d) {
+    d = norm(d);
+    const c = d[1];
+    if (c > 0.999999) return [0, 0, 0];
+    let k = [d[2], 0, -d[0]];                       // (0,1,0) × d
+    if (Math.hypot(k[0], k[2]) < 1e-6) k = [1, 0, 0];
+    k = norm(k);
+    const th = Math.acos(clamp1(c)), s = Math.sin(th), C = Math.cos(th), v = 1 - C;
+    const R = [
+      [C + k[0]*k[0]*v,        k[0]*k[1]*v - k[2]*s, k[0]*k[2]*v + k[1]*s],
+      [k[1]*k[0]*v + k[2]*s,   C + k[1]*k[1]*v,      k[1]*k[2]*v - k[0]*s],
+      [k[2]*k[0]*v - k[1]*s,   k[2]*k[1]*v + k[0]*s, C + k[2]*k[2]*v],
+    ];
+    return eulerZYX(R);
+  }
+
+  /* ---------- clean-up steps ---------- */
+  function swapPairs(w, pairs) {
+    for (const [a, b] of pairs) for (let k = 0; k < 3; k++) { const t = w[a*3+k]; w[a*3+k] = w[b*3+k]; w[b*3+k] = t; }
+  }
+  function swapVis(v, pairs) { for (const [a, b] of pairs) { const t = v[a]; v[a] = v[b]; v[b] = t; } }
+  function pairCost(cur, prev, pairs, swapped) {
+    let c = 0;
+    for (const [a, b] of pairs) c += swapped ? dist(cur, a, prev, b) + dist(cur, b, prev, a) : dist(cur, a, prev, a) + dist(cur, b, prev, b);
+    return c;
+  }
+  /** The tracker sometimes mixes up left and right (legs most of all). Undo a swap when the
+   *  swapped labels line up with the previous frame much better than the given ones. */
+  /** How much the arm/leg bone lengths differ from the previous frame (0 = identical). */
+  function lengthChange(w, prev, vis) {
+    let e = 0;
+    for (const ch of CHAINS) for (let s = 0; s < 2; s++) {
+      const a = ch[s], b = ch[s+1], lp = dist(prev, a, prev, b);
+      if (vis && (vis[a] < 0.4 || vis[b] < 0.4)) continue;     // ignore points the camera can't see
+      e += Math.abs(dist(w, a, w, b) - lp) / (lp + 1e-3);
+    }
+    return e;
+  }
+  function swap2(n2, pairs) { for (const [a, b] of pairs) for (let k = 0; k < 2; k++) { const t = n2[a*2+k]; n2[a*2+k] = n2[b*2+k]; n2[b*2+k] = t; } }
+  function fixSwapsFrame(cur, prev, vis, img) {
+    for (const pairs of [PAIRS, ARM_PAIRS, LEG_PAIRS]) {
+      // judge only by points the camera can actually see (it invents the rest)
+      const seen = vis ? pairs.filter(([a, b]) => vis[a] >= 0.4 && vis[b] >= 0.4) : pairs;
+      if (!seen.length) continue;
+      const keep = pairCost(cur, prev, seen, false), sw = pairCost(cur, prev, seen, true);
+      if (!(sw < keep * 0.6 && keep - sw > 0.04 * seen.length)) continue;
+      // Hands crossing the body (a dab, folded arms) can look like a swap. Only accept a swap that
+      // keeps every bone a believable length; a real mix-up makes the bones stretch across the body.
+      if (pairs !== PAIRS) {
+        const test = Float32Array.from(cur); swapPairs(test, pairs);
+        if (lengthChange(test, prev, vis) > lengthChange(cur, prev, vis) - 0.15) continue;
+      }
+      swapPairs(cur, pairs); if (vis) swapVis(vis, pairs); if (img) swap2(img, pairs);
+    }
+  }
+  function fixSwaps(frames, vis, imgs) { for (let t = 1; t < frames.length; t++) fixSwapsFrame(frames[t], frames[t-1], vis && vis[t], imgs && imgs[t]); }
+
+  /** Arms and legs the camera can't see well are filled in from the frames around them. */
+  function fillGaps(frames, vis, thr = 0.35, maxGap = 30) {
+    const n = frames.length;
+    for (const i of [...LIMB_IDX, 0, 2, 5, 7, 8, 9, 10]) {
+      let t = 0;
+      while (t < n) {
+        if (vis[t][i] >= thr) { t++; continue; }
+        let e = t; while (e < n && vis[e][i] < thr) e++;
+        const a = t - 1, b = e;
+        if (e - t <= maxGap && (a >= 0 || b < n)) {
+          for (let k = t; k < e; k++) {
+            const u = a < 0 ? 1 : b >= n ? 0 : (k - a) / (b - a);
+            const A = a < 0 ? frames[b] : frames[a], B = b >= n ? frames[a] : frames[b];
+            for (let q = 0; q < 3; q++) frames[k][i*3+q] = A[i*3+q] + (B[i*3+q] - A[i*3+q]) * u;
+            if (a >= 0 && b < n && e - t <= 15) vis[k][i] = Math.max(vis[k][i], 0.7);   // a short blink: trust the fill
+          }
+        }
+        t = e;
+      }
+    }
+  }
+
+  /** Replace single-frame spikes with the local median (Hampel filter). */
+  function hampel(frames, half = 3, k = 3, floor = 0.015) {
+    const n = frames.length; if (n < 2 * half + 1) return frames;
+    const out = frames.map(f => Float32Array.from(f)), m = 2 * half + 1, win = new Array(m), dev = new Array(m);
+    for (let q = 0; q < frames[0].length; q++) {
+      for (let t = 0; t < n; t++) {
+        for (let j = -half; j <= half; j++) win[j + half] = frames[clamp(t + j, 0, n - 1)][q];
+        const med = win.slice().sort((x, y) => x - y)[half];
+        for (let j = 0; j < m; j++) dev[j] = Math.abs(win[j] - med);
+        const mad = dev.slice().sort((x, y) => x - y)[half] * 1.4826;
+        if (Math.abs(frames[t][q] - med) > k * mad + floor) out[t][q] = med;
+      }
+    }
+    return out;
+  }
+
+  /** Robust length of every arm and leg bone across the recording. */
+  function boneLengths(frames, vis) {
+    const L = {};
+    for (const ch of CHAINS) for (let s = 0; s < 2; s++) {
+      const a = ch[s], b = ch[s+1];
+      let fs = vis ? frames.filter((f, t) => vis[t][a] > 0.6 && vis[t][b] > 0.6) : frames;
+      if (fs.length < 5) fs = frames;
+      const v = fs.map(f => dist(f, a, f, b)).sort((x, y) => x - y);
+      L[a + '-' + b] = v[Math.floor(v.length * 0.6)] || 0.3;
+    }
+    return L;
+  }
+  /** Keep joints joined at a constant bone length. When a bone looks short on screen it must be
+   *  pointing toward or away from the camera, so its depth is recovered from that foreshortening
+   *  (the tracker's own depth guess is the weakest part of its output). */
+  function constrainFrame(w, lens, signRef, trust = 0.7) {
+    for (const ch of CHAINS) {
+      let A = P(w, ch[0]);
+      for (let s = 0; s < 2; s++) {
+        const a = ch[s], b = ch[s+1], L = lens[a + '-' + b];
+        const d = sub(P(w, b), P(w, a));
+        const dl = len(d) || 1e-6;
+        const dxy = Math.hypot(d[0], d[1]), r = dxy / L;
+        const zm = d[2] * L / dl;
+        const ref = signRef ? signRef(a, b) : d[2];
+        const sign = Math.abs(ref) > 0.06 * L ? Math.sign(ref) : Math.sign(d[2] || 1);
+        const zfs = sign * Math.sqrt(Math.max(0, L * L - Math.min(dxy, L) ** 2));
+        const wfs = smoothstep(0.92, 0.55, r) * trust;
+        let v = [d[0], d[1], zm + (zfs - zm) * wfs];
+        v = scale(v, L / (len(v) || 1e-6));
+        const B = add(A, v);
+        setP(w, b, B); A = B;
+      }
+    }
+  }
+
+  /* One Euro filter: smooths hard while you hold still, follows quickly when you move fast. */
+  const alpha = (cut, dt) => { const tau = 1 / (2 * Math.PI * cut); return 1 / (1 + tau / dt); };
+  function oneEuroPass(frames, times, minCut, beta, reverse) {
+    // One cutoff per joint, driven by how fast the joint moves on screen (x, y). Depth (z) is the
+    // noisiest coordinate, so it never loosens the filter by itself.
+    const n = frames.length, out = new Array(n), sp = new Float64Array(33);
+    let xPrev = null, tPrev = 0;
+    for (let s = 0; s < n; s++) {
+      const t = reverse ? n - 1 - s : s, x = frames[t], y = new Float32Array(99);
+      if (!xPrev) { y.set(x); xPrev = y; tPrev = times[t]; out[t] = y; continue; }
+      const dt = Math.max(1 / 120, Math.abs(times[t] - tPrev)), aD = alpha(1.0, dt);
+      for (let i = 0; i < 33; i++) {
+        const v = Math.hypot(x[i*3] - xPrev[i*3], x[i*3+1] - xPrev[i*3+1]) / dt;
+        sp[i] += aD * (v - sp[i]);
+        const a = alpha(minCut + beta * sp[i], dt), az = alpha(minCut * 0.6 + beta * sp[i], dt);
+        y[i*3] = xPrev[i*3] + a * (x[i*3] - xPrev[i*3]);
+        y[i*3+1] = xPrev[i*3+1] + a * (x[i*3+1] - xPrev[i*3+1]);
+        y[i*3+2] = xPrev[i*3+2] + az * (x[i*3+2] - xPrev[i*3+2]);
+      }
+      xPrev = y; tPrev = times[t]; out[t] = y;
+    }
+    return out;
+  }
+  /** Run the filter both ways and average: same smoothing, but no lag. */
+  function zeroLagSmooth(frames, times, minCut, beta) {
+    const f = oneEuroPass(frames, times, minCut, beta, false), b = oneEuroPass(frames, times, minCut, beta, true);
+    return f.map((x, t) => x.map((v, q) => (v + b[t][q]) / 2));
+  }
+  function gaussian(frames, sigma) {
+    if (sigma <= 0.01 || frames.length < 3) return frames;
+    const r = Math.ceil(sigma * 2.5), k = [];
+    for (let i = -r; i <= r; i++) k.push(Math.exp(-(i * i) / (2 * sigma * sigma)));
+    const n = frames.length;
+    return frames.map((_, t) => {
+      const o = new Float32Array(99); let ws = 0;
+      for (let i = -r; i <= r; i++) { const f = frames[clamp(t + i, 0, n - 1)], wg = k[i + r]; ws += wg; for (let q = 0; q < 99; q++) o[q] += f[q] * wg; }
+      for (let q = 0; q < 99; q++) o[q] /= ws;
+      return o;
+    });
+  }
+  /** Savitzky–Golay: fits a small curve through each window of frames, which takes the noise off
+   *  without shaving the tops off quick moves the way plain blurring does. */
+  function sgCoeffs(half, order) {
+    const m = 2 * half + 1, A = [];
+    for (let i = -half; i <= half; i++) { const r = []; for (let p = 0; p <= order; p++) r.push(i ** p); A.push(r); }
+    const n = order + 1, AtA = [...Array(n)].map((_, r) => [...Array(n)].map((_, c) => A.reduce((s, row) => s + row[r] * row[c], 0)));
+    const inv = [...Array(n)].map((_, r) => [...Array(n)].map((_, c) => (r === c ? 1 : 0)));
+    for (let c = 0; c < n; c++) {                       // Gauss–Jordan
+      let piv = c; for (let r = c + 1; r < n; r++) if (Math.abs(AtA[r][c]) > Math.abs(AtA[piv][c])) piv = r;
+      [AtA[c], AtA[piv]] = [AtA[piv], AtA[c]]; [inv[c], inv[piv]] = [inv[piv], inv[c]];
+      const d = AtA[c][c]; for (let k = 0; k < n; k++) { AtA[c][k] /= d; inv[c][k] /= d; }
+      for (let r = 0; r < n; r++) if (r !== c) { const f = AtA[r][c]; for (let k = 0; k < n; k++) { AtA[r][k] -= f * AtA[c][k]; inv[r][k] -= f * inv[c][k]; } }
+    }
+    return A.map(row => row.reduce((s, v, k) => s + v * inv[0][k], 0));
+  }
+  function savgol(frames, half, order = 3) {
+    const n = frames.length; if (half < 1 || n < 3) return frames;
+    half = Math.min(half, Math.floor((n - 1) / 2)); if (half < 1) return frames;
+    const c = sgCoeffs(half, Math.min(order, 2 * half));
+    return frames.map((_, t) => {
+      const m = frames[0].length, o = new Float32Array(m);
+      for (let j = -half; j <= half; j++) {
+        let k = t + j; if (k < 0) k = -k; if (k >= n) k = 2 * (n - 1) - k; k = clamp(k, 0, n - 1);   // mirror at the ends
+        const f = frames[k], wgt = c[j + half];
+        for (let q = 0; q < m; q++) o[q] += f[q] * wgt;
+      }
+      return o;
+    });
+  }
+  // Smoothing slider 0–6 → One Euro settings (Hz, and how fast moves loosen the filter)
+  const euroFor = (s) => ({ minCut: EURO.c / (1 + s * EURO.k), beta: EURO.b });
+  const LIVE = G.__LIVE || { c: 1.5, k: 0.35, b: 0.8, s: 0.25 };
+  const EURO = G.__EURO || { h0: 4, h1: 3, c: 1.0, k: 0.6, b: 0.3, g: 2.0 };
+
+  function mirror(w) {
+    const o = Float32Array.from(w);
+    for (let i = 0; i < 33; i++) o[i*3] = -o[i*3];
+    swapPairs(o, PAIRS);
+    return o;
+  }
+
+  /* ---------- live filter (camera preview) ---------- */
+  function LiveFilter() {
+    let prevRaw = null, lens = null, xPrev = null, tPrev = 0;
+    const sp = new Float64Array(33);
+    return {
+      reset() { prevRaw = null; lens = null; xPrev = null; sp.fill(0); },
+      push(w, vis, time, smoothing, img) {
+        w = Float32Array.from(w);
+        if (prevRaw) fixSwapsFrame(w, prevRaw, vis, img);
+        prevRaw = Float32Array.from(w);
+        const cur = boneLengths([w]);       // running bone lengths, from clearly visible limbs
+        if (!lens) lens = cur;
+        else for (const k in cur) { const [a, b] = k.split('-').map(Number); if ((vis?.[a] ?? 1) > 0.6 && (vis?.[b] ?? 1) > 0.6) lens[k] += (cur[k] - lens[k]) * 0.03; }
+        constrainFrame(w, lens, null, 0.5);
+        // Live view favours quick response: per-joint One Euro driven by on-screen speed.
+        const s = smoothing ?? 2, minCut = LIVE.c / (1 + s * LIVE.k), beta = LIVE.b;
+        if (!xPrev) { xPrev = w; tPrev = time; return w; }
+        const dt = clamp(time - tPrev, 1 / 120, 0.25), aD = alpha(1.0, dt), y = new Float32Array(99);
+        for (let i = 0; i < 33; i++) {
+          const v = Math.hypot(w[i*3] - xPrev[i*3], w[i*3+1] - xPrev[i*3+1]) / dt;
+          sp[i] += aD * (v - sp[i]);
+          const fast = FAST_SET.has(i) ? 1 : LIVE.s;
+          const a = alpha(minCut * fast + beta * sp[i], dt), az = alpha(minCut * fast * 0.6 + beta * sp[i], dt);
+          y[i*3] = xPrev[i*3] + a * (w[i*3] - xPrev[i*3]);
+          y[i*3+1] = xPrev[i*3+1] + a * (w[i*3+1] - xPrev[i*3+1]);
+          y[i*3+2] = xPrev[i*3+2] + az * (w[i*3+2] - xPrev[i*3+2]);
+        }
+        xPrev = y; tPrev = time;
+        return y;
+      },
+    };
+  }
+
+  /* ---------- solving the pose ---------- */
+  /** Where a Minecraft limb (no elbow/knee) should point. "auto": a straight limb points at the
+   *  hand/foot; the more the knee bends, the more it follows the upper part instead, so a knee
+   *  raise lifts the whole leg as high as the knee instead of halfway. */
+  function limbAim(a, b, c, mode) {
+    const upper = norm(sub(b, a)), whole = norm(sub(c, a));
+    if (mode === 'end' || mode === 'wrist') return whole;
+    if (mode === 'mid' || mode === 'elbow') return upper;
+    const wgt = smoothstep(20, 75, angleBetween(sub(b, a), sub(c, b)));
+    return norm(add(scale(whole, 1 - wgt), scale(upper, wgt)));
+  }
+  /** Minecraft arms and legs are one stiff block. To show a bent elbow or knee, animators point
+   *  the block mostly along the lower half (forearm / shin) and SLIDE it so its end lands where the
+   *  hand or foot really is: a knee lift raises the whole leg, a punch wind-up pulls the arm back.
+   *  Returns the rotation plus a position offset in Bedrock pixels ([left, up, back]). */
+  const MC_LEN = { arm: 10, leg: 12 };          // pivot → hand / foot, in model pixels
+  function limbPose(F, root, midJ, end, mode, side, kind, slide) {
+    const upper = local(F, sub(midJ, root)), lower = local(F, sub(end, midJ)), whole = local(F, sub(end, root));
+    const nu = norm(upper), nl = norm(lower), nw = norm(whole);
+    const bend = angleBetween(upper, lower);
+    let dir;
+    if (mode === 'end' || mode === 'wrist') dir = nw;
+    else if (mode === 'mid' || mode === 'elbow') dir = nu;
+    else {
+      const w = kind === 'leg' ? smoothstep(20, 75, bend) : smoothstep(25, 90, bend);
+      const bent = slide ? norm(add(scale(nl, 0.6), scale(nu, 0.4))) : nu;   // slide: follow the lower half
+      dir = norm(add(scale(nw, 1 - w), scale(bent, w)));
+    }
+    dir = kind === 'leg' ? limitLeg(dir, side) : limitArm(dir, side);
+    let t = [0, 0, 0];
+    if (slide && mode !== 'mid' && mode !== 'elbow') {
+      const L = MC_LEN[kind], real = len(upper) + len(lower) || 1;
+      t = sub(scale(whole, L / real), scale(dir, L));       // where the end should be − where it is
+      if (t[0] * side < 0) t[0] = 0;                         // never slide sideways into the body
+      if (kind === 'leg' && t[1] > 0) t[1] = 0;              // legs never slide down through the floor
+      if (kind === 'arm' && t[1] > 1.5) t[1] = 1.5;          // arms don't drop off the shoulder
+      const cap = kind === 'leg' ? 6 : 4.5, m = len(t);
+      if (m > cap) t = scale(t, cap / m);
+    }
+    return { dir, t };
+  }
+  const toBedrock3 = (t) => [t[0], -t[1], t[2]].map(v => (Math.round(v * 1000) / 1000) || 0);
+
+  /** "knee" (knee raised, lower leg hanging), "kick" (straight leg swung up) or "" */
+  function legMove(F, hip, knee, ank) {
+    const thigh = local(F, sub(knee, hip)), shin = local(F, sub(ank, knee)), whole = local(F, sub(ank, hip));
+    const bend = angleBetween(thigh, shin), thighLift = angleBetween(thigh, [0, 1, 0]), legLift = angleBetween(whole, [0, 1, 0]);
+    if (thighLift > 45 && bend > 50) return 'knee';
+    if (legLift > 35 && bend < 35) return 'kick';
+    return '';
+  }
+  // Keep limbs out of the body and out of each other
+  const limitArm = (d) => norm(d);          // arms are kept out of the body by clearArm() instead
+
+  /* ---------- keeping parts from passing through each other ----------
+   * Model pixels around the neck pivot, in the same axes as everything else (x left, y down, z back).
+   * The torso and head are boxes; an arm is a thick line from the shoulder to the hand. If an arm
+   * would sink into the head or torso, it is turned forward (and a little outward) just enough to
+   * pass in front, the way an animator keeps a dab's arm in front of the face. */
+  const TORSO_BOX = [[-4, 4], [0, 12], [-2, 2]], HEAD_BOX = [[-4, 4], [-8, 0], [-4, 4]];
+  function rotM(e) {
+    const [a, b, c] = e.map(v => v / R2D), ca = Math.cos(a), sa = Math.sin(a), cb = Math.cos(b), sb = Math.sin(b), cc = Math.cos(c), sc = Math.sin(c);
+    return [[cc*cb, cc*sb*sa - sc*ca, cc*sb*ca + sc*sa], [sc*cb, sc*sb*sa + cc*ca, sc*sb*ca - cc*sa], [-sb, cb*sa, cb*ca]];
+  }
+  const mulV = (R, v) => [R[0][0]*v[0]+R[0][1]*v[1]+R[0][2]*v[2], R[1][0]*v[0]+R[1][1]*v[1]+R[1][2]*v[2], R[2][0]*v[0]+R[2][1]*v[1]+R[2][2]*v[2]];
+  const mulTV = (R, v) => [R[0][0]*v[0]+R[1][0]*v[1]+R[2][0]*v[2], R[0][1]*v[0]+R[1][1]*v[1]+R[2][1]*v[2], R[0][2]*v[0]+R[1][2]*v[1]+R[2][2]*v[2]];
+  function boxDepth(p, box, r) {         // how deep a ball of radius r at p sinks into the box
+    let d = Infinity;
+    for (let k = 0; k < 3; k++) { const lo = box[k][0] - r, hi = box[k][1] + r; if (p[k] <= lo || p[k] >= hi) return 0; d = Math.min(d, p[k] - lo, hi - p[k]); }
+    return d;
+  }
+  function armSink(dir, t, side, headR) {
+    const R = rotM(swingEuler(dir)), pivot = [5 * side, 2, 0];
+    let worst = 0;
+    for (let s = 2; s <= 10; s += 1) {
+      const p = add(add(pivot, t), mulV(R, [side, s, 0]));          // centre line of the arm block
+      worst = Math.max(worst, boxDepth(p, TORSO_BOX, 1.9), boxDepth(mulTV(headR, p), HEAD_BOX, 1.9));
+    }
+    return worst;
+  }
+  function clearArm(dir, t, side, headE) {
+    const headR = rotM(headE);
+    const start = armSink(dir, t, side, headR);
+    if (start < 0.4) return { dir, t };
+    // One smooth path per situation (so the fix changes gently from frame to frame):
+    //  - an arm reaching across the body (a dab) keeps pointing across, slides forward to pass in
+    //    front of the face and turns forward a little;
+    //  - an arm out to the side or overhead just leans outward, like a Minecraft "arms up" pose.
+    const across = dir[0] * side < 0;
+    const at = across
+      ? (l) => ({ dir: norm(add(dir, [0, 0, -0.5 * l])), t: add(t, [0, 0, -Math.min(6, 4 * l)]) })
+      : (l) => ({ dir: norm(add(dir, [side * 0.8 * l, 0, -0.3 * l])), t });
+    let prev = 0, best = { dir, t }, bestSink = start;
+    for (let l = 0.1; l <= 4.001; l += 0.1) {
+      const q = at(l), sk = armSink(q.dir, q.t, side, headR);
+      if (sk < 0.4) {
+        let lo = prev, hi = l;          // narrow down to the smallest amount that clears
+        for (let it = 0; it < 7; it++) { const m = (lo + hi) / 2; if (armSink(at(m).dir, at(m).t, side, headR) < 0.4) hi = m; else lo = m; }
+        return at(hi);
+      }
+      if (sk < bestSink) { bestSink = sk; best = q; }
+      prev = l;
+    }
+    return best;
+  }
+
+  function limitLeg(d, side) {
+    d = norm(d);
+    if (d[0] * side < -0.3) d = norm([-0.3 * side, d[1], d[2]]);   // legs don't pass through each other
+    if (d[1] < -0.55) d = norm([d[0], -0.55, d[2]]);              // at most ~35° above level
+    if (d[2] > 0.75) d = norm([d[0], d[1], 0.75]);                  // limited swing backwards
+    return d;
+  }
+  const LIMITS = { head: [[-70, 70], [-85, 85], [-45, 45]], body: [[-35, 60], [-60, 60], [-35, 35]] };
+  const wrap = (a) => ((a + 180) % 360 + 360) % 360 - 180;
+  const limitEuler = (e, lim) => e.map((v, i) => clamp(wrap(v), lim[i][0], lim[i][1]));
+
+  function solvePose(w, o) {
+    o = o || {};
+    const g = i => P(w, i), V = i => (o.vis ? o.vis[i] : 1);
+    const hipVis = Math.min(V(I.lHip), V(I.rHip)), hipSeen = smoothstep(0.3, 0.6, hipVis);
+    const shMid = mid(g(I.lSh), g(I.rSh)), hipMid = mid(g(I.lHip), g(I.rHip));
+    // hips out of view (sitting close to the camera): assume the body is upright
+    const down = norm(add(scale(norm(sub(hipMid, shMid)), hipSeen), scale([0, 1, 0], 1 - hipSeen)));
+    const torso = frameLD(sub(g(I.lSh), g(I.rSh)), down);
+    const hips  = hipSeen > 0.01 ? frameLD(add(scale(norm(sub(g(I.lHip), g(I.rHip))), hipSeen), scale(norm(sub(g(I.lSh), g(I.rSh))), 1 - hipSeen)), [0, 1, 0])
+                                 : frameLD(sub(g(I.lSh), g(I.rSh)), [0, 1, 0]);
+    const earMid = mid(g(I.lEar), g(I.rEar));
+    const head = frameLB(sub(g(I.lEar), g(I.rEar)), sub(earMid, g(I.nose)));
+    const armMode = o.armTarget || 'auto', legMode = o.legTarget || 'auto';
+
+    // If the Body bone is switched off it stays upright in the game, so the arms and head are
+    // measured from the hips instead of the torso. Otherwise a bow would swing the arms forward.
+    const upper = o.bodyOff ? hips : torso;
+    let he = eulerZYX(rel(upper, head));
+    // Nods: how far the face sits below/above the ear line. Uses up/down distances (reliable)
+    // instead of depth (unreliable), measured from a calibrated neutral and scaled up a little.
+    he[0] = (headPitchRaw(w, upper, o.headDist) - (o.headNeutral ?? 14)) * (o.headGain ?? 1.5) - (o.headPitchOffset ?? 0);
+    const h2 = o.img ? head2D(o.img) : null;
+    const slide = o.slide !== false;
+    // Arms the camera can't see (sitting close, hands below the frame): hidden hand → the arm
+    // follows the upper arm; hidden elbow → the arm hangs at its idle pose. Invented points are ignored.
+    const arm = (sh, el, wr, side) => {
+      const seen = smoothstep(0.3, 0.6, Math.min(V(sh), V(el))), hand = smoothstep(0.3, 0.6, V(wr));
+      const straight = add(g(el), sub(g(el), g(sh)));
+      const full = limbPose(upper, g(sh), g(el), add(scale(g(wr), hand), scale(straight, 1 - hand)), armMode, side, 'arm', slide);
+      return { dir: norm(add(scale(full.dir, seen), scale([0, 1, 0], 1 - seen))), t: scale(full.t, seen), seen };
+    };
+    const rA = arm(I.rSh, I.rEl, I.rWr, -1), lA = arm(I.lSh, I.lEl, I.lWr, 1);
+    // Legs the camera can't see: hidden ankle → the leg follows the thigh; hidden knee or hip →
+    // the leg eases back to standing (idle) and stays planted. The tracker's guesses are not used.
+    const leg = (hip, knee, ank, side) => {
+      const seen = smoothstep(0.3, 0.6, Math.min(hipVis, V(knee))), foot = smoothstep(0.3, 0.6, V(ank));
+      // foot out of view: assume the shin hangs straight down from the knee (a kicking foot would
+      // come up into view), so a raised knee still becomes a Minecraft-style knee lift
+      const guess = add(g(knee), scale(hips[1], len(sub(g(knee), g(hip)))));
+      const ankle = add(scale(g(ank), foot), scale(guess, 1 - foot));
+      const full = limbPose(hips, g(hip), g(knee), ankle, legMode, side, 'leg', slide);
+      const dir = norm(add(scale(full.dir, seen), scale([0, 1, 0], 1 - seen)));
+      return { dir, t: scale(full.t, seen), seen, foot };
+    };
+    const rL = leg(I.rHip, I.rKnee, I.rAnk, -1), lL = leg(I.lHip, I.lKnee, I.lAnk, 1);
+    const body = limitEuler(eulerZYX(rel(hips, torso)), LIMITS.body).map(v => v * hipSeen);
+    if (h2) {
+      // head angles from the camera image, then taken relative to the body bone as it is exported
+      // (if the body isn't animated, e.g. hips out of view, the head carries the whole tilt/turn)
+      const b = o.bodyOff ? [0, 0, 0] : body;
+      he = [(h2.pitch - (o.headNeutral ?? 14)) * (o.headGain ?? 1.5) - (o.headPitchOffset ?? 0) - b[0], h2.yaw - b[1], h2.roll - b[2]];
+    }
+    const pose = { head: limitEuler(he, LIMITS.head), body };
+    if (o.flipTurn) for (const b of ['head', 'body']) pose[b] = [pose[b][0], -pose[b][1], -pose[b][2]];
+    // keep the arms out of the head and torso (using the head as it will really be posed)
+    const headNow = o.headOff ? [0, 0, 0] : pose.head;
+    Object.assign(rA, clearArm(rA.dir, rA.t, -1, headNow));
+    Object.assign(lA, clearArm(lA.dir, lA.t, 1, headNow));
+    for (const [b, r] of [['rightArm', rA], ['leftArm', lA], ['rightLeg', rL], ['leftLeg', lL]]) pose[b] = swingEuler(r.dir);
+    pose.pos = { rightArm: toBedrock3(rA.t), leftArm: toBedrock3(lA.t), rightLeg: toBedrock3(rL.t), leftLeg: toBedrock3(lL.t) };
+    pose.legsSeen = (rL.seen + lL.seen) / 2;
+    pose.moves = { right: legMove(hips, g(I.rHip), g(I.rKnee), g(I.rAnk)), left: legMove(hips, g(I.lHip), g(I.lKnee), g(I.lAnk)) };
+    // Is each foot on the ground? Lifted = clearly higher than the other foot, or swung forward/back.
+    const dR = local(hips, sub(g(I.rAnk), hipMid)), dL = local(hips, sub(g(I.lAnk), hipMid));
+    const swing = (hip, ank) => { const v = local(hips, sub(ank, hip)); return Math.abs(Math.atan2(-v[2], v[1])) * R2D; };
+    const lifted = (rise, sw) => rise > 0.07 || sw > 25;
+    // foot out of view: a raised thigh still counts as a lifted leg
+    const thighUp = (hip, knee) => angleBetween(local(hips, sub(g(knee), g(hip))), [0, 1, 0]) > 30;
+    const footLift = (L, rise, hip, knee, ank) => L.seen < 0.5 ? false : L.foot > 0.5 ? lifted(rise, swing(g(hip), g(ank))) : thighUp(hip, knee);
+    pose.feet = { right: footLift(rL, dL[1] - dR[1], I.rHip, I.rKnee, I.rAnk), left: footLift(lL, dR[1] - dL[1], I.lHip, I.lKnee, I.lAnk) };
+    if (rL.seen < 0.5 || rL.foot < 0.5) pose.moves.right = '';
+    if (lL.seen < 0.5 || lL.foot < 0.5) pose.moves.left = '';
+    return pose;
+  }
+
+  /* ---------- head angles from the flat camera image ----------
+   * The tracker's 2D points are its most reliable output, even when only your head and shoulders
+   * are in view. Image units: x right, y down (x already scaled by the frame's width/height).
+   *  tilt (roll): slope of the line between the eyes
+   *  turn (yaw):  how far the nose sits left/right of the ears' midpoint, against the ear spacing
+   *  nod (pitch): how far the face sits below/above the ear line, against the face size
+   * All three are measured along the eye line, so a tilted head doesn't leak into turn or nod. */
+  const Q = (n, i) => [n[i*2], n[i*2+1]];
+  const avg2 = (n, ids) => { let x = 0, y = 0; for (const i of ids) { x += n[i*2]; y += n[i*2+1]; } return [x / ids.length, y / ids.length]; };
+  function head2D(n) {
+    const eyeL = avg2(n, [1, 2, 3]), eyeR = avg2(n, [4, 5, 6]);
+    const earL = Q(n, 7), earR = Q(n, 8), earM = [(earL[0] + earR[0]) / 2, (earL[1] + earR[1]) / 2];
+    let u = [eyeL[0] - eyeR[0], eyeL[1] - eyeR[1]]; const ul = Math.hypot(u[0], u[1]) || 1e-6; u = [u[0] / ul, u[1] / ul];
+    const v = [-u[1], u[0]];                                     // "down" along the face
+    const roll = Math.atan2(u[1], u[0]) * R2D;
+    const earW = Math.hypot(earL[0] - earR[0], earL[1] - earR[1]) || 1e-6;
+    const nose = Q(n, 0), offH = (nose[0] - earM[0]) * u[0] + (nose[1] - earM[1]) * u[1];
+    const yaw = -Math.atan(0.75 * offH / (earW / 2)) * R2D;      // + = turned to your own right
+    const face = avg2(n, [0, 2, 5, 9, 10]);
+    const offV = (face[0] - earM[0]) * v[0] + (face[1] - earM[1]) * v[1];
+    const D = 0.62 * earW / Math.max(0.4, Math.cos(yaw / R2D));
+    const pitch = Math.asin(clamp1(offV / D)) * R2D;             // + = looking down
+    const sh = [n[11*2] - n[12*2], n[11*2+1] - n[12*2+1]];
+    return { pitch, yaw, roll, shoulderRoll: Math.atan2(sh[1], sh[0]) * R2D };
+  }
+  function mirror2(n2) { const o = Float32Array.from(n2); for (let i = 0; i < 33; i++) o[i*2] = -o[i*2]; swap2(o, PAIRS); return o; }
+
+  /** Degrees the face sits below (+) or above (−) the line through the ears. */
+  function faceVec(w, F) {
+    const f = [0, 0, 0];
+    for (const i of FACE) { f[0] += w[i*3] / FACE.length; f[1] += w[i*3+1] / FACE.length; f[2] += w[i*3+2] / FACE.length; }
+    return local(F, sub(f, mid(P(w, I.lEar), P(w, I.rEar))));
+  }
+  function headPitchRaw(w, F, D) {
+    const v = faceVec(w, F);
+    return Math.asin(clamp1(v[1] / (D || len(v) || 0.1))) * R2D;
+  }
+  function torsoFrame(w) {
+    const g = i => P(w, i);
+    return frameLD(sub(g(I.lSh), g(I.rSh)), sub(mid(g(I.lHip), g(I.rHip)), mid(g(I.lSh), g(I.rSh))));
+  }
+  const median = (a) => { const s = a.slice().sort((x, y) => x - y); return s.length ? s[Math.floor(s.length / 2)] : 0; };
+  /** Face size and the "looking straight ahead" angle, from the countdown (or the first half second). */
+  function headCalibration(frames, pre, imgs, preImgs) {
+    if (imgs && imgs.length) {
+      const cal = preImgs && preImgs.length >= 5 ? preImgs : imgs.slice(0, Math.max(5, Math.round(imgs.length * 0.08)));
+      return { headNeutral: median(cal.map(n => head2D(n).pitch)) };
+    }
+    // Face depth (ear line → face) is about 0.62 × the ear-to-ear width. The width is measured
+    // side to side, which the camera sees well; the tracker's own depth guess is not trusted here.
+    const D = 0.62 * (median(frames.map(w => len(sub(P(w, I.lEar), P(w, I.rEar))))) || 0.15);
+    const calib = pre && pre.length >= 5 ? pre : frames.slice(0, Math.max(5, Math.round(frames.length * 0.08)));
+    return { headDist: D, headNeutral: median(calib.map(w => headPitchRaw(w, torsoFrame(w), D))) };
+  }
+
+  /** Feet that aren't lifted stay planted: the leg holds one steady angle for the whole time the
+   *  foot is down, and blends smoothly into and out of each step. */
+  function plantLegs(clip, feet, fps) {
+    for (const [bone, side] of [['rightLeg', 'right'], ['leftLeg', 'left']]) {
+      const vals = clip.bones[bone], n = vals.length;
+      const speed = vals.map((v, t) => t ? Math.hypot(...v.map((x, k) => x - vals[t-1][k])) * fps : 0);
+      const down = feet.map((f, t) => !f[side] && speed[t] < 120);
+      // need a few steady frames before calling it planted; lifting releases at once
+      const need = Math.max(2, Math.round(fps * 0.1));
+      const planted = new Array(n).fill(false);
+      for (let t = 0, run = 0; t < n; t++) { run = down[t] ? run + 1 : 0; planted[t] = run >= need; }
+      for (let t = n - 1, run = 0; t >= 0; t--) { if (planted[t]) run = need; else if (down[t] && run > 0) planted[t] = true; else run = 0; }
+      // one held angle per planted stretch
+      const hold = new Array(n).fill(null);
+      for (let t = 0; t < n;) {
+        if (!planted[t]) { t++; continue; }
+        let e = t; while (e < n && planted[e]) e++;
+        const seg = vals.slice(t, e), h = [0, 1, 2].map(k => median(seg.map(v => v[k])));
+        for (let k = t; k < e; k++) hold[k] = h;
+        t = e;
+      }
+      if (!hold.some(Boolean)) continue;
+      // lifted frames blend toward whichever planted stretch is closer in time
+      const prevI = new Array(n), nextI = new Array(n);
+      for (let t = 0, l = -1; t < n; t++) { if (planted[t]) l = t; prevI[t] = l; }
+      for (let t = n - 1, l = -1; t >= 0; t--) { if (planted[t]) l = t; nextI[t] = l; }
+      for (let t = 0; t < n; t++) if (!planted[t]) {
+        const a = prevI[t], b = nextI[t];
+        hold[t] = a < 0 ? hold[b] : b < 0 ? hold[a] : (t - a <= b - t ? hold[a] : hold[b]);
+      }
+      const wgt = gaussian1(planted.map(Number), fps * 0.06);
+      clip.bones[bone] = vals.map((v, t) => hold[t] ? v.map((x, k) => x + (hold[t][k] - x) * wgt[t]) : v);
+      clip.pos[bone] = clip.pos[bone].map((v, t) => v.map(x => x * (1 - wgt[t])));   // planted foot sits on the floor
+    }
+  }
+  function gaussian33(frames, sigma) {
+    const n = frames.length, r = Math.ceil(sigma * 2.5);
+    return frames.map((_, t) => {
+      const o = new Float32Array(33); let ws = 0;
+      for (let i = -r; i <= r; i++) { const f = frames[clamp(t + i, 0, n - 1)], wg = Math.exp(-(i * i) / (2 * sigma * sigma)); ws += wg; for (let q = 0; q < 33; q++) o[q] += f[q] * wg; }
+      for (let q = 0; q < 33; q++) o[q] /= ws;
+      return o;
+    });
+  }
+  function gaussian1(a, sigma) {
+    if (sigma < 0.3) return a;
+    const r = Math.ceil(sigma * 2.5), n = a.length;
+    return a.map((_, t) => { let s = 0, ws = 0; for (let i = -r; i <= r; i++) { const wg = Math.exp(-(i * i) / (2 * sigma * sigma)); s += a[clamp(t + i, 0, n - 1)] * wg; ws += wg; } return s / ws; });
+  }
+
+  /* Keep angles continuous between frames (pick the equivalent euler closest to the last one) */
+  const near = (a, ref) => a + 360 * Math.round((ref - a) / 360);
+  const altEuler = e => [e[0] + 180, 180 - e[1], e[2] + 180];
+  function continuous(e, prev) {
+    if (!prev) return e;
+    const cands = [e, altEuler(e)].map(c => c.map((v, i) => near(v, prev[i])));
+    let best = cands[0], bd = Infinity;
+    for (const c of cands) { const d = c.reduce((s, v, i) => s + (v - prev[i]) ** 2, 0); if (d < bd) { bd = d; best = c; } }
+    return best;
+  }
+  const isLimbBone = b => b !== 'head' && b !== 'body';
+
+  /** Clean the raw recording (cached per smoothing/mirror setting). */
+  function cleanSamples(samples, o) {
+    let times = samples.map(s => s.t);
+    let frames = samples.map(s => Float32Array.from(s.w));
+    const vis = samples.map(s => s.v ? Float32Array.from(s.v) : new Float32Array(33).fill(1));
+    let imgs = samples.every(s => s.n) ? samples.map(s => Float32Array.from(s.n)) : null;
+    let preImgs = samples.preImg || null;
+    if (o.mirror) { frames = frames.map(mirror); vis.forEach(v => swapVis(v, PAIRS)); if (imgs) imgs = imgs.map(mirror2); if (preImgs) preImgs = preImgs.map(mirror2); }
+    const pack = (arr) => arr && arr.map((w, i) => ({ t: times[i], w }));
+    if (o.raw) return { frames: pack(frames), vis: pack(vis), img: pack(imgs), calib: headCalibration(frames, samples.pre, imgs, preImgs) };
+    fixSwaps(frames, vis, imgs);
+    if (imgs) imgs = hampel(imgs, 3, 3, 0.004);
+    fillGaps(frames, vis);
+    frames = hampel(frames);
+    const lens = boneLengths(frames, vis);
+    const ref = gaussian(frames, 3);                    // steady depth signs for the length fix
+    frames.forEach((f, t) => constrainFrame(f, lens, (a, b) => ref[t][b*3+2] - ref[t][a*3+2]));
+    const s = o.smoothing ?? 2;
+    let visOut = vis;
+    if (s > 0) {
+      // even out the frame timing first (webcams drop frames), then smooth on a steady 30 fps grid
+      const t0 = times[0], t1 = times[times.length - 1];
+      frames = resample(frames.map((w, i) => ({ t: times[i], w })), t0, t1, 30);
+      visOut = resample(vis.map((w, i) => ({ t: times[i], w })), t0, t1, 30);
+      if (imgs) imgs = savgol(resample(imgs.map((w, i) => ({ t: times[i], w })), t0, t1, 30), Math.round(2 + s * 1.5), 3);
+      times = frames.map((_, k) => t0 + k / 30);
+      // Head and torso move slowly: strong adaptive smoothing (One Euro, run both ways, plus a light blur).
+      const e = euroFor(s);
+      const calm = gaussian(zeroLagSmooth(frames, times, e.minCut, e.beta), EURO.g * Math.min(1, s / 2));
+      // Arms and legs move fast: Savitzky–Golay keeps the full height of kicks, knee-ups and waves.
+      const half = Math.round(EURO.h0 + s * EURO.h1);
+      const quick = savgol(savgol(frames, half, 3), Math.max(1, Math.round(half / 2)), 2);
+      frames = calm.map((c, t) => { for (const i of FAST_IDX) for (let q = 0; q < 3; q++) c[i*3+q] = quick[t][i*3+q]; return c; });
+    }
+    const pre = samples.pre && samples.pre.map(w => o.mirror ? mirror(w) : w);
+    visOut = gaussian33(visOut, 4);       // steady "can the camera see it" values, no flicker
+    return { frames: pack(frames), vis: pack(visOut), img: pack(imgs), calib: headCalibration(frames, pre, imgs, preImgs) };
+  }
+
+  function resample(samples, t0, t1, fps) {
+    const out = [], n = Math.max(1, Math.round((t1 - t0) * fps));
+    let j = 0;
+    for (let k = 0; k <= n; k++) {
+      const t = t0 + k / fps;
+      while (j < samples.length - 2 && samples[j + 1].t < t) j++;
+      const a = samples[j], b = samples[Math.min(j + 1, samples.length - 1)];
+      const u = b.t > a.t ? clamp((t - a.t) / (b.t - a.t), 0, 1) : 0;
+      const m = a.w.length, f = new Float32Array(m);
+      for (let q = 0; q < m; q++) f[q] = a.w[q] + (b.w[q] - a.w[q]) * u;
+      out.push(f);
+    }
+    return out;
+  }
+
+  // samples: [{t, w, v}] → clip {times, length, bones:{name:[[x,y,z],...]}, moves:[...]}
+  let cache = { key: null, data: null, src: null };
+  function buildClip(samples, t0, t1, o) {
+    const fps = o.fps || 20;
+    const key = [o.smoothing, !!o.mirror, !!o.raw, samples.length].join('|');
+    if (cache.src !== samples || cache.key !== key) cache = { key, src: samples, data: cleanSamples(samples, o) };
+    const frames = resample(cache.data.frames, t0, t1, fps), visF = resample(cache.data.vis, t0, t1, fps);
+    const imgF = cache.data.img ? resample(cache.data.img, t0, t1, fps) : null;
+    const bones = {}; BONES.forEach(b => bones[b] = []);
+    const pos = { rightArm: [], leftArm: [], rightLeg: [], leftLeg: [] };
+    const moves = [], feet = [];
+    const oo = { ...cache.data.calib, ...o };
+    let legsSeen = 0;
+    frames.forEach((w, k) => {
+      const p = solvePose(w, { ...oo, vis: visF[k], img: imgF && imgF[k] });
+      legsSeen += p.legsSeen;
+      moves.push(p.moves); feet.push(p.feet);
+      for (const b of BONES) { const arr = bones[b]; arr.push(continuous(p[b], arr[arr.length - 1])); }
+      for (const b in pos) pos[b].push(p.pos[b]);
+    });
+    const times = frames.map((_, k) => k / fps);
+    const clip = { times, length: times[times.length - 1], bones, pos, moves, feet, calib: cache.data.calib, legsSeen: legsSeen / frames.length };
+    if (o.plant !== false) plantLegs(clip, feet, fps);
+    return clip;
+  }
+
+  function reduceKeys(times, vals, tol) {
+    const n = times.length;
+    if (n <= 2 || tol <= 0) return [...Array(n).keys()];
+    const keep = new Uint8Array(n); keep[0] = keep[n - 1] = 1;
+    const stack = [[0, n - 1]];
+    while (stack.length) {
+      const [s, e] = stack.pop();
+      let md = 0, mi = -1;
+      for (let i = s + 1; i < e; i++) {
+        const u = (times[i] - times[s]) / (times[e] - times[s]);
+        let d = 0;
+        for (let c = 0; c < 3; c++) d = Math.max(d, Math.abs(vals[i][c] - (vals[s][c] + (vals[e][c] - vals[s][c]) * u)));
+        if (d > md) { md = d; mi = i; }
+      }
+      if (md > tol) { keep[mi] = 1; stack.push([s, mi], [mi, e]); }
+    }
+    const idx = []; keep.forEach((v, i) => v && idx.push(i)); return idx;
+  }
+  const fmtT = t => t === 0 ? '0.0' : String(+t.toFixed(4));
+  const r2 = v => (Math.round(v * 100) / 100) || 0;
+  function toBedrock(clip, o) {
+    const bones = {}; let keyCount = 0;
+    for (const b of o.bones) {
+      const idx = reduceKeys(clip.times, clip.bones[b], o.tolerance ?? 1);
+      const rot = {};
+      for (const i of idx) rot[fmtT(clip.times[i])] = clip.bones[b][i].map(r2);
+      keyCount += idx.length;
+      const track = { rotation: rot };
+      const pv = clip.pos && clip.pos[b];
+      if (pv && pv.some(v => Math.abs(v[0]) + Math.abs(v[1]) + Math.abs(v[2]) > 0.05)) {
+        const pIdx = reduceKeys(clip.times, pv, (o.tolerance ?? 1) * 0.1), position = {};
+        for (const i of pIdx) position[fmtT(clip.times[i])] = pv[i].map(r2);
+        keyCount += pIdx.length;
+        track.position = position;
+      }
+      bones[b === 'body' && o.lean === 'waist' ? 'waist' : b] = track;
+    }
+    const loop = o.loop === 'true' ? true : o.loop === 'false' ? false : o.loop;
+    return { json: { format_version: '1.8.0', animations: { [o.id]: { loop, animation_length: +clip.length.toFixed(4), bones } } }, keyCount };
+  }
+  function sampleClip(clip, t) {
+    const f = clamp(t / (clip.times[1] || 1), 0, clip.times.length - 1);
+    const i = Math.floor(f), j = Math.min(i + 1, clip.times.length - 1), u = f - i, out = {};
+    for (const b of BONES) { const a = clip.bones[b][i], c = clip.bones[b][j]; out[b] = [0, 1, 2].map(k => a[k] + (c[k] - a[k]) * u); }
+    out.pos = {};
+    for (const b in clip.pos) { const a = clip.pos[b][i], c = clip.pos[b][j]; out.pos[b] = [0, 1, 2].map(k => a[k] + (c[k] - a[k]) * u); }
+    out.moves = clip.moves[Math.round(f)];
+    return out;
+  }
+
+  G.MocapMath = { BONES, solvePose, continuous, isLimbBone, buildClip, toBedrock, sampleClip, mirror, reduceKeys,
+    LiveFilter, swingEuler, limbAim, limbPose, cleanSamples, _collide: { armSink, rotM },
+    mirrorVis: (v) => { const o = Float32Array.from(v); swapVis(o, PAIRS); return o; }, mirror2, head2D, headPitchRaw, torsoFrame, faceVec, len, median };
+})(globalThis);
+</script>
+
+<script>
+/* Mocap Maker translations: English text is the key. */
+window.MocapStrings = {
+"es": {
+"Skip to the camera": "Ir a la cámara",
+"Act it out on camera, get a Minecraft Education animation": "Actúa ante la cámara y obtén una animación para Minecraft Education",
+"Display & language": "Pantalla e idioma",
+"Open the Emote Tool": "Abrir la Emote Tool",
+"Language": "Idioma",
+"Theme": "Tema",
+"System": "Sistema",
+"Light": "Claro",
+"Dark": "Oscuro",
+"High contrast": "Alto contraste",
+"Text size": "Tamaño del texto",
+"Normal": "Normal",
+"Large": "Grande",
+"Sound": "Sonido",
+"Countdown beeps": "Pitidos de cuenta atrás",
+"Hear when recording starts, even from across the room.": "Oye cuándo empieza la grabación, incluso desde el otro lado de la sala.",
+"Keyboard shortcuts": "Atajos de teclado",
+"Start or stop recording": "Iniciar o detener la grabación",
+"Play or pause the preview": "Reproducir o pausar la vista previa",
+"Turn the 3D model (when it has focus)": "Girar el modelo 3D (cuando está seleccionado)",
+"Zoom the 3D model": "Hacer zoom en el modelo 3D",
+"These settings are shared with the Cleverlike Emote Tool.": "Estos ajustes se comparten con la Cleverlike Emote Tool.",
+"Camera": "Cámara",
+"Off": "Apagada",
+"Start your camera or load a video.": "Enciende tu cámara o carga un vídeo.",
+"Stand back so your whole body is in the picture.": "Aléjate para que se vea todo tu cuerpo.",
+"Start camera": "Encender cámara",
+"Load a video": "Cargar un vídeo",
+"Record": "Grabar",
+"Countdown": "Cuenta atrás",
+"None": "Ninguna",
+"3 seconds": "3 segundos",
+"5 seconds": "5 segundos",
+"10 seconds": "10 segundos",
+"Record for": "Grabar durante",
+"2 seconds": "2 segundos",
+"8 seconds": "8 segundos",
+"12 seconds": "12 segundos",
+"Until I press Stop": "Hasta que pulse Detener",
+"Tracking": "Seguimiento",
+"Fast": "Rápido",
+"Balanced": "Equilibrado",
+"Accurate": "Preciso",
+"Video speed": "Velocidad del vídeo",
+"Tips for a clean capture": "Consejos para una buena captura",
+"Stand <b>2–3 meters</b> from the camera, facing it, with your whole body in the picture.": "Ponte a <b>2–3 metros</b> de la cámara, de frente, con todo tu cuerpo a la vista.",
+"Bright, even light and a plain background help the most. Baggy clothes can hide your elbows and knees.": "Lo que más ayuda es una luz fuerte y uniforme y un fondo liso. La ropa holgada puede ocultar tus codos y rodillas.",
+"Minecraft arms and legs have no elbows or knees, so a bent arm becomes one straight arm pointing at your hand.": "Los brazos y piernas de Minecraft no tienen codos ni rodillas, así que un brazo doblado se convierte en un brazo recto que apunta a tu mano.",
+"Act in place. Walking, jumping and turning all the way around are not recorded.": "Actúa sin moverte del sitio. No se graba caminar, saltar ni dar la vuelta completa.",
+"Start and end with your arms relaxed at your sides so the move blends in smoothly.": "Empieza y termina con los brazos relajados a los lados para que el movimiento se integre con suavidad.",
+"Live view": "Vista en directo",
+"Drag to turn · scroll to zoom": "Arrastra para girar · desplaza para hacer zoom",
+"Reset view": "Restablecer vista",
+"Trim": "Recortar",
+"Cut extra time off the start and end.": "Quita el tiempo de más al principio y al final.",
+"Start": "Inicio",
+"End": "Final",
+"Preview skin": "Skin de la vista previa",
+"Classic arms": "Brazos clásicos",
+"Slim arms": "Brazos delgados",
+"Front": "Delante",
+"Behind": "Detrás",
+"Back to live view": "Volver a la vista en directo",
+"Clean up": "Limpiar",
+"Smoothing": "Suavizado",
+"Simplify keyframes": "Simplificar fotogramas clave",
+"Head tilt fix": "Corregir inclinación de la cabeza",
+"Keyframes per second": "Fotogramas clave por segundo",
+"20 (one per game tick)": "20 (uno por tick del juego)",
+"Arms point at": "Los brazos apuntan a",
+"Hands": "Manos",
+"Elbows": "Codos",
+"Lean from": "Inclinar desde",
+"Neck": "Cuello",
+"Hips": "Caderas",
+"Mirror": "Espejo",
+"Swap left and right.": "Intercambia izquierda y derecha.",
+"Flip head turns": "Invertir giros de cabeza",
+"Use this if the head turns the wrong way in the game.": "Úsalo si la cabeza gira hacia el lado contrario en el juego.",
+"Body parts to include": "Partes del cuerpo que incluir",
+"Head": "Cabeza",
+"Body": "Cuerpo",
+"Right arm": "Brazo derecho",
+"Left arm": "Brazo izquierdo",
+"Right leg": "Pierna derecha",
+"Left leg": "Pierna izquierda",
+"Download": "Descargar",
+"Animation name": "Nombre de la animación",
+"ID": "ID",
+"When it plays": "Cómo se reproduce",
+"Once": "Una vez",
+"Loop": "Repetir",
+"Hold last pose": "Mantener la última pose",
+"Download animation": "Descargar animación",
+"Copy JSON": "Copiar JSON",
+"Record a move first.": "Primero graba un movimiento.",
+"Use it in Minecraft Education": "Úsala en Minecraft Education",
+"<b>Download</b> the <span class=\"mono\">.animation.json</span> file.": "<b>Descarga</b> el archivo <span class=\"mono\">.animation.json</span>.",
+"Open the <b>Cleverlike Emote Tool</b> and choose <b>Add animation files</b>.": "Abre la <b>Cleverlike Emote Tool</b> y elige <b>Añadir archivos de animación</b>.",
+"Name your emote, then download the add-on and open it on the Minecraft Education computer.": "Ponle nombre a tu emote, descarga el complemento y ábrelo en el ordenador que tiene Minecraft Education.",
+"Close": "Cerrar",
+"Camera view with your tracked body": "Vista de la cámara con tu cuerpo detectado",
+"3D player model. It copies your moves, then plays your recording. Arrow keys turn it.": "Modelo 3D del jugador. Copia tus movimientos y luego reproduce tu grabación. Las flechas del teclado lo giran.",
+"Animation time": "Tiempo de la animación",
+"Trim start": "Recortar inicio",
+"Trim end": "Recortar final",
+"Arm width": "Ancho de los brazos",
+"Camera side": "Lado de la cámara",
+"Change the language, colors and text size.": "Cambia el idioma, los colores y el tamaño del texto.",
+"Turn your animations into an emote add-on.": "Convierte tus animaciones en un complemento de emotes.",
+"Close this panel.": "Cierra este panel.",
+"Match your device's light or dark setting.": "Usa el modo claro u oscuro de tu dispositivo.",
+"Soft light gray background.": "Fondo gris claro suave.",
+"Dark background, easier on the eyes in a dim room.": "Fondo oscuro, más cómodo para la vista con poca luz.",
+"Black and white with bold outlines, the easiest to read.": "Blanco y negro con contornos gruesos, lo más fácil de leer.",
+"Standard text size.": "Tamaño de texto estándar.",
+"Make all text bigger.": "Agranda todo el texto.",
+"Turn on your webcam.": "Enciende tu webcam.",
+"Use a video you filmed before, like one from a phone.": "Usa un vídeo que grabaste antes, por ejemplo con un móvil.",
+"Count down, then record your move.": "Cuenta atrás y luego graba tu movimiento.",
+"Accurate is smoother but needs a faster computer.": "Preciso es más suave, pero necesita un ordenador más rápido.",
+"Slower playback lets the tracker see more frames of a loaded video.": "Reproducir más lento permite al detector ver más fotogramas de un vídeo cargado.",
+"Play or pause the preview.": "Reproduce o pausa la vista previa.",
+"Put the camera back where it started.": "Devuelve la cámara a su posición inicial.",
+"Preview with wide arms, like Steve.": "Vista previa con brazos anchos, como Steve.",
+"Preview with slim arms, like Alex.": "Vista previa con brazos delgados, como Alex.",
+"Look at the model's face.": "Mira la cara del modelo.",
+"Look from behind, so the model moves the same way you do.": "Mira desde detrás, para que el modelo se mueva igual que tú.",
+"Let the model copy your camera again. Your recording is kept.": "Deja que el modelo vuelva a copiar tu cámara. Tu grabación se conserva.",
+"Higher removes shaking but softens fast moves.": "Más alto quita los temblores, pero suaviza los movimientos rápidos.",
+"Drops keyframes that change less than this. Makes the file smaller.": "Quita los fotogramas clave que cambian menos que esto. Hace el archivo más pequeño.",
+"Raise this if the model looks down when you look straight ahead.": "Súbelo si el modelo mira hacia abajo cuando tú miras al frente.",
+"Best for waves and gestures.": "Lo mejor para saludos y gestos.",
+"Follow the upper arm instead.": "Sigue la parte superior del brazo.",
+"Moves the body bone, like most Minecraft animations.": "Mueve el hueso del cuerpo, como la mayoría de las animaciones de Minecraft.",
+"Moves the waist bone, so bows and leans bend at the hips.": "Mueve el hueso de la cintura, así las reverencias e inclinaciones se doblan por las caderas.",
+"Letters, numbers and underscores. Also used for the file name.": "Letras, números y guiones bajos. También se usa para el nombre del archivo.",
+"Plays one time, then stops.": "Se reproduce una vez y luego se detiene.",
+"Repeats until the player moves.": "Se repite hasta que el jugador se mueve.",
+"Plays once and stays in the last pose.": "Se reproduce una vez y se queda en la última pose.",
+"Save the animation file to your computer.": "Guarda el archivo de animación en tu ordenador.",
+"Copy the animation's code to paste somewhere else.": "Copia el código de la animación para pegarlo en otro sitio.",
+"Loading the body tracker…": "Cargando el detector de cuerpo…",
+"Couldn't load the body tracker. Check your internet connection and reload the page.": "No se pudo cargar el detector de cuerpo. Revisa tu conexión a internet y recarga la página.",
+"Camera on. Step back until your whole body is in the picture, then press Record.": "Cámara encendida. Aléjate hasta que se vea todo tu cuerpo y luego pulsa Grabar.",
+"The camera is blocked or missing. Allow camera access in your browser and try again.": "La cámara está bloqueada o no se encuentra. Permite el acceso a la cámara en tu navegador e inténtalo de nuevo.",
+"That video can't be played in this browser. Try an MP4 or WebM file.": "Ese vídeo no se puede reproducir en este navegador. Prueba con un archivo MP4 o WebM.",
+"Loaded {name} ({s} s). Press Track video to capture it.": "Se cargó {name} ({s} s). Pulsa Analizar vídeo para capturarlo.",
+"Recording canceled": "Grabación cancelada",
+"Recording starts in {n}": "La grabación empieza en {n}",
+"Recording… do your move!": "Grabando… ¡haz tu movimiento!",
+"Recording": "Grabando",
+"Tracking the video…": "Analizando el vídeo…",
+"Nobody was found in the recording. Make sure your whole body is in the picture and try again.": "No se encontró a nadie en la grabación. Asegúrate de que se vea todo tu cuerpo e inténtalo de nuevo.",
+"Captured {s} s. Check the preview, trim it, then download.": "Se capturaron {s} s. Revisa la vista previa, recórtala y descárgala.",
+"Recording stopped. Captured {s} seconds.": "Grabación detenida. Se capturaron {s} segundos.",
+"{s} seconds": "{s} segundos",
+"{s} s · {b} body parts · {k} keyframes · {kb} KB": "{s} s · {b} partes del cuerpo · {k} fotogramas clave · {kb} KB",
+"Pick at least one body part to include.": "Elige al menos una parte del cuerpo que incluir.",
+"off": "no",
+"Saved {file}": "Se guardó {file}",
+"Copied to the clipboard": "Copiado al portapapeles",
+"Couldn't copy. Use Download instead.": "No se pudo copiar. Usa Descargar.",
+"{a} of {b} seconds": "{a} de {b} segundos",
+"live": "en directo",
+"Body tracker ready. Press Record when you are in place.": "Detector de cuerpo listo. Pulsa Grabar cuando estés en tu sitio.",
+"Body tracker ready. Start your camera or load a video.": "Detector de cuerpo listo. Enciende tu cámara o carga un vídeo.",
+"Stop camera": "Apagar cámara",
+"Turn off your webcam.": "Apaga tu webcam.",
+"Track video": "Analizar vídeo",
+"Track the whole video from the start.": "Analiza todo el vídeo desde el principio.",
+"Your recording": "Tu grabación",
+"Copies you live": "Te copia en directo",
+"Waiting for the camera": "Esperando a la cámara",
+"Pause": "Pausa",
+"Play": "Reproducir",
+"No body found": "No se detecta ningún cuerpo",
+"Legs hidden": "Piernas ocultas",
+"Full body": "Cuerpo entero",
+"Stop": "Detener",
+"Stop recording now.": "Detén la grabación ahora.",
+"Legs point at": "Las piernas apuntan a",
+"Auto": "Auto",
+"Feet": "Pies",
+"Knees": "Rodillas",
+"The leg always points at the foot.": "La pierna siempre apunta al pie.",
+"The leg always points at the knee.": "La pierna siempre apunta a la rodilla.",
+"Right knee up": "Rodilla derecha arriba",
+"Left knee up": "Rodilla izquierda arriba",
+"Right kick": "Patada derecha",
+"Left kick": "Patada izquierda",
+"For kicks and knee-ups, turning about 45° from the camera lets it see how high your leg goes.": "Para patadas y subidas de rodilla, gírate unos 45° respecto a la cámara para que vea lo alto que sube tu pierna.",
+"Head nod strength": "Fuerza del cabeceo",
+"Makes looking up and down bigger or smaller.": "Hace más grande o más pequeño el movimiento de mirar arriba y abajo.",
+"Plant feet": "Pies en el suelo",
+"A leg that isn't lifted stays still on the ground.": "Una pierna que no está levantada se queda quieta en el suelo.",
+"Straight arm: points at the hand. Bent elbow: follows the forearm and slides back, like a punch wind-up.": "Brazo recto: apunta a la mano. Codo doblado: sigue al antebrazo y se desliza hacia atrás, como al preparar un puñetazo.",
+"Straight leg: points at the foot, like a kick. Bent knee: the leg lifts up, like a knee raise.": "Pierna recta: apunta al pie, como una patada. Rodilla doblada: la pierna sube, como al levantar la rodilla.",
+"Slide bent arms and legs": "Deslizar brazos y piernas doblados",
+"Like Minecraft animations: a raised knee lifts the whole leg, and a pulled-back fist slides the arm back.": "Como en las animaciones de Minecraft: al subir la rodilla se levanta toda la pierna, y al echar el puño atrás el brazo se desliza hacia atrás.",
+"Captured {s} s. Your legs were mostly out of view, so they stay standing still.": "Se capturaron {s} s. Tus piernas casi no se veían, así que se quedan quietas de pie."
+},
+"fr": {
+"Skip to the camera": "Aller à la caméra",
+"Act it out on camera, get a Minecraft Education animation": "Joue-le devant la caméra, obtiens une animation Minecraft Education",
+"Display & language": "Affichage et langue",
+"Open the Emote Tool": "Ouvrir l'Emote Tool",
+"Language": "Langue",
+"Theme": "Thème",
+"System": "Système",
+"Light": "Clair",
+"Dark": "Sombre",
+"High contrast": "Contraste élevé",
+"Text size": "Taille du texte",
+"Normal": "Normal",
+"Large": "Grand",
+"Sound": "Son",
+"Countdown beeps": "Bips du compte à rebours",
+"Hear when recording starts, even from across the room.": "Entends quand l'enregistrement commence, même à l'autre bout de la pièce.",
+"Keyboard shortcuts": "Raccourcis clavier",
+"Start or stop recording": "Démarrer ou arrêter l'enregistrement",
+"Play or pause the preview": "Lancer ou mettre en pause l'aperçu",
+"Turn the 3D model (when it has focus)": "Tourner le modèle 3D (quand il est sélectionné)",
+"Zoom the 3D model": "Zoomer sur le modèle 3D",
+"These settings are shared with the Cleverlike Emote Tool.": "Ces réglages sont partagés avec le Cleverlike Emote Tool.",
+"Camera": "Caméra",
+"Off": "Éteinte",
+"Start your camera or load a video.": "Allume ta caméra ou charge une vidéo.",
+"Stand back so your whole body is in the picture.": "Recule pour que tout ton corps soit dans l'image.",
+"Start camera": "Allumer la caméra",
+"Load a video": "Charger une vidéo",
+"Record": "Enregistrer",
+"Countdown": "Compte à rebours",
+"None": "Aucun",
+"3 seconds": "3 secondes",
+"5 seconds": "5 secondes",
+"10 seconds": "10 secondes",
+"Record for": "Durée",
+"2 seconds": "2 secondes",
+"8 seconds": "8 secondes",
+"12 seconds": "12 secondes",
+"Until I press Stop": "Jusqu'à ce que j'appuie sur Arrêter",
+"Tracking": "Suivi",
+"Fast": "Rapide",
+"Balanced": "Équilibré",
+"Accurate": "Précis",
+"Video speed": "Vitesse de la vidéo",
+"Tips for a clean capture": "Conseils pour une bonne capture",
+"Stand <b>2–3 meters</b> from the camera, facing it, with your whole body in the picture.": "Place-toi à <b>2–3 mètres</b> de la caméra, face à elle, avec tout ton corps dans l'image.",
+"Bright, even light and a plain background help the most. Baggy clothes can hide your elbows and knees.": "Une lumière vive et uniforme et un fond uni aident le plus. Les vêtements amples peuvent cacher tes coudes et tes genoux.",
+"Minecraft arms and legs have no elbows or knees, so a bent arm becomes one straight arm pointing at your hand.": "Dans Minecraft, les bras et les jambes n'ont ni coudes ni genoux : un bras plié devient un bras droit qui pointe vers ta main.",
+"Act in place. Walking, jumping and turning all the way around are not recorded.": "Reste sur place. Marcher, sauter et faire un tour complet ne sont pas enregistrés.",
+"Start and end with your arms relaxed at your sides so the move blends in smoothly.": "Commence et termine avec les bras détendus le long du corps pour que le mouvement s'enchaîne en douceur.",
+"Live view": "Vue en direct",
+"Drag to turn · scroll to zoom": "Fais glisser pour tourner · fais défiler pour zoomer",
+"Reset view": "Réinitialiser la vue",
+"Trim": "Couper",
+"Cut extra time off the start and end.": "Coupe le temps en trop au début et à la fin.",
+"Start": "Début",
+"End": "Fin",
+"Preview skin": "Skin de l'aperçu",
+"Classic arms": "Bras classiques",
+"Slim arms": "Bras fins",
+"Front": "Devant",
+"Behind": "Derrière",
+"Back to live view": "Retour à la vue en direct",
+"Clean up": "Nettoyage",
+"Smoothing": "Lissage",
+"Simplify keyframes": "Simplifier les images clés",
+"Head tilt fix": "Correction de la tête",
+"Keyframes per second": "Images clés par seconde",
+"20 (one per game tick)": "20 (une par tick de jeu)",
+"Arms point at": "Les bras pointent vers",
+"Hands": "Les mains",
+"Elbows": "Les coudes",
+"Lean from": "Pencher depuis",
+"Neck": "Le cou",
+"Hips": "Les hanches",
+"Mirror": "Miroir",
+"Swap left and right.": "Inverse la gauche et la droite.",
+"Flip head turns": "Inverser les rotations de la tête",
+"Use this if the head turns the wrong way in the game.": "Utilise-le si la tête tourne dans le mauvais sens en jeu.",
+"Body parts to include": "Parties du corps à inclure",
+"Head": "Tête",
+"Body": "Corps",
+"Right arm": "Bras droit",
+"Left arm": "Bras gauche",
+"Right leg": "Jambe droite",
+"Left leg": "Jambe gauche",
+"Download": "Télécharger",
+"Animation name": "Nom de l'animation",
+"ID": "ID",
+"When it plays": "Lecture",
+"Once": "Une fois",
+"Loop": "Boucle",
+"Hold last pose": "Garder la dernière pose",
+"Download animation": "Télécharger l'animation",
+"Copy JSON": "Copier le JSON",
+"Record a move first.": "Enregistre d'abord un mouvement.",
+"Use it in Minecraft Education": "L'utiliser dans Minecraft Education",
+"<b>Download</b> the <span class=\"mono\">.animation.json</span> file.": "<b>Télécharge</b> le fichier <span class=\"mono\">.animation.json</span>.",
+"Open the <b>Cleverlike Emote Tool</b> and choose <b>Add animation files</b>.": "Ouvre le <b>Cleverlike Emote Tool</b> et choisis <b>Ajouter des fichiers d'animation</b>.",
+"Name your emote, then download the add-on and open it on the Minecraft Education computer.": "Nomme ton emote, puis télécharge l'add-on et ouvre-le sur l'ordinateur où se trouve Minecraft Education.",
+"Close": "Fermer",
+"Camera view with your tracked body": "Vue de la caméra avec ton corps suivi",
+"3D player model. It copies your moves, then plays your recording. Arrow keys turn it.": "Modèle 3D du joueur. Il copie tes mouvements, puis joue ton enregistrement. Les flèches du clavier le font tourner.",
+"Animation time": "Temps de l'animation",
+"Trim start": "Début de la coupe",
+"Trim end": "Fin de la coupe",
+"Arm width": "Largeur des bras",
+"Camera side": "Côté de la caméra",
+"Change the language, colors and text size.": "Change la langue, les couleurs et la taille du texte.",
+"Turn your animations into an emote add-on.": "Transforme tes animations en add-on d'emotes.",
+"Close this panel.": "Ferme ce panneau.",
+"Match your device's light or dark setting.": "Suit le réglage clair ou sombre de ton appareil.",
+"Soft light gray background.": "Fond gris clair et doux.",
+"Dark background, easier on the eyes in a dim room.": "Fond sombre, plus doux pour les yeux dans une pièce peu éclairée.",
+"Black and white with bold outlines, the easiest to read.": "Noir et blanc avec des contours épais, le plus facile à lire.",
+"Standard text size.": "Taille de texte standard.",
+"Make all text bigger.": "Agrandit tout le texte.",
+"Turn on your webcam.": "Allume ta webcam.",
+"Use a video you filmed before, like one from a phone.": "Utilise une vidéo filmée avant, par exemple avec un téléphone.",
+"Count down, then record your move.": "Compte à rebours, puis enregistre ton mouvement.",
+"Accurate is smoother but needs a faster computer.": "Précis est plus fluide mais demande un ordinateur plus rapide.",
+"Slower playback lets the tracker see more frames of a loaded video.": "Une lecture plus lente permet au suivi de voir plus d'images d'une vidéo chargée.",
+"Play or pause the preview.": "Lance ou mets en pause l'aperçu.",
+"Put the camera back where it started.": "Remet la caméra à sa position de départ.",
+"Preview with wide arms, like Steve.": "Aperçu avec des bras larges, comme Steve.",
+"Preview with slim arms, like Alex.": "Aperçu avec des bras fins, comme Alex.",
+"Look at the model's face.": "Regarde le visage du modèle.",
+"Look from behind, so the model moves the same way you do.": "Regarde depuis derrière, pour que le modèle bouge dans le même sens que toi.",
+"Let the model copy your camera again. Your recording is kept.": "Le modèle copie à nouveau ta caméra. Ton enregistrement est conservé.",
+"Higher removes shaking but softens fast moves.": "Plus haut enlève les tremblements mais adoucit les mouvements rapides.",
+"Drops keyframes that change less than this. Makes the file smaller.": "Supprime les images clés qui changent moins que cette valeur. Le fichier est plus léger.",
+"Raise this if the model looks down when you look straight ahead.": "Augmente-le si le modèle regarde vers le bas quand tu regardes droit devant.",
+"Best for waves and gestures.": "Idéal pour les saluts et les gestes.",
+"Follow the upper arm instead.": "Suit plutôt le haut du bras.",
+"Moves the body bone, like most Minecraft animations.": "Bouge l'os du corps, comme la plupart des animations Minecraft.",
+"Moves the waist bone, so bows and leans bend at the hips.": "Bouge l'os de la taille, pour que les saluts et les penchés se plient aux hanches.",
+"Letters, numbers and underscores. Also used for the file name.": "Lettres, chiffres et tirets bas. Sert aussi de nom de fichier.",
+"Plays one time, then stops.": "Joué une fois, puis s'arrête.",
+"Repeats until the player moves.": "Se répète jusqu'à ce que le joueur bouge.",
+"Plays once and stays in the last pose.": "Joué une fois, puis reste dans la dernière pose.",
+"Save the animation file to your computer.": "Enregistre le fichier d'animation sur ton ordinateur.",
+"Copy the animation's code to paste somewhere else.": "Copie le code de l'animation pour le coller ailleurs.",
+"Loading the body tracker…": "Chargement du suivi du corps…",
+"Couldn't load the body tracker. Check your internet connection and reload the page.": "Impossible de charger le suivi du corps. Vérifie ta connexion Internet et recharge la page.",
+"Camera on. Step back until your whole body is in the picture, then press Record.": "Caméra allumée. Recule jusqu'à ce que tout ton corps soit dans l'image, puis appuie sur Enregistrer.",
+"The camera is blocked or missing. Allow camera access in your browser and try again.": "La caméra est bloquée ou absente. Autorise l'accès à la caméra dans ton navigateur et réessaie.",
+"That video can't be played in this browser. Try an MP4 or WebM file.": "Cette vidéo ne peut pas être lue dans ce navigateur. Essaie un fichier MP4 ou WebM.",
+"Loaded {name} ({s} s). Press Track video to capture it.": "{name} chargé ({s} s). Appuie sur Suivre la vidéo pour la capturer.",
+"Recording canceled": "Enregistrement annulé",
+"Recording starts in {n}": "Enregistrement dans {n}",
+"Recording… do your move!": "Enregistrement… fais ton mouvement !",
+"Recording": "Enregistrement",
+"Tracking the video…": "Suivi de la vidéo…",
+"Nobody was found in the recording. Make sure your whole body is in the picture and try again.": "Personne n'a été trouvé dans l'enregistrement. Vérifie que tout ton corps est dans l'image et réessaie.",
+"Captured {s} s. Check the preview, trim it, then download.": "{s} s capturées. Vérifie l'aperçu, coupe-le, puis télécharge.",
+"Recording stopped. Captured {s} seconds.": "Enregistrement arrêté. {s} secondes capturées.",
+"{s} seconds": "{s} secondes",
+"{s} s · {b} body parts · {k} keyframes · {kb} KB": "{s} s · {b} parties du corps · {k} images clés · {kb} Ko",
+"Pick at least one body part to include.": "Choisis au moins une partie du corps à inclure.",
+"off": "désactivé",
+"Saved {file}": "{file} enregistré",
+"Copied to the clipboard": "Copié dans le presse-papiers",
+"Couldn't copy. Use Download instead.": "Impossible de copier. Utilise plutôt Télécharger.",
+"{a} of {b} seconds": "{a} sur {b} secondes",
+"live": "direct",
+"Body tracker ready. Press Record when you are in place.": "Suivi du corps prêt. Appuie sur Enregistrer quand tu es en place.",
+"Body tracker ready. Start your camera or load a video.": "Suivi du corps prêt. Allume ta caméra ou charge une vidéo.",
+"Stop camera": "Éteindre la caméra",
+"Turn off your webcam.": "Éteins ta webcam.",
+"Track video": "Suivre la vidéo",
+"Track the whole video from the start.": "Suit toute la vidéo depuis le début.",
+"Your recording": "Ton enregistrement",
+"Copies you live": "Te copie en direct",
+"Waiting for the camera": "En attente de la caméra",
+"Pause": "Pause",
+"Play": "Lecture",
+"No body found": "Aucun corps trouvé",
+"Legs hidden": "Jambes cachées",
+"Full body": "Corps entier",
+"Stop": "Arrêter",
+"Stop recording now.": "Arrête l'enregistrement maintenant.",
+"Legs point at": "Les jambes pointent vers",
+"Auto": "Auto",
+"Feet": "Les pieds",
+"Knees": "Les genoux",
+"The leg always points at the foot.": "La jambe pointe toujours vers le pied.",
+"The leg always points at the knee.": "La jambe pointe toujours vers le genou.",
+"Right knee up": "Genou droit levé",
+"Left knee up": "Genou gauche levé",
+"Right kick": "Coup de pied droit",
+"Left kick": "Coup de pied gauche",
+"For kicks and knee-ups, turning about 45° from the camera lets it see how high your leg goes.": "Pour les coups de pied et les montées de genou, tourne-toi d’environ 45° par rapport à la caméra pour qu’elle voie à quelle hauteur monte ta jambe.",
+"Head nod strength": "Ampleur des hochements de tête",
+"Makes looking up and down bigger or smaller.": "Rend les mouvements de tête vers le haut et le bas plus grands ou plus petits.",
+"Plant feet": "Pieds au sol",
+"A leg that isn't lifted stays still on the ground.": "Une jambe qui n’est pas levée reste immobile au sol.",
+"Straight arm: points at the hand. Bent elbow: follows the forearm and slides back, like a punch wind-up.": "Bras tendu : il pointe vers la main. Coude plié : il suit l’avant-bras et glisse vers l’arrière, comme pour armer un coup de poing.",
+"Straight leg: points at the foot, like a kick. Bent knee: the leg lifts up, like a knee raise.": "Jambe tendue : elle pointe vers le pied, comme un coup de pied. Genou plié : la jambe monte, comme une montée de genou.",
+"Slide bent arms and legs": "Faire glisser bras et jambes pliés",
+"Like Minecraft animations: a raised knee lifts the whole leg, and a pulled-back fist slides the arm back.": "Comme dans les animations Minecraft : un genou levé soulève toute la jambe, et un poing armé fait glisser le bras vers l’arrière.",
+"Captured {s} s. Your legs were mostly out of view, so they stay standing still.": "{s} s enregistrées. Tes jambes étaient presque toujours hors du cadre, elles restent donc immobiles, debout."
+},
+"pt": {
+"Skip to the camera": "Pular para a câmera",
+"Act it out on camera, get a Minecraft Education animation": "Encene na câmera e ganhe uma animação para o Minecraft Education",
+"Display & language": "Exibição e idioma",
+"Open the Emote Tool": "Abrir o Emote Tool",
+"Language": "Idioma",
+"Theme": "Tema",
+"System": "Sistema",
+"Light": "Claro",
+"Dark": "Escuro",
+"High contrast": "Alto contraste",
+"Text size": "Tamanho do texto",
+"Normal": "Normal",
+"Large": "Grande",
+"Sound": "Som",
+"Countdown beeps": "Bipes da contagem regressiva",
+"Hear when recording starts, even from across the room.": "Ouça quando a gravação começar, mesmo do outro lado da sala.",
+"Keyboard shortcuts": "Atalhos de teclado",
+"Start or stop recording": "Iniciar ou parar a gravação",
+"Play or pause the preview": "Reproduzir ou pausar a pré-visualização",
+"Turn the 3D model (when it has focus)": "Girar o modelo 3D (quando estiver em foco)",
+"Zoom the 3D model": "Dar zoom no modelo 3D",
+"These settings are shared with the Cleverlike Emote Tool.": "Estas configurações são compartilhadas com o Cleverlike Emote Tool.",
+"Camera": "Câmera",
+"Off": "Desligada",
+"Start your camera or load a video.": "Ligue sua câmera ou carregue um vídeo.",
+"Stand back so your whole body is in the picture.": "Afaste-se para que seu corpo inteiro apareça na imagem.",
+"Start camera": "Ligar câmera",
+"Load a video": "Carregar um vídeo",
+"Record": "Gravar",
+"Countdown": "Contagem regressiva",
+"None": "Nenhuma",
+"3 seconds": "3 segundos",
+"5 seconds": "5 segundos",
+"10 seconds": "10 segundos",
+"Record for": "Gravar por",
+"2 seconds": "2 segundos",
+"8 seconds": "8 segundos",
+"12 seconds": "12 segundos",
+"Until I press Stop": "Até eu apertar Parar",
+"Tracking": "Rastreamento",
+"Fast": "Rápido",
+"Balanced": "Equilibrado",
+"Accurate": "Preciso",
+"Video speed": "Velocidade do vídeo",
+"Tips for a clean capture": "Dicas para uma boa captura",
+"Stand <b>2–3 meters</b> from the camera, facing it, with your whole body in the picture.": "Fique a <b>2–3 metros</b> da câmera, de frente para ela, com o corpo inteiro na imagem.",
+"Bright, even light and a plain background help the most. Baggy clothes can hide your elbows and knees.": "Luz forte e uniforme e um fundo liso ajudam muito. Roupas largas podem esconder seus cotovelos e joelhos.",
+"Minecraft arms and legs have no elbows or knees, so a bent arm becomes one straight arm pointing at your hand.": "Os braços e pernas do Minecraft não têm cotovelos nem joelhos, então um braço dobrado vira um braço reto apontando para a sua mão.",
+"Act in place. Walking, jumping and turning all the way around are not recorded.": "Encene sem sair do lugar. Andar, pular e dar uma volta completa não são gravados.",
+"Start and end with your arms relaxed at your sides so the move blends in smoothly.": "Comece e termine com os braços relaxados ao lado do corpo para o movimento se encaixar suavemente.",
+"Live view": "Ao vivo",
+"Drag to turn · scroll to zoom": "Arraste para girar · role para dar zoom",
+"Reset view": "Redefinir visualização",
+"Trim": "Cortar",
+"Cut extra time off the start and end.": "Corte o tempo extra do início e do fim.",
+"Start": "Início",
+"End": "Fim",
+"Preview skin": "Skin da pré-visualização",
+"Classic arms": "Braços clássicos",
+"Slim arms": "Braços finos",
+"Front": "Frente",
+"Behind": "Atrás",
+"Back to live view": "Voltar ao vivo",
+"Clean up": "Ajustes",
+"Smoothing": "Suavização",
+"Simplify keyframes": "Simplificar quadros-chave",
+"Head tilt fix": "Correção da inclinação da cabeça",
+"Keyframes per second": "Quadros-chave por segundo",
+"20 (one per game tick)": "20 (um por tick do jogo)",
+"Arms point at": "Braços apontam para",
+"Hands": "Mãos",
+"Elbows": "Cotovelos",
+"Lean from": "Inclinar a partir de",
+"Neck": "Pescoço",
+"Hips": "Quadril",
+"Mirror": "Espelhar",
+"Swap left and right.": "Troca esquerda e direita.",
+"Flip head turns": "Inverter giros da cabeça",
+"Use this if the head turns the wrong way in the game.": "Use se a cabeça girar para o lado errado no jogo.",
+"Body parts to include": "Partes do corpo a incluir",
+"Head": "Cabeça",
+"Body": "Corpo",
+"Right arm": "Braço direito",
+"Left arm": "Braço esquerdo",
+"Right leg": "Perna direita",
+"Left leg": "Perna esquerda",
+"Download": "Baixar",
+"Animation name": "Nome da animação",
+"ID": "ID",
+"When it plays": "Como toca",
+"Once": "Uma vez",
+"Loop": "Repetir",
+"Hold last pose": "Manter a última pose",
+"Download animation": "Baixar animação",
+"Copy JSON": "Copiar JSON",
+"Record a move first.": "Grave um movimento primeiro.",
+"Use it in Minecraft Education": "Use no Minecraft Education",
+"<b>Download</b> the <span class=\"mono\">.animation.json</span> file.": "<b>Baixe</b> o arquivo <span class=\"mono\">.animation.json</span>.",
+"Open the <b>Cleverlike Emote Tool</b> and choose <b>Add animation files</b>.": "Abra o <b>Cleverlike Emote Tool</b> e escolha <b>Adicionar arquivos de animação</b>.",
+"Name your emote, then download the add-on and open it on the Minecraft Education computer.": "Dê um nome ao seu emote, depois baixe o add-on e abra-o no computador que tem o Minecraft Education.",
+"Close": "Fechar",
+"Camera view with your tracked body": "Imagem da câmera com seu corpo rastreado",
+"3D player model. It copies your moves, then plays your recording. Arrow keys turn it.": "Modelo 3D do jogador. Ele copia seus movimentos e depois reproduz sua gravação. As setas do teclado giram o modelo.",
+"Animation time": "Tempo da animação",
+"Trim start": "Cortar início",
+"Trim end": "Cortar fim",
+"Arm width": "Largura dos braços",
+"Camera side": "Lado da câmera",
+"Change the language, colors and text size.": "Mude o idioma, as cores e o tamanho do texto.",
+"Turn your animations into an emote add-on.": "Transforme suas animações em um add-on de emotes.",
+"Close this panel.": "Fecha este painel.",
+"Match your device's light or dark setting.": "Segue a configuração clara ou escura do seu dispositivo.",
+"Soft light gray background.": "Fundo cinza-claro suave.",
+"Dark background, easier on the eyes in a dim room.": "Fundo escuro, mais confortável para os olhos em ambientes com pouca luz.",
+"Black and white with bold outlines, the easiest to read.": "Preto e branco com contornos grossos, o mais fácil de ler.",
+"Standard text size.": "Tamanho de texto padrão.",
+"Make all text bigger.": "Aumenta todo o texto.",
+"Turn on your webcam.": "Liga sua webcam.",
+"Use a video you filmed before, like one from a phone.": "Usa um vídeo que você gravou antes, como um do celular.",
+"Count down, then record your move.": "Faz a contagem regressiva e grava seu movimento.",
+"Accurate is smoother but needs a faster computer.": "Preciso é mais suave, mas precisa de um computador mais rápido.",
+"Slower playback lets the tracker see more frames of a loaded video.": "Reproduzir mais devagar deixa o rastreador ver mais quadros de um vídeo carregado.",
+"Play or pause the preview.": "Reproduz ou pausa a pré-visualização.",
+"Put the camera back where it started.": "Coloca a câmera de volta na posição inicial.",
+"Preview with wide arms, like Steve.": "Pré-visualização com braços largos, como o Steve.",
+"Preview with slim arms, like Alex.": "Pré-visualização com braços finos, como a Alex.",
+"Look at the model's face.": "Olha para o rosto do modelo.",
+"Look from behind, so the model moves the same way you do.": "Olha por trás, para o modelo se mexer para o mesmo lado que você.",
+"Let the model copy your camera again. Your recording is kept.": "Deixa o modelo copiar sua câmera de novo. Sua gravação é mantida.",
+"Higher removes shaking but softens fast moves.": "Mais alto tira os tremores, mas suaviza movimentos rápidos.",
+"Drops keyframes that change less than this. Makes the file smaller.": "Remove quadros-chave que mudam menos que isso. Deixa o arquivo menor.",
+"Raise this if the model looks down when you look straight ahead.": "Aumente se o modelo olhar para baixo quando você olhar para a frente.",
+"Best for waves and gestures.": "Melhor para acenos e gestos.",
+"Follow the upper arm instead.": "Segue a parte de cima do braço.",
+"Moves the body bone, like most Minecraft animations.": "Move o osso do corpo, como a maioria das animações do Minecraft.",
+"Moves the waist bone, so bows and leans bend at the hips.": "Move o osso da cintura, para que reverências e inclinações dobrem no quadril.",
+"Letters, numbers and underscores. Also used for the file name.": "Letras, números e sublinhados. Também usado no nome do arquivo.",
+"Plays one time, then stops.": "Toca uma vez e depois para.",
+"Repeats until the player moves.": "Repete até o jogador se mexer.",
+"Plays once and stays in the last pose.": "Toca uma vez e fica na última pose.",
+"Save the animation file to your computer.": "Salva o arquivo de animação no seu computador.",
+"Copy the animation's code to paste somewhere else.": "Copia o código da animação para colar em outro lugar.",
+"Loading the body tracker…": "Carregando o rastreador de corpo…",
+"Couldn't load the body tracker. Check your internet connection and reload the page.": "Não foi possível carregar o rastreador de corpo. Verifique sua conexão com a internet e recarregue a página.",
+"Camera on. Step back until your whole body is in the picture, then press Record.": "Câmera ligada. Afaste-se até seu corpo inteiro aparecer na imagem e aperte Gravar.",
+"The camera is blocked or missing. Allow camera access in your browser and try again.": "A câmera está bloqueada ou não foi encontrada. Permita o acesso à câmera no navegador e tente de novo.",
+"That video can't be played in this browser. Try an MP4 or WebM file.": "Esse vídeo não pode ser reproduzido neste navegador. Tente um arquivo MP4 ou WebM.",
+"Loaded {name} ({s} s). Press Track video to capture it.": "{name} carregado ({s} s). Aperte Rastrear vídeo para capturá-lo.",
+"Recording canceled": "Gravação cancelada",
+"Recording starts in {n}": "A gravação começa em {n}",
+"Recording… do your move!": "Gravando… faça seu movimento!",
+"Recording": "Gravando",
+"Tracking the video…": "Rastreando o vídeo…",
+"Nobody was found in the recording. Make sure your whole body is in the picture and try again.": "Ninguém foi encontrado na gravação. Confira se seu corpo inteiro aparece na imagem e tente de novo.",
+"Captured {s} s. Check the preview, trim it, then download.": "{s} s capturados. Confira a pré-visualização, corte e depois baixe.",
+"Recording stopped. Captured {s} seconds.": "Gravação parada. {s} segundos capturados.",
+"{s} seconds": "{s} segundos",
+"{s} s · {b} body parts · {k} keyframes · {kb} KB": "{s} s · {b} partes do corpo · {k} quadros-chave · {kb} KB",
+"Pick at least one body part to include.": "Escolha pelo menos uma parte do corpo para incluir.",
+"off": "desligado",
+"Saved {file}": "{file} salvo",
+"Copied to the clipboard": "Copiado para a área de transferência",
+"Couldn't copy. Use Download instead.": "Não foi possível copiar. Use Baixar.",
+"{a} of {b} seconds": "{a} de {b} segundos",
+"live": "ao vivo",
+"Body tracker ready. Press Record when you are in place.": "Rastreador de corpo pronto. Aperte Gravar quando estiver na posição.",
+"Body tracker ready. Start your camera or load a video.": "Rastreador de corpo pronto. Ligue sua câmera ou carregue um vídeo.",
+"Stop camera": "Desligar câmera",
+"Turn off your webcam.": "Desliga sua webcam.",
+"Track video": "Rastrear vídeo",
+"Track the whole video from the start.": "Rastreia o vídeo inteiro desde o início.",
+"Your recording": "Sua gravação",
+"Copies you live": "Copia você ao vivo",
+"Waiting for the camera": "Esperando a câmera",
+"Pause": "Pausar",
+"Play": "Reproduzir",
+"No body found": "Nenhum corpo encontrado",
+"Legs hidden": "Pernas escondidas",
+"Full body": "Corpo inteiro",
+"Stop": "Parar",
+"Stop recording now.": "Para a gravação agora.",
+"Legs point at": "Pernas apontam para",
+"Auto": "Auto",
+"Feet": "Pés",
+"Knees": "Joelhos",
+"The leg always points at the foot.": "A perna sempre aponta para o pé.",
+"The leg always points at the knee.": "A perna sempre aponta para o joelho.",
+"Right knee up": "Joelho direito para cima",
+"Left knee up": "Joelho esquerdo para cima",
+"Right kick": "Chute direito",
+"Left kick": "Chute esquerdo",
+"For kicks and knee-ups, turning about 45° from the camera lets it see how high your leg goes.": "Para chutes e joelhos para cima, vire cerca de 45° em relação à câmera para ela ver a altura da sua perna.",
+"Head nod strength": "Força do aceno de cabeça",
+"Makes looking up and down bigger or smaller.": "Deixa o movimento de olhar para cima e para baixo maior ou menor.",
+"Plant feet": "Pés no chão",
+"A leg that isn't lifted stays still on the ground.": "Uma perna que não está levantada fica parada no chão.",
+"Straight arm: points at the hand. Bent elbow: follows the forearm and slides back, like a punch wind-up.": "Braço esticado: aponta para a mão. Cotovelo dobrado: segue o antebraço e desliza para trás, como ao preparar um soco.",
+"Straight leg: points at the foot, like a kick. Bent knee: the leg lifts up, like a knee raise.": "Perna esticada: aponta para o pé, como um chute. Joelho dobrado: a perna sobe, como ao levantar o joelho.",
+"Slide bent arms and legs": "Deslizar braços e pernas dobrados",
+"Like Minecraft animations: a raised knee lifts the whole leg, and a pulled-back fist slides the arm back.": "Como nas animações do Minecraft: um joelho levantado ergue a perna inteira, e um punho puxado para trás desliza o braço para trás.",
+"Captured {s} s. Your legs were mostly out of view, so they stay standing still.": "{s} s capturados. Suas pernas ficaram quase sempre fora da imagem, então elas ficam paradas em pé."
+},
+"de": {
+"Skip to the camera": "Zur Kamera springen",
+"Act it out on camera, get a Minecraft Education animation": "Spiel es vor der Kamera vor und erhalte eine Animation für Minecraft Education",
+"Display & language": "Anzeige & Sprache",
+"Open the Emote Tool": "Emote Tool öffnen",
+"Language": "Sprache",
+"Theme": "Design",
+"System": "System",
+"Light": "Hell",
+"Dark": "Dunkel",
+"High contrast": "Hoher Kontrast",
+"Text size": "Textgröße",
+"Normal": "Normal",
+"Large": "Groß",
+"Sound": "Ton",
+"Countdown beeps": "Countdown-Pieptöne",
+"Hear when recording starts, even from across the room.": "Hör, wann die Aufnahme startet, auch vom anderen Ende des Raums.",
+"Keyboard shortcuts": "Tastenkürzel",
+"Start or stop recording": "Aufnahme starten oder stoppen",
+"Play or pause the preview": "Vorschau abspielen oder pausieren",
+"Turn the 3D model (when it has focus)": "3D-Modell drehen (wenn es ausgewählt ist)",
+"Zoom the 3D model": "3D-Modell zoomen",
+"These settings are shared with the Cleverlike Emote Tool.": "Diese Einstellungen gelten auch im Cleverlike Emote Tool.",
+"Camera": "Kamera",
+"Off": "Aus",
+"Start your camera or load a video.": "Starte deine Kamera oder lade ein Video.",
+"Stand back so your whole body is in the picture.": "Geh zurück, damit dein ganzer Körper im Bild ist.",
+"Start camera": "Kamera starten",
+"Load a video": "Video laden",
+"Record": "Aufnehmen",
+"Countdown": "Countdown",
+"None": "Ohne",
+"3 seconds": "3 Sekunden",
+"5 seconds": "5 Sekunden",
+"10 seconds": "10 Sekunden",
+"Record for": "Aufnahmedauer",
+"2 seconds": "2 Sekunden",
+"8 seconds": "8 Sekunden",
+"12 seconds": "12 Sekunden",
+"Until I press Stop": "Bis ich Stopp drücke",
+"Tracking": "Erkennung",
+"Fast": "Schnell",
+"Balanced": "Ausgewogen",
+"Accurate": "Genau",
+"Video speed": "Videotempo",
+"Tips for a clean capture": "Tipps für eine saubere Aufnahme",
+"Stand <b>2–3 meters</b> from the camera, facing it, with your whole body in the picture.": "Stell dich <b>2–3 Meter</b> vor die Kamera, schau sie an und achte darauf, dass dein ganzer Körper im Bild ist.",
+"Bright, even light and a plain background help the most. Baggy clothes can hide your elbows and knees.": "Helles, gleichmäßiges Licht und ein schlichter Hintergrund helfen am meisten. Weite Kleidung kann Ellbogen und Knie verdecken.",
+"Minecraft arms and legs have no elbows or knees, so a bent arm becomes one straight arm pointing at your hand.": "Arme und Beine in Minecraft haben keine Ellbogen oder Knie. Ein gebeugter Arm wird deshalb zu einem geraden Arm, der auf deine Hand zeigt.",
+"Act in place. Walking, jumping and turning all the way around are not recorded.": "Bleib an deinem Platz. Gehen, Springen und ganze Drehungen werden nicht aufgenommen.",
+"Start and end with your arms relaxed at your sides so the move blends in smoothly.": "Beginne und ende mit locker hängenden Armen, damit die Bewegung sanft übergeht.",
+"Live view": "Live-Ansicht",
+"Drag to turn · scroll to zoom": "Ziehen zum Drehen · Scrollen zum Zoomen",
+"Reset view": "Ansicht zurücksetzen",
+"Trim": "Kürzen",
+"Cut extra time off the start and end.": "Schneide überflüssige Zeit am Anfang und Ende weg.",
+"Start": "Anfang",
+"End": "Ende",
+"Preview skin": "Vorschau-Skin",
+"Classic arms": "Klassische Arme",
+"Slim arms": "Schmale Arme",
+"Front": "Vorne",
+"Behind": "Hinten",
+"Back to live view": "Zurück zur Live-Ansicht",
+"Clean up": "Bereinigen",
+"Smoothing": "Glättung",
+"Simplify keyframes": "Keyframes vereinfachen",
+"Head tilt fix": "Kopfneigung ausgleichen",
+"Keyframes per second": "Keyframes pro Sekunde",
+"20 (one per game tick)": "20 (einer pro Spieltick)",
+"Arms point at": "Arme zeigen auf",
+"Hands": "Hände",
+"Elbows": "Ellbogen",
+"Lean from": "Neigen ab",
+"Neck": "Hals",
+"Hips": "Hüfte",
+"Mirror": "Spiegeln",
+"Swap left and right.": "Links und rechts tauschen.",
+"Flip head turns": "Kopfdrehung umkehren",
+"Use this if the head turns the wrong way in the game.": "Nutze das, wenn sich der Kopf im Spiel falsch herum dreht.",
+"Body parts to include": "Enthaltene Körperteile",
+"Head": "Kopf",
+"Body": "Körper",
+"Right arm": "Rechter Arm",
+"Left arm": "Linker Arm",
+"Right leg": "Rechtes Bein",
+"Left leg": "Linkes Bein",
+"Download": "Herunterladen",
+"Animation name": "Animationsname",
+"ID": "ID",
+"When it plays": "Wiedergabe",
+"Once": "Einmal",
+"Loop": "Wiederholen",
+"Hold last pose": "Letzte Pose halten",
+"Download animation": "Animation herunterladen",
+"Copy JSON": "JSON kopieren",
+"Record a move first.": "Nimm zuerst eine Bewegung auf.",
+"Use it in Minecraft Education": "So nutzt du es in Minecraft Education",
+"<b>Download</b> the <span class=\"mono\">.animation.json</span> file.": "Lade die Datei <span class=\"mono\">.animation.json</span> über <b>Herunterladen</b> herunter.",
+"Open the <b>Cleverlike Emote Tool</b> and choose <b>Add animation files</b>.": "Öffne das <b>Cleverlike Emote Tool</b> und wähle <b>Animationsdateien hinzufügen</b>.",
+"Name your emote, then download the add-on and open it on the Minecraft Education computer.": "Gib deinem Emote einen Namen, lade dann das Add-on herunter und öffne es auf dem Computer mit Minecraft Education.",
+"Close": "Schließen",
+"Camera view with your tracked body": "Kamerabild mit deinem erkannten Körper",
+"3D player model. It copies your moves, then plays your recording. Arrow keys turn it.": "3D-Spielermodell. Es macht deine Bewegungen nach und spielt dann deine Aufnahme ab. Mit den Pfeiltasten drehst du es.",
+"Animation time": "Animationszeit",
+"Trim start": "Anfang kürzen",
+"Trim end": "Ende kürzen",
+"Arm width": "Armbreite",
+"Camera side": "Kameraseite",
+"Change the language, colors and text size.": "Sprache, Farben und Textgröße ändern.",
+"Turn your animations into an emote add-on.": "Mach aus deinen Animationen ein Emote-Add-on.",
+"Close this panel.": "Dieses Fenster schließen.",
+"Match your device's light or dark setting.": "Folgt der Hell- oder Dunkel-Einstellung deines Geräts.",
+"Soft light gray background.": "Sanfter hellgrauer Hintergrund.",
+"Dark background, easier on the eyes in a dim room.": "Dunkler Hintergrund, angenehmer für die Augen in dunklen Räumen.",
+"Black and white with bold outlines, the easiest to read.": "Schwarz-Weiß mit kräftigen Umrissen, am leichtesten zu lesen.",
+"Standard text size.": "Normale Textgröße.",
+"Make all text bigger.": "Macht den gesamten Text größer.",
+"Turn on your webcam.": "Webcam einschalten.",
+"Use a video you filmed before, like one from a phone.": "Nutze ein Video, das du vorher gefilmt hast, zum Beispiel mit dem Handy.",
+"Count down, then record your move.": "Countdown, dann wird deine Bewegung aufgenommen.",
+"Accurate is smoother but needs a faster computer.": "Genau ist flüssiger, braucht aber einen schnelleren Computer.",
+"Slower playback lets the tracker see more frames of a loaded video.": "Bei langsamerer Wiedergabe sieht die Erkennung mehr Bilder eines geladenen Videos.",
+"Play or pause the preview.": "Vorschau abspielen oder pausieren.",
+"Put the camera back where it started.": "Setzt die Kamera auf den Anfang zurück.",
+"Preview with wide arms, like Steve.": "Vorschau mit breiten Armen, wie Steve.",
+"Preview with slim arms, like Alex.": "Vorschau mit schmalen Armen, wie Alex.",
+"Look at the model's face.": "Schau dem Modell ins Gesicht.",
+"Look from behind, so the model moves the same way you do.": "Schau von hinten, damit sich das Modell genauso bewegt wie du.",
+"Let the model copy your camera again. Your recording is kept.": "Das Modell macht wieder deine Kamera nach. Deine Aufnahme bleibt erhalten.",
+"Higher removes shaking but softens fast moves.": "Höher entfernt Wackeln, macht schnelle Bewegungen aber weicher.",
+"Drops keyframes that change less than this. Makes the file smaller.": "Entfernt Keyframes, die sich weniger als dieser Wert ändern. Macht die Datei kleiner.",
+"Raise this if the model looks down when you look straight ahead.": "Erhöhe den Wert, wenn das Modell nach unten schaut, obwohl du geradeaus schaust.",
+"Best for waves and gestures.": "Am besten für Winken und Gesten.",
+"Follow the upper arm instead.": "Folgt stattdessen dem Oberarm.",
+"Moves the body bone, like most Minecraft animations.": "Bewegt den Körperknochen, wie die meisten Minecraft-Animationen.",
+"Moves the waist bone, so bows and leans bend at the hips.": "Bewegt den Hüftknochen, damit Verbeugungen und Neigungen in der Hüfte knicken.",
+"Letters, numbers and underscores. Also used for the file name.": "Buchstaben, Zahlen und Unterstriche. Wird auch als Dateiname verwendet.",
+"Plays one time, then stops.": "Spielt einmal und stoppt dann.",
+"Repeats until the player moves.": "Wiederholt sich, bis der Spieler sich bewegt.",
+"Plays once and stays in the last pose.": "Spielt einmal und bleibt in der letzten Pose.",
+"Save the animation file to your computer.": "Speichert die Animationsdatei auf deinem Computer.",
+"Copy the animation's code to paste somewhere else.": "Kopiert den Code der Animation, um ihn woanders einzufügen.",
+"Loading the body tracker…": "Körpererkennung wird geladen…",
+"Couldn't load the body tracker. Check your internet connection and reload the page.": "Die Körpererkennung konnte nicht geladen werden. Prüfe deine Internetverbindung und lade die Seite neu.",
+"Camera on. Step back until your whole body is in the picture, then press Record.": "Kamera an. Geh zurück, bis dein ganzer Körper im Bild ist, und drücke dann Aufnehmen.",
+"The camera is blocked or missing. Allow camera access in your browser and try again.": "Die Kamera ist blockiert oder fehlt. Erlaube den Kamerazugriff in deinem Browser und versuche es erneut.",
+"That video can't be played in this browser. Try an MP4 or WebM file.": "Dieses Video kann in diesem Browser nicht abgespielt werden. Versuche eine MP4- oder WebM-Datei.",
+"Loaded {name} ({s} s). Press Track video to capture it.": "{name} geladen ({s} s). Drücke Video analysieren, um es aufzunehmen.",
+"Recording canceled": "Aufnahme abgebrochen",
+"Recording starts in {n}": "Aufnahme startet in {n}",
+"Recording… do your move!": "Aufnahme läuft… zeig deine Bewegung!",
+"Recording": "Aufnahme",
+"Tracking the video…": "Video wird analysiert…",
+"Nobody was found in the recording. Make sure your whole body is in the picture and try again.": "In der Aufnahme wurde niemand gefunden. Achte darauf, dass dein ganzer Körper im Bild ist, und versuche es erneut.",
+"Captured {s} s. Check the preview, trim it, then download.": "{s} s aufgenommen. Prüfe die Vorschau, kürze die Aufnahme und lade sie dann herunter.",
+"Recording stopped. Captured {s} seconds.": "Aufnahme gestoppt. {s} Sekunden aufgenommen.",
+"{s} seconds": "{s} Sekunden",
+"{s} s · {b} body parts · {k} keyframes · {kb} KB": "{s} s · {b} Körperteile · {k} Keyframes · {kb} KB",
+"Pick at least one body part to include.": "Wähle mindestens ein Körperteil aus.",
+"off": "aus",
+"Saved {file}": "{file} gespeichert",
+"Copied to the clipboard": "In die Zwischenablage kopiert",
+"Couldn't copy. Use Download instead.": "Kopieren hat nicht geklappt. Nutze stattdessen Herunterladen.",
+"{a} of {b} seconds": "{a} von {b} Sekunden",
+"live": "live",
+"Body tracker ready. Press Record when you are in place.": "Körpererkennung bereit. Drücke Aufnehmen, wenn du an deinem Platz bist.",
+"Body tracker ready. Start your camera or load a video.": "Körpererkennung bereit. Starte deine Kamera oder lade ein Video.",
+"Stop camera": "Kamera stoppen",
+"Turn off your webcam.": "Webcam ausschalten.",
+"Track video": "Video analysieren",
+"Track the whole video from the start.": "Analysiert das ganze Video von Anfang an.",
+"Your recording": "Deine Aufnahme",
+"Copies you live": "Macht dich live nach",
+"Waiting for the camera": "Warte auf die Kamera",
+"Pause": "Pause",
+"Play": "Abspielen",
+"No body found": "Kein Körper erkannt",
+"Legs hidden": "Beine verdeckt",
+"Full body": "Ganzer Körper",
+"Stop": "Stopp",
+"Stop recording now.": "Aufnahme jetzt stoppen.",
+"Legs point at": "Beine zeigen auf",
+"Auto": "Auto",
+"Feet": "Füße",
+"Knees": "Knie",
+"The leg always points at the foot.": "Das Bein zeigt immer auf den Fuß.",
+"The leg always points at the knee.": "Das Bein zeigt immer auf das Knie.",
+"Right knee up": "Rechtes Knie hoch",
+"Left knee up": "Linkes Knie hoch",
+"Right kick": "Tritt rechts",
+"Left kick": "Tritt links",
+"For kicks and knee-ups, turning about 45° from the camera lets it see how high your leg goes.": "Für Tritte und Kniehebe dreh dich etwa 45° zur Kamera, damit sie sieht, wie hoch dein Bein geht.",
+"Head nod strength": "Stärke des Nickens",
+"Makes looking up and down bigger or smaller.": "Macht das Hoch- und Runterschauen größer oder kleiner.",
+"Plant feet": "Füße am Boden",
+"A leg that isn't lifted stays still on the ground.": "Ein Bein, das nicht angehoben ist, bleibt ruhig auf dem Boden.",
+"Straight arm: points at the hand. Bent elbow: follows the forearm and slides back, like a punch wind-up.": "Gestreckter Arm: zeigt auf die Hand. Gebeugter Ellbogen: folgt dem Unterarm und rutscht zurück, wie beim Ausholen zum Schlag.",
+"Straight leg: points at the foot, like a kick. Bent knee: the leg lifts up, like a knee raise.": "Gestrecktes Bein: zeigt auf den Fuß, wie bei einem Tritt. Gebeugtes Knie: das Bein geht nach oben, wie beim Knieheben.",
+"Slide bent arms and legs": "Gebeugte Arme und Beine verschieben",
+"Like Minecraft animations: a raised knee lifts the whole leg, and a pulled-back fist slides the arm back.": "Wie in Minecraft-Animationen: Ein gehobenes Knie hebt das ganze Bein, und eine zurückgezogene Faust schiebt den Arm nach hinten.",
+"Captured {s} s. Your legs were mostly out of view, so they stay standing still.": "{s} s aufgenommen. Deine Beine waren meist nicht im Bild, deshalb bleiben sie ruhig stehen."
+},
+"zh": {
+"Skip to the camera": "跳到摄像头",
+"Act it out on camera, get a Minecraft Education animation": "对着摄像头表演，得到 Minecraft Education 动画",
+"Display & language": "显示与语言",
+"Open the Emote Tool": "打开 Emote Tool",
+"Language": "语言",
+"Theme": "主题",
+"System": "跟随系统",
+"Light": "浅色",
+"Dark": "深色",
+"High contrast": "高对比度",
+"Text size": "文字大小",
+"Normal": "正常",
+"Large": "大",
+"Sound": "声音",
+"Countdown beeps": "倒计时提示音",
+"Hear when recording starts, even from across the room.": "即使站在房间另一头，也能听到录制何时开始。",
+"Keyboard shortcuts": "键盘快捷键",
+"Start or stop recording": "开始或停止录制",
+"Play or pause the preview": "播放或暂停预览",
+"Turn the 3D model (when it has focus)": "旋转 3D 模型（选中时）",
+"Zoom the 3D model": "缩放 3D 模型",
+"These settings are shared with the Cleverlike Emote Tool.": "这些设置与 Cleverlike Emote Tool 共用。",
+"Camera": "摄像头",
+"Off": "关闭",
+"Start your camera or load a video.": "打开摄像头或载入视频。",
+"Stand back so your whole body is in the picture.": "往后站，让全身都在画面里。",
+"Start camera": "打开摄像头",
+"Load a video": "载入视频",
+"Record": "录制",
+"Countdown": "倒计时",
+"None": "无",
+"3 seconds": "3 秒",
+"5 seconds": "5 秒",
+"10 seconds": "10 秒",
+"Record for": "录制时长",
+"2 seconds": "2 秒",
+"8 seconds": "8 秒",
+"12 seconds": "12 秒",
+"Until I press Stop": "直到我按停止",
+"Tracking": "追踪",
+"Fast": "快速",
+"Balanced": "均衡",
+"Accurate": "精确",
+"Video speed": "视频速度",
+"Tips for a clean capture": "录得更好的小技巧",
+"Stand <b>2–3 meters</b> from the camera, facing it, with your whole body in the picture.": "站在离摄像头 <b>2–3 米</b>的地方，面向摄像头，让全身都在画面里。",
+"Bright, even light and a plain background help the most. Baggy clothes can hide your elbows and knees.": "明亮均匀的光线和简单的背景最有帮助。宽松的衣服可能会挡住手肘和膝盖。",
+"Minecraft arms and legs have no elbows or knees, so a bent arm becomes one straight arm pointing at your hand.": "Minecraft 的手臂和腿没有手肘和膝盖，所以弯曲的手臂会变成一条指向你手的直臂。",
+"Act in place. Walking, jumping and turning all the way around are not recorded.": "请在原地表演。走动、跳跃和整圈转身都不会被录下来。",
+"Start and end with your arms relaxed at your sides so the move blends in smoothly.": "开始和结束时让双臂自然垂在身体两侧，这样动作衔接更流畅。",
+"Live view": "实时画面",
+"Drag to turn · scroll to zoom": "拖动旋转 · 滚动缩放",
+"Reset view": "重置视角",
+"Trim": "裁剪",
+"Cut extra time off the start and end.": "剪掉开头和结尾多余的时间。",
+"Start": "开始",
+"End": "结束",
+"Preview skin": "预览皮肤",
+"Classic arms": "经典手臂",
+"Slim arms": "纤细手臂",
+"Front": "正面",
+"Behind": "背面",
+"Back to live view": "返回实时画面",
+"Clean up": "优化",
+"Smoothing": "平滑",
+"Simplify keyframes": "精简关键帧",
+"Head tilt fix": "头部倾斜修正",
+"Keyframes per second": "每秒关键帧数",
+"20 (one per game tick)": "20（每个游戏刻一个）",
+"Arms point at": "手臂指向",
+"Hands": "手",
+"Elbows": "手肘",
+"Lean from": "倾斜起点",
+"Neck": "脖子",
+"Hips": "臀部",
+"Mirror": "镜像",
+"Swap left and right.": "左右互换。",
+"Flip head turns": "反转头部转向",
+"Use this if the head turns the wrong way in the game.": "如果游戏中头转错了方向，请使用此项。",
+"Body parts to include": "要包含的身体部位",
+"Head": "头",
+"Body": "身体",
+"Right arm": "右臂",
+"Left arm": "左臂",
+"Right leg": "右腿",
+"Left leg": "左腿",
+"Download": "下载",
+"Animation name": "动画名称",
+"ID": "ID",
+"When it plays": "播放方式",
+"Once": "一次",
+"Loop": "循环",
+"Hold last pose": "保持最后姿势",
+"Download animation": "下载动画",
+"Copy JSON": "复制 JSON",
+"Record a move first.": "请先录制一个动作。",
+"Use it in Minecraft Education": "在 Minecraft Education 中使用",
+"<b>Download</b> the <span class=\"mono\">.animation.json</span> file.": "<b>下载</b> <span class=\"mono\">.animation.json</span> 文件。",
+"Open the <b>Cleverlike Emote Tool</b> and choose <b>Add animation files</b>.": "打开 <b>Cleverlike Emote Tool</b>，选择<b>添加动画文件</b>。",
+"Name your emote, then download the add-on and open it on the Minecraft Education computer.": "给表情动作命名，然后下载附加包，并在装有 Minecraft Education 的电脑上打开。",
+"Close": "关闭",
+"Camera view with your tracked body": "显示追踪到的身体的摄像头画面",
+"3D player model. It copies your moves, then plays your recording. Arrow keys turn it.": "3D 玩家模型。它会模仿你的动作，然后播放你的录制。方向键可以旋转它。",
+"Animation time": "动画时间",
+"Trim start": "裁剪开头",
+"Trim end": "裁剪结尾",
+"Arm width": "手臂宽度",
+"Camera side": "镜头方向",
+"Change the language, colors and text size.": "更改语言、颜色和文字大小。",
+"Turn your animations into an emote add-on.": "把你的动画做成表情动作附加包。",
+"Close this panel.": "关闭此面板。",
+"Match your device's light or dark setting.": "跟随设备的浅色或深色设置。",
+"Soft light gray background.": "柔和的浅灰色背景。",
+"Dark background, easier on the eyes in a dim room.": "深色背景，在光线较暗时更护眼。",
+"Black and white with bold outlines, the easiest to read.": "黑白配色加粗轮廓，最容易阅读。",
+"Standard text size.": "标准文字大小。",
+"Make all text bigger.": "放大所有文字。",
+"Turn on your webcam.": "打开你的摄像头。",
+"Use a video you filmed before, like one from a phone.": "使用你之前拍的视频，比如手机拍的。",
+"Count down, then record your move.": "倒计时，然后录制你的动作。",
+"Accurate is smoother but needs a faster computer.": "“精确”更流畅，但需要更快的电脑。",
+"Slower playback lets the tracker see more frames of a loaded video.": "放慢播放，追踪器就能看到载入视频的更多画面。",
+"Play or pause the preview.": "播放或暂停预览。",
+"Put the camera back where it started.": "将镜头恢复到初始位置。",
+"Preview with wide arms, like Steve.": "以较宽手臂预览，像 Steve 一样。",
+"Preview with slim arms, like Alex.": "以纤细手臂预览，像 Alex 一样。",
+"Look at the model's face.": "看向模型的脸。",
+"Look from behind, so the model moves the same way you do.": "从背后看，模型的动作方向和你一样。",
+"Let the model copy your camera again. Your recording is kept.": "让模型重新模仿摄像头画面。你的录制会保留。",
+"Higher removes shaking but softens fast moves.": "数值越高，抖动越少，但快速动作会变柔和。",
+"Drops keyframes that change less than this. Makes the file smaller.": "删除变化小于此值的关键帧，让文件更小。",
+"Raise this if the model looks down when you look straight ahead.": "如果你直视前方时模型却在低头，请调高此项。",
+"Best for waves and gestures.": "最适合挥手和手势。",
+"Follow the upper arm instead.": "改为跟随上臂。",
+"Moves the body bone, like most Minecraft animations.": "移动身体骨骼，和大多数 Minecraft 动画一样。",
+"Moves the waist bone, so bows and leans bend at the hips.": "移动腰部骨骼，让鞠躬和倾斜从臀部弯曲。",
+"Letters, numbers and underscores. Also used for the file name.": "字母、数字和下划线。也用作文件名。",
+"Plays one time, then stops.": "播放一次，然后停止。",
+"Repeats until the player moves.": "循环播放，直到玩家移动。",
+"Plays once and stays in the last pose.": "播放一次，并停在最后的姿势。",
+"Save the animation file to your computer.": "把动画文件保存到你的电脑。",
+"Copy the animation's code to paste somewhere else.": "复制动画代码，粘贴到其他地方。",
+"Loading the body tracker…": "正在加载身体追踪器…",
+"Couldn't load the body tracker. Check your internet connection and reload the page.": "无法加载身体追踪器。请检查网络连接并刷新页面。",
+"Camera on. Step back until your whole body is in the picture, then press Record.": "摄像头已打开。往后退，直到全身都在画面里，然后按“录制”。",
+"The camera is blocked or missing. Allow camera access in your browser and try again.": "摄像头被阻止或找不到。请在浏览器中允许使用摄像头，然后重试。",
+"That video can't be played in this browser. Try an MP4 or WebM file.": "此浏览器无法播放该视频。请试试 MP4 或 WebM 文件。",
+"Loaded {name} ({s} s). Press Track video to capture it.": "已载入 {name}（{s} 秒）。按“追踪视频”来捕捉动作。",
+"Recording canceled": "已取消录制",
+"Recording starts in {n}": "{n} 秒后开始录制",
+"Recording… do your move!": "正在录制…做出你的动作！",
+"Recording": "正在录制",
+"Tracking the video…": "正在追踪视频…",
+"Nobody was found in the recording. Make sure your whole body is in the picture and try again.": "录制中没有找到人。请确保全身都在画面里，然后重试。",
+"Captured {s} s. Check the preview, trim it, then download.": "已捕捉 {s} 秒。检查预览，裁剪后再下载。",
+"Recording stopped. Captured {s} seconds.": "录制已停止。已捕捉 {s} 秒。",
+"{s} seconds": "{s} 秒",
+"{s} s · {b} body parts · {k} keyframes · {kb} KB": "{s} 秒 · {b} 个身体部位 · {k} 个关键帧 · {kb} KB",
+"Pick at least one body part to include.": "请至少选择一个身体部位。",
+"off": "关",
+"Saved {file}": "已保存 {file}",
+"Copied to the clipboard": "已复制到剪贴板",
+"Couldn't copy. Use Download instead.": "无法复制。请改用“下载”。",
+"{a} of {b} seconds": "{a} / {b} 秒",
+"live": "实时",
+"Body tracker ready. Press Record when you are in place.": "身体追踪器已就绪。站好位置后按“录制”。",
+"Body tracker ready. Start your camera or load a video.": "身体追踪器已就绪。打开摄像头或载入视频。",
+"Stop camera": "关闭摄像头",
+"Turn off your webcam.": "关闭你的摄像头。",
+"Track video": "追踪视频",
+"Track the whole video from the start.": "从头追踪整个视频。",
+"Your recording": "你的录制",
+"Copies you live": "实时模仿你",
+"Waiting for the camera": "正在等待摄像头",
+"Pause": "暂停",
+"Play": "播放",
+"No body found": "未找到身体",
+"Legs hidden": "腿部被挡住",
+"Full body": "全身",
+"Stop": "停止",
+"Stop recording now.": "立即停止录制。",
+"Legs point at": "腿部指向",
+"Auto": "自动",
+"Feet": "脚",
+"Knees": "膝盖",
+"The leg always points at the foot.": "腿总是指向脚。",
+"The leg always points at the knee.": "腿总是指向膝盖。",
+"Right knee up": "右膝抬起",
+"Left knee up": "左膝抬起",
+"Right kick": "右踢腿",
+"Left kick": "左踢腿",
+"For kicks and knee-ups, turning about 45° from the camera lets it see how high your leg goes.": "做踢腿和抬膝动作时，侧身约 45° 对着摄像头，它就能看清你的腿抬多高。",
+"Head nod strength": "点头幅度",
+"Makes looking up and down bigger or smaller.": "让抬头和低头的动作更大或更小。",
+"Plant feet": "双脚着地",
+"A leg that isn't lifted stays still on the ground.": "没有抬起的腿会稳稳地留在地面上。",
+"Straight arm: points at the hand. Bent elbow: follows the forearm and slides back, like a punch wind-up.": "手臂伸直时指向手；手肘弯曲时跟随前臂并向后滑动，像出拳前的蓄力。",
+"Straight leg: points at the foot, like a kick. Bent knee: the leg lifts up, like a knee raise.": "腿伸直时指向脚，像踢腿；膝盖弯曲时整条腿向上抬，像抬膝。",
+"Slide bent arms and legs": "弯曲的手臂和腿会滑动",
+"Like Minecraft animations: a raised knee lifts the whole leg, and a pulled-back fist slides the arm back.": "像 Minecraft 动画那样：抬膝时整条腿抬起，拳头后拉时手臂向后滑动。",
+"Captured {s} s. Your legs were mostly out of view, so they stay standing still.": "已录制 {s} 秒。你的腿大部分时间不在画面里，所以腿会保持站立不动。"
+}
+};
+</script>
+<script>
+/* Cleverlike Mocap Maker — translations (same system as the Emote Tool)
+ * English text is the key, so a missing translation simply shows English.
+ * "{name}" placeholders are filled from params. Dictionaries live in window.MocapStrings. */
+(function (G) {
+  "use strict";
+  const LANGS = [
+    { code: "en", name: "English" },
+    { code: "es", name: "Español" },
+    { code: "fr", name: "Français" },
+    { code: "pt", name: "Português" },
+    { code: "de", name: "Deutsch" },
+    { code: "zh", name: "简体中文" },
+  ];
+  let lang = "en";
+  const norm = (s) => String(s).replace(/\s+/g, " ").trim();
+  const missing = new Set();
+
+  function t(key, params) {
+    const k = norm(key);
+    const dict = (G.MocapStrings || {})[lang];
+    let s = lang === "en" ? k : dict && dict[k];
+    if (s === undefined) { if (lang !== "en") missing.add(k); s = k; }
+    if (params) s = s.replace(/\{(\w+)\}/g, (m, p) => (p in params ? String(params[p]) : m));
+    return s;
+  }
+  /** Translate everything marked in the page: data-i18n (text), data-i18n="html", data-i18n-attr="aria-label" */
+  function applyStatic(root) {
+    root = root || document;
+    root.querySelectorAll("[data-i18n]").forEach((el) => {
+      const html = el.dataset.i18n === "html";
+      if (el._i18nSrc === undefined) el._i18nSrc = html ? el.innerHTML : el.textContent;
+      if (html) el.innerHTML = t(el._i18nSrc); else el.textContent = t(el._i18nSrc);
+    });
+    root.querySelectorAll("[data-i18n-attr]").forEach((el) => {
+      el._i18nAttr = el._i18nAttr || {};
+      for (const a of el.dataset.i18nAttr.split(/\s+/)) {
+        if (!(a in el._i18nAttr)) el._i18nAttr[a] = el.getAttribute(a) || "";
+        el.setAttribute(a, t(el._i18nAttr[a]));
+      }
+    });
+    document.documentElement.lang = lang === "zh" ? "zh-Hans" : lang;
+  }
+  function setLang(code) { lang = LANGS.some((l) => l.code === code) ? code : "en"; }
+  function guess() {
+    for (const l of navigator.languages || [navigator.language || "en"]) {
+      const c = String(l).slice(0, 2).toLowerCase();
+      if (LANGS.some((x) => x.code === c)) return c;
+    }
+    return "en";
+  }
+  G.MocapI18n = { LANGS, t, applyStatic, setLang, guess, get lang() { return lang; }, missing };
+})(window);
+
+/* Hover explanations: any element with data-tip="English text" gets a small pop-up after the
+ * pointer rests on it, or after it gets keyboard focus. The text is translated when shown. */
+(function (G) {
+  "use strict";
+  const DELAY = 650, t = (s) => G.MocapI18n.t(s);
+  let tip, timer = 0, target = null;
+  function el() {
+    if (!tip) {
+      tip = document.createElement("div");
+      tip.id = "tip"; tip.className = "tip"; tip.setAttribute("role", "tooltip"); tip.hidden = true;
+      document.body.appendChild(tip);
+    }
+    return tip;
+  }
+  function place(node) {
+    const r = node.getBoundingClientRect(), b = el();
+    b.style.left = "0px"; b.style.top = "0px";
+    const w = b.offsetWidth, h = b.offsetHeight, gap = 8, vw = document.documentElement.clientWidth;
+    let top = r.top - h - gap, below = false;
+    if (top < 6) { top = r.bottom + gap; below = true; }
+    let left = Math.max(6, Math.min(r.left + r.width / 2 - w / 2, vw - w - 6));
+    b.style.left = left + "px"; b.style.top = top + "px";
+    b.dataset.side = below ? "below" : "above";
+    b.style.setProperty("--arrow-x", Math.max(10, Math.min(w - 10, r.left + r.width / 2 - left)) + "px");
+  }
+  function show(node) {
+    if (!node.isConnected || node.closest("[hidden]")) return;
+    const b = el();
+    b.textContent = t(node.dataset.tip);
+    b.hidden = false; place(node);
+    const ids = (node.getAttribute("aria-describedby") || "").split(/\s+/).filter((x) => x && x !== "tip");
+    node.setAttribute("aria-describedby", [...ids, "tip"].join(" "));
+  }
+  function hide() {
+    clearTimeout(timer); timer = 0;
+    if (target) {
+      const ids = (target.getAttribute("aria-describedby") || "").split(/\s+/).filter((x) => x && x !== "tip");
+      if (ids.length) target.setAttribute("aria-describedby", ids.join(" ")); else target.removeAttribute("aria-describedby");
+    }
+    target = null;
+    if (tip) tip.hidden = true;
+  }
+  function arm(node, delay) {
+    if (node === target) return;
+    hide(); target = node;
+    timer = setTimeout(() => { if (target === node) show(node); }, delay);
+  }
+  document.addEventListener("pointerover", (e) => {
+    if (e.pointerType === "touch") return;
+    const n = e.target.closest("[data-tip]");
+    if (n) arm(n, DELAY); else if (target) hide();
+  });
+  document.addEventListener("pointerout", (e) => { if (target && !(e.relatedTarget && target.contains(e.relatedTarget))) hide(); });
+  document.addEventListener("focusin", (e) => {
+    const n = e.target.closest && e.target.closest("[data-tip]");
+    if (n && n.matches(":focus-visible")) arm(n, DELAY); else if (target) hide();
+  });
+  document.addEventListener("focusout", () => { if (target) hide(); });
+  for (const ev of ["pointerdown", "scroll", "wheel", "resize"]) addEventListener(ev, () => { if (target) hide(); }, { capture: true, passive: true });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && tip && !tip.hidden) hide(); }, true);
+  G.MocapTips = { hide };
+})(window);
+
+/* Player model — the same Bedrock rig and skins as the Emote Tool's preview.
+ * Coordinates follow Blockbench: Bedrock X is mirrored, rotations apply as (-x, -y, z) in ZYX order.
+ * Units are pixels (16 = one block). */
+(function (G) {
+  "use strict";
+  const DEG = Math.PI / 180;
+  function rigDef(slim) {
+    const aw = slim ? 3 : 4, ap = slim ? 21.5 : 22;
+    return [
+      { name: "root", parent: null, pivot: [0, 0, 0] },
+      { name: "waist", parent: "root", pivot: [0, 12, 0] },
+      { name: "body", parent: "waist", pivot: [0, 24, 0], cubes: [{ o: [-4, 12, -2], s: [8, 12, 4], uv: [16, 16] }] },
+      { name: "jacket", parent: "body", pivot: [0, 24, 0], cubes: [{ o: [-4, 12, -2], s: [8, 12, 4], uv: [16, 32], i: 0.25 }] },
+      { name: "head", parent: "body", pivot: [0, 24, 0], cubes: [{ o: [-4, 24, -4], s: [8, 8, 8], uv: [0, 0] }] },
+      { name: "hat", parent: "head", pivot: [0, 24, 0], cubes: [{ o: [-4, 24, -4], s: [8, 8, 8], uv: [32, 0], i: 0.5 }] },
+      { name: "rightArm", parent: "body", pivot: [-5, ap, 0], cubes: [{ o: [-4 - aw, 12, -2], s: [aw, 12, 4], uv: [40, 16] }] },
+      { name: "rightSleeve", parent: "rightArm", pivot: [-5, ap, 0], cubes: [{ o: [-4 - aw, 12, -2], s: [aw, 12, 4], uv: [40, 32], i: 0.25 }] },
+      { name: "leftArm", parent: "body", pivot: [5, ap, 0], cubes: [{ o: [4, 12, -2], s: [aw, 12, 4], uv: [32, 48] }] },
+      { name: "leftSleeve", parent: "leftArm", pivot: [5, ap, 0], cubes: [{ o: [4, 12, -2], s: [aw, 12, 4], uv: [48, 48], i: 0.25 }] },
+      { name: "rightLeg", parent: "root", pivot: [-1.9, 12, 0], cubes: [{ o: [-3.9, 0, -2], s: [4, 12, 4], uv: [0, 16] }] },
+      { name: "rightPants", parent: "rightLeg", pivot: [-1.9, 12, 0], cubes: [{ o: [-3.9, 0, -2], s: [4, 12, 4], uv: [0, 32], i: 0.25 }] },
+      { name: "leftLeg", parent: "root", pivot: [1.9, 12, 0], cubes: [{ o: [-0.1, 0, -2], s: [4, 12, 4], uv: [16, 48] }] },
+      { name: "leftPants", parent: "leftLeg", pivot: [1.9, 12, 0], cubes: [{ o: [-0.1, 0, -2], s: [4, 12, 4], uv: [0, 48], i: 0.25 }] },
+    ];
+  }
+  function cubeGeometry(THREE, c, pivot, texW, texH) {
+    const [ox, oy, oz] = c.o, [w, h, d] = c.s, [u, v] = c.uv, i = c.i || 0;
+    const X0 = -(ox + w) - i, X1 = -ox + i, Y0 = oy - i, Y1 = oy + h + i, Z0 = oz - i, Z1 = oz + d + i;
+    const px = -pivot[0], py = pivot[1], pz = pivot[2];
+    const pos = [], uvs = [], nrm = [];
+    function quad(tl, tr, br, bl, rect, n) {
+      const [u0, v0, rw, rh] = rect;
+      const U = (x) => x / texW, V = (y) => 1 - y / texH;
+      const P = [tl, bl, br, tl, br, tr];
+      const T = [[u0, v0], [u0, v0 + rh], [u0 + rw, v0 + rh], [u0, v0], [u0 + rw, v0 + rh], [u0 + rw, v0]];
+      for (let k = 0; k < 6; k++) { pos.push(P[k][0] - px, P[k][1] - py, P[k][2] - pz); uvs.push(U(T[k][0]), V(T[k][1])); nrm.push(...n); }
+    }
+    quad([X1, Y1, Z0], [X0, Y1, Z0], [X0, Y0, Z0], [X1, Y0, Z0], [u + d, v + d, w, h], [0, 0, -1]);
+    quad([X1, Y1, Z1], [X1, Y1, Z0], [X1, Y0, Z0], [X1, Y0, Z1], [u, v + d, d, h], [1, 0, 0]);
+    quad([X0, Y1, Z0], [X0, Y1, Z1], [X0, Y0, Z1], [X0, Y0, Z0], [u + d + w, v + d, d, h], [-1, 0, 0]);
+    quad([X0, Y1, Z1], [X1, Y1, Z1], [X1, Y0, Z1], [X0, Y0, Z1], [u + 2 * d + w, v + d, w, h], [0, 0, 1]);
+    quad([X1, Y1, Z1], [X0, Y1, Z1], [X0, Y1, Z0], [X1, Y1, Z0], [u + d, v, w, d], [0, 1, 0]);
+    quad([X1, Y0, Z0], [X0, Y0, Z0], [X0, Y0, Z1], [X1, Y0, Z1], [u + d + w, v, w, d], [0, -1, 0]);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+    g.setAttribute("normal", new THREE.Float32BufferAttribute(nrm, 3));
+    return g;
+  }
+  const DEFAULT_SKIN = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAC+ElEQVR4AexavYoUQRCu3UThLlLwFlZEUfEVLtfYQM0u8gnEn+gwMDDVdzBYzIwMFQzvAUwExR9c2BPTwzO5PWq4D5q6mqqZ673rnple+Kjuqa6vu76ug+6ZG5Pze//559LC/YfPlhYc+uRuVwBe4eaNy6SBjn7TjQlpOHJnbRoJkHUGkYsrAkQK2PnwUgGd38LIBBpVwM7X36QBc893F6QB/pzt+Pbi1dLC28VFsvDm5gWysP/tydJCanGqCtjcuEQasLirkzXSAP/atSukAf5z01ukAf6UthIg5QJSz91IgHtTIgYWy20G+l22jQTocoLe2hsJ8G5OxAAZtxnod9k2EqDLCXprrwTY2f1DGhD8Y7FHGuDf+/6LNMD/f/6FNMB/llbONf44eToK8fjvAwqxP3tBIWZ31kch1re3RyE+3d2iEB/+PaIQWy/HFEK+S5ALlH35bqJtvOSrKkA+xN0fz3HXR9+ziJcWceCTFn7PghfjwIN+G6sK0Iag62NVAXDuR3I456PvWcRLizjwSQu/Z8GLceBBv409dheQ5355zpfnenmPkPGyL/lmzw8oRFt+ySfjPTGqCsA9AINx7kcf53z0ca5Hvy4ePLAYX8cHXliMr+OHv44PfstWAlgD+u4rAvR9h738SgV4CvXdXyqg7zvs5VcqwFOo7/6qAvAuAMni7o8+7vro426Pfl08eGAxvo4PvLAYX8cPfx0f+z0cex8Q3vW5Hd71uX3++utRiPBdArc5xgJzhAi5tDZzhpDcIRe3JYcrgDeg7/7qT6DvSVr5FQEsdYbgKxUwhF22ciwVYKkzBF+pgCHsspVjqQBLnSH4SgUMYZetHHtXAVaymm/lAsR+v4+N15K0nq1cAJ4s9vt9bDyvoSlORYCmk+cw7lQEiP1+HxvfRthoAbz/D/C+38fGt0lWGxstAJPGfr+Pjec1nBQrEeCkk+cQVwTIYRdSrqFUQEr1c5i7VEAOu5ByDaUCUqqfw9wrqYDY7/cx8bEiHgIAAP//rCdZDQAAAAZJREFUAwCVozDeWe9Q4QAAAABJRU5ErkJggg==";
+  const DEFAULT_SKIN_SLIM = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAADNUlEQVR4AexavYoUQRCu3UThLlLwDlZEUfEVLtfYQM0u8gnEn+gwMJDL9B0MFjMjQwXDewATQfEHF/bE0MMzceUb7oOyrna6b2buen564aOqt36m6+sKuqdnLIHf6/dfF2W4fffRogyB9MnNQQIww40r58WDHPwma+vi4cDcahFFQKsrqDm5TEBNAjsfnjug80tYs4CoDtj5+F088Nmz3bl4oL3Ncnx9/mxRhpfzs1KGF1fPSBn2Pz1YlCE1OUUHbKydEw+c3MX1FfFA+8qlC+KB9lOTa+KB9pSyICDlBFI/O4qAWxMRgJOFDnDcZRlFQJcLDM09ioBXMxGAyaADHHdZRhHQ5QJDcy8I2Nn9IR4Y/GW+Jx5o3/v8TTzQ/mf2QTzQfpLSPmv8dv3hSOP+zzuisT99IhrTG6sjjdWtrZHGu5ubovHm9z3R2Hw6Fg37LsFO0I71uwkda/1ix0UHWGee/fk/z/ochyTjrWQc81lJe0giL32Qg3oV6RJQJVFXY1wCuO9nUdzncxySjLeSccxnJe0hibz0QQ7qVeShs4Dd99t9vt3X23OEjbdjm2/6+K9oHCW/zvVre/u/M0csGUUH8BzAIO77OeY+n2Pu6zleFs88lPRflo95Kenv5afNy0VbjCwIiHHsq08moK8rG1tX7oBYpvrqlzugrysbW1fugFim+upXdADfBbBInv055lmfY57tOV4WzzyU9F+Wj3kp6e/lp83LRRtkCIfeB+izPnR91od++vLzkYZ+lwAdMWVADg2dy9ORU0Pn1nmg6/hQ4bQXHcDBEGUmYIirrmvOHaDZGKKeO2CIq65rzh2g2RiinjtgiKuua84doNkYop47oG+rftR6Gu8AfX8PXd/hQw9NEDEE/IlQXFV74wRgIri/B6ADuMMHoMfAxsbEVPU5FgKqTiZF3LEQgPt7gAXhDh/gOCRtbMi/jr02AaHvA/QdPvSTvv8PkVObADzAu7/HNwGwAd4dPr4BgA3w4vE/4MXi/6bQCAFNTSZFnkxACtbb9MzcAW1ajRRzyR2QgvU2PTN3QJtWI8VcGukA7/4e3wSwIO8OH98A0O7F0+bF0gZZF/8AAAD//4WEasYAAAAGSURBVAMArnkGjhysXyYAAAAASUVORK5CYII=";
+  function loadDefaultSkin(slim) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => { const cv = document.createElement("canvas"); cv.width = img.width; cv.height = img.height; cv.getContext("2d").drawImage(img, 0, 0); resolve(cv); };
+      img.onerror = () => { const cv = document.createElement("canvas"); cv.width = cv.height = 64; const g = cv.getContext("2d"); g.fillStyle = "#c98e66"; g.fillRect(0, 0, 64, 64); resolve(cv); };
+      img.src = slim ? DEFAULT_SKIN_SLIM : DEFAULT_SKIN;
+    });
+  }
+  function makeRig(THREE, skinCanvas, slim) {
+    const texture = new THREE.CanvasTexture(skinCanvas);
+    texture.magFilter = THREE.NearestFilter; texture.minFilter = THREE.NearestFilter; texture.generateMipmaps = false;
+    const base = new THREE.MeshLambertMaterial({ map: texture, alphaTest: 0.5 });
+    const layer = new THREE.MeshLambertMaterial({ map: texture, alphaTest: 0.1, transparent: true });
+    const bones = {}, rest = {}; let root = null;
+    const def = rigDef(slim);
+    for (const b of def) {
+      const grp = new THREE.Group(); grp.name = b.name; grp.rotation.order = "ZYX";
+      const parent = b.parent ? def.find((x) => x.name === b.parent) : null;
+      const pp = parent ? parent.pivot : [0, 0, 0];
+      grp.position.set(-(b.pivot[0] - pp[0]), b.pivot[1] - pp[1], b.pivot[2] - pp[2]);
+      rest[b.name] = grp.position.clone();
+      for (const c of b.cubes || []) grp.add(new THREE.Mesh(cubeGeometry(THREE, c, b.pivot, 64, 64), c.i ? layer : base));
+      if (b.parent) bones[b.parent].add(grp); else root = grp;
+      bones[b.name] = grp;
+    }
+    return { root, bones, rest, dispose() { root.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); texture.dispose(); base.dispose(); layer.dispose(); } };
+  }
+  /** pose: {boneName: [x, y, z] degrees, pos: {boneName: [x, y, z] pixels}} in Bedrock terms */
+  function poseRig(rig, pose) {
+    for (const [n, g] of Object.entries(rig.bones)) { g.rotation.set(0, 0, 0); g.position.copy(rig.rest[n]); }
+    if (!pose) return;
+    for (const [n, r] of Object.entries(pose)) {
+      const g = rig.bones[n];
+      if (g && r && n !== "pos") g.rotation.set(-r[0] * DEG, -r[1] * DEG, r[2] * DEG);
+    }
+    for (const [n, p] of Object.entries(pose.pos || {})) {
+      const g = rig.bones[n];
+      if (g && p) g.position.set(rig.rest[n].x - p[0], rig.rest[n].y + p[1], rig.rest[n].z + p[2]);
+    }
+  }
+  function createPreview(canvas, THREE) {
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(G.devicePixelRatio || 1, 2));
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(32, 1, 1, 1000);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8597, 0.75));
+    const sun = new THREE.DirectionalLight(0xffffff, 0.55); sun.position.set(-30, 60, -40); scene.add(sun);
+    const back = new THREE.DirectionalLight(0xffffff, 0.3); back.position.set(30, 40, 40); scene.add(back);
+    const grid = new THREE.GridHelper(64, 4, 0x888888, 0x888888); scene.add(grid);
+    const shadowCv = document.createElement("canvas"); shadowCv.width = shadowCv.height = 64;
+    const sg = shadowCv.getContext("2d"); const grd = sg.createRadialGradient(32, 32, 2, 32, 32, 32);
+    grd.addColorStop(0, "rgba(0,0,0,0.35)"); grd.addColorStop(1, "rgba(0,0,0,0)"); sg.fillStyle = grd; sg.fillRect(0, 0, 64, 64);
+    const shadow = new THREE.Mesh(new THREE.PlaneGeometry(22, 22), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(shadowCv), transparent: true, depthWrite: false }));
+    shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.05; scene.add(shadow);
+
+    let rig = null, pose = null;
+    const HOME = { yaw: 192, pitch: 6, dist: 82 };   // nearly straight on, turned just enough to show depth
+    const view = { ...HOME };
+    function placeCamera() {
+      const t = new THREE.Vector3(0, 17, 0), y = view.yaw * DEG, p = view.pitch * DEG;
+      camera.position.set(t.x + view.dist * Math.sin(y) * Math.cos(p), t.y + view.dist * Math.sin(p), t.z + view.dist * Math.cos(y) * Math.cos(p));
+      camera.lookAt(t);
+    }
+    function resize() {
+      const r = canvas.parentElement.getBoundingClientRect();
+      const w = Math.max(1, Math.floor(r.width)), h = Math.max(1, Math.floor(r.height));
+      renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+    }
+    new ResizeObserver(resize).observe(canvas.parentElement);
+    let drag = null;
+    canvas.addEventListener("pointerdown", (e) => { drag = { x: e.clientX, y: e.clientY, id: e.pointerId }; canvas.setPointerCapture(e.pointerId); });
+    canvas.addEventListener("pointermove", (e) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      view.yaw -= (e.clientX - drag.x) * 0.5; view.pitch = Math.max(-20, Math.min(70, view.pitch + (e.clientY - drag.y) * 0.4));
+      drag.x = e.clientX; drag.y = e.clientY;
+    });
+    const end = () => { drag = null; };
+    canvas.addEventListener("pointerup", end); canvas.addEventListener("pointercancel", end);
+    const zoom = (dir) => { view.dist = Math.max(40, Math.min(160, view.dist * (1 + dir * 0.08))); };
+    canvas.addEventListener("wheel", (e) => { e.preventDefault(); zoom(Math.sign(e.deltaY)); }, { passive: false });
+    // Keyboard: arrows turn and tilt, + / - zoom
+    canvas.addEventListener("keydown", (e) => {
+      const k = e.key; let used = true;
+      if (k === "ArrowLeft") view.yaw += 15; else if (k === "ArrowRight") view.yaw -= 15;
+      else if (k === "ArrowUp") view.pitch = Math.min(70, view.pitch + 8); else if (k === "ArrowDown") view.pitch = Math.max(-20, view.pitch - 8);
+      else if (k === "+" || k === "=") zoom(-1); else if (k === "-" || k === "_") zoom(1);
+      else used = false;
+      if (used) e.preventDefault();
+    });
+    let onFrame = () => {};
+    let last = performance.now();
+    function frame(now) {
+      const dt = Math.min(0.1, (now - last) / 1000); last = now;
+      onFrame(dt);
+      if (rig) poseRig(rig, pose);
+      placeCamera(); renderer.render(scene, camera);
+      requestAnimationFrame(frame);
+    }
+    resize(); requestAnimationFrame(frame);
+    return {
+      setSkin(cv, slim) { if (rig) { scene.remove(rig.root); rig.dispose(); } rig = makeRig(THREE, cv, slim); scene.add(rig.root); },
+      setPose(p) { pose = p; },
+      onFrame(fn) { onFrame = fn; },
+      resetView(behind) { Object.assign(view, HOME); if (behind) view.yaw = HOME.yaw - 180; },
+      setSide(behind) { view.yaw = behind ? HOME.yaw - 180 : HOME.yaw; },
+      setColors(bg, line) {
+        scene.background = new THREE.Color(bg);
+        const m = grid.material; m.vertexColors = false; m.color = new THREE.Color(line); m.transparent = true; m.opacity = 0.7; m.needsUpdate = true;
+      },
+    };
+  }
+  G.MocapPreview = { createPreview, loadDefaultSkin };
+})(window);
+
+</script>
+<script type="module">
+import { FilesetResolver, PoseLandmarker, DrawingUtils } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
+
+const M = window.MocapMath, L = window.MocapI18n, t = L.t;
+const $ = (id) => document.getElementById(id);
+const video = $("video"), overlay = $("overlay"), octx = overlay.getContext("2d");
+const draw = new DrawingUtils(octx);
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const S = {
+  landmarker: null, vision: null, source: null, stream: null, lastVT: -1, fileName: "",
+  recording: false, samples: [], clip: null, json: null, mode: "live", playing: !reduceMotion, playT: 0,
+  livePose: null, countdown: null, stopTimer: 0, recStart: 0, trackState: "off",
+  arm: "auto", leg: "auto", lean: "waist", loop: "false", live: M.LiveFilter(), move: "", recent: [], headD: null, headN: null, lastLive: 0, pitchHist: [],
+  plant: { right: { hold: null, w: 0 }, left: { hold: null, w: 0 } }, slim: false, behind: false,
+};
+
+/* ---------------- messages ---------------- */
+let statusMsg = ["Loading the body tracker…"], statusKind = "";
+function setStatus(key, params, kind) {
+  statusMsg = [key, params]; statusKind = kind || "";
+  const el = $("status"); el.textContent = t(key, params);
+  el.className = "status " + (kind === "bad" ? "note bad" : "muted");
+}
+const announce = (key, params) => { const a = $("announcer"); a.textContent = ""; setTimeout(() => { a.textContent = t(key, params); }, 30); };
+let toastTimer = 0;
+function toast(key, params) { const el = $("toast"); el.textContent = t(key, params); el.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 2200); }
+
+/* ---------------- beeps (audio countdown) ---------------- */
+let audio = null;
+function beep(freq, ms) {
+  if (!$("pref-beep").checked) return;
+  try {
+    audio ??= new (window.AudioContext || window.webkitAudioContext)();
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.frequency.value = freq; o.type = "sine";
+    g.gain.setValueAtTime(0.0001, audio.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.25, audio.currentTime + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + ms / 1000);
+    o.connect(g).connect(audio.destination); o.start(); o.stop(audio.currentTime + ms / 1000 + 0.02);
+  } catch { /* no audio */ }
+}
+
+/* ---------------- pose tracker ---------------- */
+const MODEL_URL = (q) => `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_${q}/float16/1/pose_landmarker_${q}.task`;
+async function loadModel() {
+  const q = $("opt-model").value;
+  S.landmarker = null; updateRecButton();
+  setStatus("Loading the body tracker…");
+  try {
+    S.vision ??= await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+    const make = (delegate) => PoseLandmarker.createFromOptions(S.vision, {
+      baseOptions: { modelAssetPath: MODEL_URL(q), delegate }, runningMode: "VIDEO", numPoses: 1,
+      minPoseDetectionConfidence: 0.5, minPosePresenceConfidence: 0.5, minTrackingConfidence: 0.5,
+    });
+    let lm; try { lm = await make("GPU"); } catch { lm = await make("CPU"); }
+    S.landmarker = lm;
+    setStatus(S.source ? "Body tracker ready. Press Record when you are in place." : "Body tracker ready. Start your camera or load a video.");
+  } catch (e) {
+    console.error(e);
+    setStatus("Couldn't load the body tracker. Check your internet connection and reload the page.", null, "bad");
+  }
+  updateRecButton();
+}
+$("opt-model").onchange = loadModel;
+
+/* ---------------- camera / video ---------------- */
+async function startCamera() {
+  stopSource();
+  try {
+    S.stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+    video.srcObject = S.stream; await video.play();
+    S.source = "cam";
+    $("cam-wrap").classList.add("mirror"); $("cam-empty").hidden = true;
+    setStatus("Camera on. Step back until your whole body is in the picture, then press Record.");
+    goLive();
+  } catch (e) {
+    console.error(e);
+    setStatus("The camera is blocked or missing. Allow camera access in your browser and try again.", null, "bad");
+  }
+  updateSourceButtons();
+}
+function stopSource() {
+  if (S.recording) stopRecording(true);
+  cancelCountdown();
+  S.stream?.getTracks().forEach((tr) => tr.stop()); S.stream = null;
+  if (video.src) { URL.revokeObjectURL(video.src); video.removeAttribute("src"); }
+  video.srcObject = null; video.load();
+  S.source = null; S.lastVT = -1;
+  $("cam-wrap").classList.remove("mirror"); $("cam-empty").hidden = false;
+  octx.clearRect(0, 0, overlay.width, overlay.height);
+  setTrack("off");
+  updateSourceButtons();
+}
+function updateSourceButtons() {
+  const cam = $("cam-btn");
+  cam.textContent = t(S.source === "cam" ? "Stop camera" : "Start camera");
+  cam.dataset.tip = S.source === "cam" ? "Turn off your webcam." : "Turn on your webcam.";
+  updateRecButton();
+}
+$("cam-btn").onclick = () => (S.source === "cam" ? stopSource() : startCamera());
+$("file-btn").onclick = () => $("file-input").click();
+$("file-input").onchange = async (e) => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  stopSource();
+  video.src = URL.createObjectURL(f);
+  try { await new Promise((ok, bad) => { video.onloadeddata = ok; video.onerror = bad; }); }
+  catch { setStatus("That video can't be played in this browser. Try an MP4 or WebM file.", null, "bad"); return; }
+  S.source = "file"; S.fileName = f.name;
+  $("cam-empty").hidden = true; video.currentTime = 0;
+  setStatus("Loaded {name} ({s} s). Press Track video to capture it.", { name: f.name, s: video.duration.toFixed(1) });
+  goLive(); updateSourceButtons();
+};
+
+/* ---------------- tracking badge ---------------- */
+const TRACK = { off: ["Off", ""], none: ["No body found", "bad"], partial: ["Legs hidden", "warn"], full: ["Full body", "ok"] };
+function setTrack(state) {
+  if (state === S.trackState) return;
+  S.trackState = state;
+  const [key, cls] = TRACK[state];
+  $("track-pill").className = "pill " + cls; $("track-text").textContent = t(key);
+}
+
+/* ---------------- recording ---------------- */
+function updateRecButton() {
+  const b = $("rec-btn"), busy = S.recording || S.countdown;
+  b.disabled = !S.landmarker || !S.source;
+  b.className = "btn big " + (busy ? "rec" : "primary");
+  $("rec-label").textContent = t(busy ? "Stop" : S.source === "file" ? "Track video" : "Record");
+  b.dataset.tip = busy ? "Stop recording now." : S.source === "file" ? "Track the whole video from the start." : "Count down, then record your move.";
+}
+function toggleRecord() {
+  if ($("rec-btn").disabled) return;
+  if (S.countdown) { cancelCountdown(); announce("Recording canceled"); return; }
+  if (S.recording) { stopRecording(); return; }
+  if (S.source === "file") startFileRecording(); else startCountdown();
+}
+$("rec-btn").onclick = toggleRecord;
+function showCount(n) {
+  for (const id of ["cam-countdown", "stage-countdown"]) { const el = $(id); el.hidden = n == null; el.textContent = n ?? ""; }
+}
+function cancelCountdown() { if (S.countdown) { clearInterval(S.countdown); S.countdown = null; } showCount(null); updateRecButton(); }
+function startCountdown() {
+  let n = +$("opt-countdown").value;
+  if (!n) { beep(1320, 300); beginRecording(); return; }
+  showCount(n); beep(880, 150); announce("Recording starts in {n}", { n });
+  S.countdown = setInterval(() => {
+    n--;
+    if (n <= 0) { clearInterval(S.countdown); S.countdown = null; showCount(null); beep(1320, 350); beginRecording(); }
+    else { showCount(n); beep(880, 150); if (n <= 3) announce(String(n)); }
+  }, 1000);
+  updateRecButton();
+}
+function beginRecording() {
+  S.samples = []; S.recording = true; S.recStart = performance.now();
+  S.samples.pre = S.recent.map((r) => r.w);   // the countdown: used to learn "looking straight ahead"
+  S.samples.preImg = S.recent.map((r) => r.n);
+  goLive();
+  const d = +$("opt-duration").value;
+  if (d) S.stopTimer = setTimeout(() => stopRecording(), d * 1000);
+  $("rec-pill").hidden = false;
+  setStatus("Recording… do your move!"); announce("Recording");
+  updateRecButton();
+}
+async function startFileRecording() {
+  video.pause(); video.playbackRate = +$("opt-rate").value; video.currentTime = 0;
+  await new Promise((r) => { video.onseeked = r; });
+  S.samples = []; S.recording = true; S.lastVT = -1;
+  video.onended = () => S.recording && stopRecording();
+  $("rec-pill").hidden = false;
+  setStatus("Tracking the video…"); announce("Tracking the video…");
+  updateRecButton(); goLive(); video.play();
+}
+function stopRecording(silent) {
+  S.recording = false; clearTimeout(S.stopTimer);
+  $("rec-pill").hidden = true;
+  if (S.source === "file") { video.pause(); video.playbackRate = 1; }
+  updateRecButton();
+  if (silent) return;
+  beep(660, 200);
+  const s = S.samples;
+  if (s.length < 5) { setStatus("Nobody was found in the recording. Make sure your whole body is in the picture and try again.", null, "bad"); announce("Nobody was found in the recording. Make sure your whole body is in the picture and try again."); return; }
+  const t0 = s[0].t; s.forEach((x) => { x.t -= t0; });
+  const len = s[s.length - 1].t;
+  for (const id of ["trim-start", "trim-end"]) { const el = $(id); el.max = len.toFixed(2); el.disabled = false; }
+  $("trim-start").value = 0; $("trim-end").value = len;
+  S.mode = "playback"; S.playT = 0; S.playing = !reduceMotion;
+  rebuild();
+  setStatus("Captured {s} s. Check the preview, trim it, then download.", { s: len.toFixed(1) });
+  if (S.clip && S.clip.legsSeen < 0.3) setStatus("Captured {s} s. Your legs were mostly out of view, so they stay standing still.", { s: len.toFixed(1) });
+  announce("Recording stopped. Captured {s} seconds.", { s: len.toFixed(1) });
+}
+
+/* ---------------- detection loop ---------------- */
+const enabledBones = () => [...document.querySelectorAll("#bone-checks input:checked")].map((c) => c.dataset.bone);
+function liveOptions() {
+  return { headPitchOffset: +$("opt-pitch").value, headGain: +$("opt-nod").value, headDist: S.headD, headNeutral: S.headN ?? undefined,
+    vis: S.visS, img: S.imgS, headOff: !enabledBones().includes("head"),
+    armTarget: S.arm, legTarget: S.leg, slide: $("opt-slide").checked, flipTurn: $("opt-flip").checked, bodyOff: !enabledBones().includes("body") };
+}
+/** Live foot planting: a foot that isn't lifted holds its leg angle, easing in and out. */
+function plantLive(p, dt) {
+  for (const [bone, side] of [["rightLeg", "right"], ["leftLeg", "left"]]) {
+    const st = S.plant[side];
+    if (!$("opt-plant").checked) { st.hold = null; st.w = 0; continue; }
+    if (!p.feet[side]) { if (!st.hold || st.w < 0.5) st.hold = p[bone].slice(); st.w = Math.min(1, st.w + dt * 6); }
+    else { st.w = Math.max(0, st.w - dt * 12); if (!st.w) st.hold = null; }
+    if (st.hold) p[bone] = p[bone].map((x, k) => x + (st.hold[k] - x) * st.w);
+    p.pos[bone] = p.pos[bone].map((x) => x * (1 - st.w));   // planted foot sits on the floor
+  }
+}
+function detect() {
+  if (!S.landmarker || !S.source || video.readyState < 2 || video.currentTime === S.lastVT) return;
+  S.lastVT = video.currentTime;
+  if (overlay.width !== video.videoWidth) { overlay.width = video.videoWidth; overlay.height = video.videoHeight; }
+  let res;
+  try { res = S.landmarker.detectForVideo(video, performance.now()); } catch (e) { console.warn(e); return; }
+  octx.clearRect(0, 0, overlay.width, overlay.height);
+  const lm = res.landmarks?.[0], wl = res.worldLandmarks?.[0];
+  if (!lm || !wl) { setTrack("none"); return; }
+  const lw = Math.max(2, overlay.width / 300);
+  draw.drawConnectors(lm, PoseLandmarker.POSE_CONNECTIONS, { color: "#00aef0", lineWidth: lw });
+  draw.drawLandmarks(lm, { color: "#ffffff", fillColor: "#ed287f", lineWidth: 1, radius: lw * 1.3 });
+  setTrack([25, 26, 27, 28].every((i) => (lm[i].visibility ?? 1) > 0.5) ? "full" : "partial");
+  const w = new Float32Array(99), v = new Float32Array(33), n = new Float32Array(66);
+  const aspect = (video.videoWidth || 4) / (video.videoHeight || 3);
+  wl.forEach((p, i) => { w[i * 3] = p.x; w[i * 3 + 1] = p.y; w[i * 3 + 2] = p.z; v[i] = lm[i].visibility ?? 1; });
+  lm.forEach((p, i) => { n[i * 2] = p.x * aspect; n[i * 2 + 1] = p.y; });   // flat camera-image points (most reliable for the head)
+  const now = S.source === "file" ? video.currentTime : performance.now() / 1000;
+  S.recent.push({ t: now, w: Float32Array.from(w), n: Float32Array.from(n) });
+  while (S.recent.length && now - S.recent[0].t > 1.2) S.recent.shift();
+  if (S.recording) {
+    S.samples.push({ t: now, w, v, n });
+    const el = S.source === "file" ? video.currentTime : (performance.now() - S.recStart) / 1000;
+    $("rec-time").textContent = `REC ${el.toFixed(1)} s`;
+  }
+  if (S.mode === "live") {
+    // Live: fix swaps, keep bone lengths, One Euro filter, then solve
+    const mirrored = $("opt-mirror").checked;
+    const vv = mirrored ? M.mirrorVis(v) : v;
+    const nn = mirrored ? M.mirror2(n) : Float32Array.from(n);
+    const f = S.live.push(mirrored ? M.mirror(w) : w, vv, now, +$("opt-smooth").value, nn);
+    // 2D points are steady already; a light filter takes off the last bit of shimmer
+    if (!S.imgS) S.imgS = nn; else for (let i = 0; i < 66; i++) S.imgS[i] += (nn[i] - S.imgS[i]) * 0.5;
+    // steady "can the camera see it" values, so a leg leaving the frame eases to idle
+    if (!S.visS) S.visS = Float32Array.from(vv); else for (let i = 0; i < 33; i++) S.visS[i] += (vv[i] - S.visS[i]) * 0.2;
+    // head: learn face size and the straight-ahead angle (frozen while recording)
+    const ear = 0.62 * M.len([f[21] - f[24], f[22] - f[25], f[23] - f[26]]);
+    S.headD = S.headD ? S.headD + (ear - S.headD) * 0.05 : ear;
+    const raw = M.head2D(S.imgS).pitch;
+    if (!S.recording) {             // straight-ahead = median of the last 3 seconds before recording
+      S.pitchHist.push({ t: now, raw });
+      while (S.pitchHist.length && now - S.pitchHist[0].t > 3) S.pitchHist.shift();
+      S.headN = M.median(S.pitchHist.map((h) => h.raw));
+    }
+    const p = M.solvePose(f, liveOptions()), prev = S.livePose;
+    for (const b of M.BONES) p[b] = M.continuous(p[b], prev?.[b]);
+    plantLive(p, Math.min(0.1, Math.max(0, now - S.lastLive))); S.lastLive = now;
+    S.livePose = p;
+  }
+}
+
+/* ---------------- build + export ---------------- */
+const slug = (s) => s.toLowerCase().replace(/[^a-z0-9_]+/g, "_").replace(/^_+|_+$/g, "") || "my_move";
+const animId = () => "animation.mocap." + slug($("opt-name").value);
+function exportOptions() {
+  return {
+    fps: +$("opt-fps").value, smoothing: +$("opt-smooth").value, tolerance: +$("opt-tol").value,
+    headPitchOffset: +$("opt-pitch").value, headGain: +$("opt-nod").value, armTarget: S.arm, legTarget: S.leg, slide: $("opt-slide").checked, lean: S.lean,
+    mirror: $("opt-mirror").checked, flipTurn: $("opt-flip").checked, plant: $("opt-plant").checked, loop: S.loop, id: animId(),
+    bones: enabledBones(), bodyOff: !enabledBones().includes("body"), headOff: !enabledBones().includes("head"),
+  };
+}
+const secs = (v) => `${(+v).toFixed(2)} s`;
+function rebuild() {
+  $("anim-id").textContent = animId();
+  if (S.recording || !S.samples.length || (S.mode !== "playback" && !S.clip)) return;
+  const t0 = +$("trim-start").value, t1 = +$("trim-end").value;
+  for (const [id, v] of [["trim-start", t0], ["trim-end", t1]]) { $(id + "-out").textContent = secs(v); $(id).setAttribute("aria-valuetext", t("{s} seconds", { s: v.toFixed(2) })); }
+  const o = exportOptions();
+  S.clip = M.buildClip(S.samples, t0, Math.max(t0 + 0.1, t1), o);
+  S.playT = Math.min(S.playT, S.clip.length);
+  const { json, keyCount } = M.toBedrock(S.clip, o);
+  S.json = json;
+  const size = (stringify(json).length / 1024).toFixed(1);
+  $("export-stats").textContent = o.bones.length
+    ? t("{s} s · {b} body parts · {k} keyframes · {kb} KB", { s: S.clip.length.toFixed(2), b: o.bones.length, k: keyCount, kb: size })
+    : t("Pick at least one body part to include.");
+  $("download").disabled = $("copy").disabled = !o.bones.length;
+  for (const id of ["play", "scrub", "live-btn"]) $(id).disabled = false;
+  $("scrub").max = S.clip.length.toFixed(2);
+  setStage();
+}
+let queued = false;
+function queueRebuild() { if (queued) return; queued = true; requestAnimationFrame(() => { queued = false; rebuild(); }); }
+function stringify(obj) {
+  return JSON.stringify(obj, null, 2).replace(/\[\s+([-\d.e+,\s]+?)\s+\]/g, (_, n) => "[" + n.split(/,\s*/).join(", ") + "]");
+}
+$("opt-name").addEventListener("input", queueRebuild);
+for (const id of ["opt-fps", "opt-mirror", "opt-flip", "opt-plant", "opt-slide"]) $(id).addEventListener("change", queueRebuild);
+for (const [id, out, fmt] of [["opt-smooth", "smooth-out", (v) => v], ["opt-tol", "tol-out", (v) => (+v ? v + "°" : t("off"))], ["opt-pitch", "pitch-out", (v) => v + "°"], ["opt-nod", "nod-out", (v) => (+v).toFixed(1) + "×"]]) {
+  const upd = () => { $(out).textContent = fmt($(id).value); $(id).setAttribute("aria-valuetext", $(out).textContent); };
+  $(id).addEventListener("input", () => { upd(); queueRebuild(); }); upd();
+}
+document.querySelectorAll("#bone-checks input").forEach((c) => c.addEventListener("change", queueRebuild));
+$("trim-start").oninput = () => { const e = +$("trim-end").value; if (+$("trim-start").value > e - 0.2) $("trim-start").value = e - 0.2; S.playT = 0; queueRebuild(); };
+$("trim-end").oninput = () => { const s = +$("trim-start").value; if (+$("trim-end").value < s + 0.2) $("trim-end").value = s + 0.2; queueRebuild(); };
+function segGroup(attr, key) {
+  const btns = document.querySelectorAll(`[data-${attr}]`);
+  btns.forEach((b) => b.addEventListener("click", () => {
+    S[key] = b.dataset[attr];
+    btns.forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    queueRebuild();
+  }));
+}
+segGroup("arm", "arm"); segGroup("leg", "leg"); segGroup("lean", "lean"); segGroup("loop", "loop");
+
+$("download").onclick = () => {
+  const blob = new Blob([stringify(S.json)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = slug($("opt-name").value) + ".animation.json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast("Saved {file}", { file: a.download });
+};
+$("copy").onclick = async () => {
+  try { await navigator.clipboard.writeText(stringify(S.json)); toast("Copied to the clipboard"); }
+  catch { toast("Couldn't copy. Use Download instead."); }
+};
+
+/* ---------------- stage ---------------- */
+const preview = window.MocapPreview.createPreview($("stage"), window.THREE);
+async function setSkin() { preview.setSkin(await window.MocapPreview.loadDefaultSkin(S.slim), S.slim); }
+function setStage() {
+  const live = S.mode === "live";
+  $("stage-name").textContent = t(live ? "Live view" : "Your recording");
+  const pill = $("stage-pill");
+  if (live && S.recording) { pill.className = "pill rec"; pill.textContent = t("Recording"); }
+  else if (live) { pill.className = "pill"; pill.textContent = t(S.source ? "Copies you live" : "Waiting for the camera"); }
+  else { pill.className = "pill ok"; pill.textContent = t({ false: "Once", true: "Loop", hold_on_last_frame: "Hold last pose" }[S.loop]); }
+  $("live-btn").disabled = live || !S.source;
+  setPlayButton();
+}
+function setPlayButton() {
+  const b = $("play"), on = S.mode === "playback" && S.playing;
+  b.textContent = on ? "❚❚" : "▶"; b.setAttribute("aria-label", t(on ? "Pause" : "Play"));
+}
+function goLive() { S.mode = "live"; S.livePose = null; S.live.reset(); S.pitchHist = []; S.visS = null; S.imgS = null; S.plant.right = { hold: null, w: 0 }; S.plant.left = { hold: null, w: 0 }; setStage(); }
+function togglePlay() {
+  if (!S.clip) return;
+  if (S.mode !== "playback") { S.mode = "playback"; S.playing = true; } else S.playing = !S.playing;
+  setStage();
+}
+$("play").onclick = togglePlay;
+$("scrub").oninput = () => { if (S.mode !== "playback") S.mode = "playback"; S.playing = false; S.playT = +$("scrub").value; setStage(); };
+$("live-btn").onclick = goLive;
+$("reset-view").onclick = () => preview.resetView(S.behind);
+for (const [id, slim] of [["arms-classic", false], ["arms-slim", true]]) $(id).onclick = () => {
+  S.slim = slim; $("arms-classic").setAttribute("aria-pressed", String(!slim)); $("arms-slim").setAttribute("aria-pressed", String(slim)); setSkin();
+};
+for (const [id, behind] of [["view-front", false], ["view-back", true]]) $(id).onclick = () => {
+  S.behind = behind; $("view-front").setAttribute("aria-pressed", String(!behind)); $("view-back").setAttribute("aria-pressed", String(behind)); preview.setSide(behind);
+};
+function stageColors() {
+  const cs = getComputedStyle(document.documentElement);
+  preview.setColors(cs.getPropertyValue("--stage").trim(), cs.getPropertyValue("--stage-line").trim());
+}
+const themeChanged = () => requestAnimationFrame(stageColors);
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", themeChanged);
+
+let lastTimeText = "";
+preview.onFrame((dt) => {
+  detect();
+  const enabled = exportOptions().bones;
+  let pose = null;
+  if (S.mode === "playback" && S.clip) {
+    if (S.playing) {
+      S.playT += dt;
+      if (S.playT > S.clip.length) S.playT = S.loop === "false" || S.loop === "hold_on_last_frame" ? (S.playT > S.clip.length + 0.8 ? 0 : S.playT) : 0;
+    }
+    const tt = Math.min(S.playT, S.clip.length);
+    $("scrub").value = tt;
+    const txt = `${tt.toFixed(2)} / ${S.clip.length.toFixed(2)} s`;
+    if (txt !== lastTimeText) { $("time").textContent = txt; lastTimeText = txt; $("scrub").setAttribute("aria-valuetext", t("{a} of {b} seconds", { a: tt.toFixed(1), b: S.clip.length.toFixed(1) })); }
+    pose = M.sampleClip(S.clip, tt);
+  } else {
+    pose = S.livePose;
+    if (lastTimeText !== "live") { $("time").textContent = t("live"); lastTimeText = "live"; }
+  }
+  showMove(pose && pose.moves);
+  if (pose) {
+    const out = {};
+    for (const b of M.BONES) if (enabled.includes(b)) out[b === "body" && S.lean === "waist" ? "waist" : b] = pose[b];   // switched-off parts stay in their idle pose
+    out.pos = {};
+    for (const b in pose.pos || {}) if (enabled.includes(b)) out.pos[b] = pose.pos[b];
+    preview.setPose(out);
+  } else preview.setPose(null);
+});
+
+/* Knee-up / kick readout on the stage */
+const MOVE_TEXT = { "right:knee": "Right knee up", "left:knee": "Left knee up", "right:kick": "Right kick", "left:kick": "Left kick" };
+function showMove(m) {
+  const on = enabledBones(), r = m && on.includes("rightLeg") && m.right, l = m && on.includes("leftLeg") && m.left;
+  const key = r ? "right:" + r : l ? "left:" + l : "";
+  if (key === S.move) return;
+  S.move = key;
+  const el = $("move-pill"); el.hidden = !key; if (key) el.textContent = t(MOVE_TEXT[key]);
+}
+
+/* ---------------- keyboard shortcuts ---------------- */
+document.addEventListener("keydown", (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const tag = e.target.tagName, typing = tag === "INPUT" && e.target.type === "text" || tag === "SELECT" || tag === "TEXTAREA";
+  if (typing) return;
+  if (e.key === "r" || e.key === "R") { e.preventDefault(); toggleRecord(); }
+  else if (e.key === " " && (e.target === document.body || e.target.id === "stage")) { e.preventDefault(); togglePlay(); }
+});
+
+/* ---------------- display & language (shared with the Emote Tool) ---------------- */
+const PREFS = "ebb.prefs.v1";
+const prefs = (() => { try { return JSON.parse(localStorage.getItem(PREFS) || "{}") || {}; } catch { return {}; } })();
+const storePrefs = () => { try { localStorage.setItem(PREFS, JSON.stringify(prefs)); } catch { /* not kept */ } };
+function applyPrefs() {
+  const root = document.documentElement;
+  if (prefs.theme && prefs.theme !== "system") root.setAttribute("data-a11y-theme", prefs.theme); else root.removeAttribute("data-a11y-theme");
+  if (prefs.text === "large") root.setAttribute("data-text", "large"); else root.removeAttribute("data-text");
+  document.querySelectorAll("[data-theme-opt]").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.themeOpt === (prefs.theme || "system"))));
+  document.querySelectorAll("[data-text-opt]").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.textOpt === (prefs.text || "normal"))));
+  $("pref-beep").checked = prefs.mocapBeep !== false;
+  themeChanged();
+}
+function applyLanguage() {
+  L.setLang(prefs.lang || L.guess());
+  L.applyStatic();
+  $("pref-lang").value = L.lang;
+  setStatus(statusMsg[0], statusMsg[1], statusKind);
+  const st = S.trackState; S.trackState = null; setTrack(st);
+  updateSourceButtons(); setStage(); lastTimeText = ""; S.move = null;
+  for (const id of ["opt-smooth", "opt-tol", "opt-pitch", "opt-nod"]) $(id).dispatchEvent(new Event("input"));
+  if (!S.clip) $("export-stats").textContent = t("Record a move first.");
+}
+$("pref-lang").innerHTML = L.LANGS.map((l) => `<option value="${l.code}" lang="${l.code}">${l.name}</option>`).join("");
+$("pref-lang").addEventListener("change", (e) => { prefs.lang = e.target.value; storePrefs(); applyLanguage(); });
+$("pref-theme").addEventListener("click", (e) => { const b = e.target.closest("[data-theme-opt]"); if (!b) return; prefs.theme = b.dataset.themeOpt; storePrefs(); applyPrefs(); });
+$("pref-text").addEventListener("click", (e) => { const b = e.target.closest("[data-text-opt]"); if (!b) return; prefs.text = b.dataset.textOpt; storePrefs(); applyPrefs(); });
+$("pref-beep").addEventListener("change", (e) => { prefs.mocapBeep = e.target.checked; storePrefs(); if (e.target.checked) beep(880, 120); });
+for (const g of [$("pref-theme"), $("pref-text")]) g.addEventListener("keydown", (e) => {
+  if (!["ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp"].includes(e.key)) return;
+  const opts = [...g.querySelectorAll("[role=radio]")], i = opts.indexOf(document.activeElement);
+  const next = opts[(i + (e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : opts.length - 1)) % opts.length];
+  e.preventDefault(); next.focus(); next.click();
+});
+// roving tab stop inside the radio groups
+const syncRoving = () => document.querySelectorAll("#prefs [role=radio]").forEach((b) => { b.tabIndex = b.getAttribute("aria-checked") === "true" ? 0 : -1; });
+new MutationObserver(syncRoving).observe($("prefs"), { attributes: true, subtree: true, attributeFilter: ["aria-checked"] });
+function openPrefs(open) {
+  $("prefs").hidden = !open; $("prefs-btn").setAttribute("aria-expanded", String(open));
+  if (open) $("pref-lang").focus(); else $("prefs-btn").focus();
+}
+$("prefs-btn").onclick = () => openPrefs($("prefs").hidden);
+$("prefs-close").onclick = () => openPrefs(false);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("prefs").hidden) openPrefs(false); });
+document.addEventListener("pointerdown", (e) => { if (!$("prefs").hidden && !e.target.closest("#prefs, #prefs-btn")) { $("prefs").hidden = true; $("prefs-btn").setAttribute("aria-expanded", "false"); } });
+// another tab (e.g. the Emote Tool) changed the shared settings
+addEventListener("storage", (e) => { if (e.key !== PREFS) return; try { Object.assign(prefs, JSON.parse(e.newValue || "{}")); } catch { return; } applyPrefs(); applyLanguage(); });
+
+/* ---------------- boot ---------------- */
+applyPrefs();
+applyLanguage();
+syncRoving();
+setSkin();
+rebuild();
+loadModel();
+window.__mocap = { S, rebuild, stopRecording };
+
+</script>
+</body>
+</html>
