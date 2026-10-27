@@ -277,6 +277,12 @@ details.more[open] > summary::before { transform: rotate(90deg); }
 
 .toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: #1d293d; color: #ffffff; border: 1px solid #334155; padding: 10px 14px; border-radius: 8px; font-size: 0.88rem; max-width: calc(100% - 32px); box-shadow: 0 6px 24px rgba(0,0,0,0.25); z-index: 10; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+.gif-dlg { border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); color: var(--ink); padding: 14px 16px; width: min(380px, calc(100vw - 32px)); box-shadow: 0 12px 40px rgba(0,0,0,.35); }
+.gif-dlg::backdrop { background: rgba(0, 0, 0, 0.35); }
+.gif-dlg .field { margin: 12px 0; }
+.gif-note { font-size: 0.82rem; margin: 10px 0; }
+.gif-actions { display: flex; align-items: center; gap: 12px; }
+.stage.dropping { outline: 3px dashed var(--accent); outline-offset: -6px; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -406,6 +412,7 @@ details.more[open] > summary::before { transform: rotate(90deg); }
       <input type="range" id="scrub" min="0" max="1" step="0.01" value="0" disabled aria-label="Animation time" data-i18n-attr="aria-label">
       <span class="time" id="time" aria-hidden="true">–</span>
       <button class="btn ghost" type="button" id="reset-view" data-tip="Put the camera back where it started." data-i18n>Reset view</button>
+      <button class="btn" type="button" id="gif-btn" disabled aria-haspopup="dialog" data-tip="Save the animation as a GIF picture, from the angle shown here." data-i18n>Save GIF</button>
     </div>
     <div class="trimbar" role="group" aria-labelledby="trim-h">
       <div class="trim-head"><b id="trim-h" data-i18n>Trim</b><span class="muted" style="font-size:.8rem" data-i18n>Drag the two handles. The colored part is kept.</span><span class="keep" id="trim-keep" aria-live="polite"></span></div>
@@ -426,6 +433,9 @@ details.more[open] > summary::before { transform: rotate(90deg); }
         <button type="button" id="view-front" aria-pressed="true" data-tip="Look at the model's face." data-i18n>Front</button>
         <button type="button" id="view-back" aria-pressed="false" data-tip="Look from behind, so the model moves the same way you do." data-i18n>Behind</button>
       </div>
+      <button class="btn" type="button" id="skin-upload" data-tip="Preview with your own Minecraft skin (a PNG file). You can also drop it on the preview." data-i18n>Use my skin…</button>
+      <button class="btn ghost" type="button" id="skin-reset" hidden data-tip="Go back to the default skin." data-i18n>Default skin</button>
+      <input type="file" id="skin-file" accept="image/png" hidden>
       <button class="btn spacer" type="button" id="live-btn" disabled data-tip="Let the model copy your camera again. Your recording is kept." data-i18n>Back to live view</button>
     </div>
   </section>
@@ -1805,7 +1815,33 @@ window.MocapStrings = {
 "The Minecraft item held in this hand during the animation.": "El objeto de Minecraft que se sostiene en esta mano durante la animación.",
 "Items": "Objetos",
 "Tools": "Herramientas",
-"The Emote Tool puts these in the player's hands while the emote plays.": "La Emote Tool los pone en las manos del jugador mientras se reproduce el emote."
+"The Emote Tool puts these in the player's hands while the emote plays.": "La Emote Tool los pone en las manos del jugador mientras se reproduce el emote.",
+"Save GIF": "Guardar GIF",
+"Save the animation as a GIF picture, from the angle shown here.": "Guarda la animación como imagen GIF, desde el ángulo que se ve aquí.",
+"Use my skin…": "Usar mi skin…",
+"Preview with your own Minecraft skin (a PNG file). You can also drop it on the preview.": "Previsualiza con tu propio skin de Minecraft (un archivo PNG). También puedes soltarlo sobre la vista previa.",
+"Default skin": "Skin predeterminado",
+"Go back to the default skin.": "Volver al skin predeterminado.",
+"Save a GIF": "Guardar un GIF",
+"Size": "Tamaño",
+"Small": "Pequeño",
+"Medium": "Mediano",
+"Background": "Fondo",
+"Like the preview": "Como la vista previa",
+"Transparent": "Transparente",
+"The preview's background, floor and shadow.": "El fondo, el suelo y la sombra de la vista previa.",
+"Only the player, so it can go on top of anything (slides, websites).": "Solo el jugador, para ponerlo encima de cualquier cosa (diapositivas, sitios web).",
+"The GIF uses the angle shown in the preview. Drag the model first to change it.": "El GIF usa el ángulo de la vista previa. Arrastra el modelo antes para cambiarlo.",
+"Make GIF": "Crear GIF",
+"Drawing frames… {p}%": "Dibujando fotogramas… {p}%",
+"Making the GIF… {p}%": "Creando el GIF… {p}%",
+"Saved {name} ({kb} KB).": "Se guardó {name} ({kb} KB).",
+"The GIF couldn't be made. Try a smaller size.": "No se pudo crear el GIF. Prueba un tamaño más pequeño.",
+"That picture isn't a Minecraft skin. Skins are PNG files 64×64 pixels (or 64×32, or HD sizes like 128×128).": "Esa imagen no es un skin de Minecraft. Los skins son archivos PNG de 64×64 píxeles (o 64×32, o tamaños HD como 128×128).",
+"Previewing with your skin (slim arms).": "Vista previa con tu skin (brazos delgados).",
+"Previewing with your skin (classic arms).": "Vista previa con tu skin (brazos clásicos).",
+"That picture couldn't be opened. Try a PNG file.": "No se pudo abrir esa imagen. Prueba con un archivo PNG.",
+"Previewing with the default skin.": "Vista previa con el skin predeterminado."
 },
 "fr": {
 "Skip to the camera": "Aller à la caméra",
@@ -2061,7 +2097,33 @@ window.MocapStrings = {
 "The Minecraft item held in this hand during the animation.": "L'objet Minecraft tenu dans cette main pendant l'animation.",
 "Items": "Objets",
 "Tools": "Outils",
-"The Emote Tool puts these in the player's hands while the emote plays.": "L'Emote Tool les met dans les mains du joueur pendant l'emote."
+"The Emote Tool puts these in the player's hands while the emote plays.": "L'Emote Tool les met dans les mains du joueur pendant l'emote.",
+"Save GIF": "Enregistrer en GIF",
+"Save the animation as a GIF picture, from the angle shown here.": "Enregistre l'animation en image GIF, sous l'angle affiché ici.",
+"Use my skin…": "Utiliser mon skin…",
+"Preview with your own Minecraft skin (a PNG file). You can also drop it on the preview.": "Prévisualise avec ton propre skin Minecraft (un fichier PNG). Tu peux aussi le déposer sur l'aperçu.",
+"Default skin": "Skin par défaut",
+"Go back to the default skin.": "Revenir au skin par défaut.",
+"Save a GIF": "Enregistrer un GIF",
+"Size": "Taille",
+"Small": "Petit",
+"Medium": "Moyen",
+"Background": "Arrière-plan",
+"Like the preview": "Comme l'aperçu",
+"Transparent": "Transparent",
+"The preview's background, floor and shadow.": "L'arrière-plan, le sol et l'ombre de l'aperçu.",
+"Only the player, so it can go on top of anything (slides, websites).": "Seulement le joueur, pour le poser sur n'importe quoi (diapos, sites web).",
+"The GIF uses the angle shown in the preview. Drag the model first to change it.": "Le GIF utilise l'angle de l'aperçu. Fais d'abord glisser le modèle pour le changer.",
+"Make GIF": "Créer le GIF",
+"Drawing frames… {p}%": "Dessin des images… {p}%",
+"Making the GIF… {p}%": "Création du GIF… {p}%",
+"Saved {name} ({kb} KB).": "{name} enregistré ({kb} Ko).",
+"The GIF couldn't be made. Try a smaller size.": "Le GIF n'a pas pu être créé. Essaie une taille plus petite.",
+"That picture isn't a Minecraft skin. Skins are PNG files 64×64 pixels (or 64×32, or HD sizes like 128×128).": "Cette image n'est pas un skin Minecraft. Les skins sont des fichiers PNG de 64×64 pixels (ou 64×32, ou en HD comme 128×128).",
+"Previewing with your skin (slim arms).": "Aperçu avec ton skin (bras fins).",
+"Previewing with your skin (classic arms).": "Aperçu avec ton skin (bras classiques).",
+"That picture couldn't be opened. Try a PNG file.": "Cette image n'a pas pu être ouverte. Essaie un fichier PNG.",
+"Previewing with the default skin.": "Aperçu avec le skin par défaut."
 },
 "pt": {
 "Skip to the camera": "Pular para a câmera",
@@ -2317,7 +2379,33 @@ window.MocapStrings = {
 "The Minecraft item held in this hand during the animation.": "O item do Minecraft segurado nesta mão durante a animação.",
 "Items": "Itens",
 "Tools": "Ferramentas",
-"The Emote Tool puts these in the player's hands while the emote plays.": "A Emote Tool coloca esses itens nas mãos do jogador enquanto o emote toca."
+"The Emote Tool puts these in the player's hands while the emote plays.": "A Emote Tool coloca esses itens nas mãos do jogador enquanto o emote toca.",
+"Save GIF": "Salvar GIF",
+"Save the animation as a GIF picture, from the angle shown here.": "Salva a animação como imagem GIF, do ângulo mostrado aqui.",
+"Use my skin…": "Usar minha skin…",
+"Preview with your own Minecraft skin (a PNG file). You can also drop it on the preview.": "Visualize com sua própria skin do Minecraft (um arquivo PNG). Você também pode soltá-la na visualização.",
+"Default skin": "Skin padrão",
+"Go back to the default skin.": "Voltar para a skin padrão.",
+"Save a GIF": "Salvar um GIF",
+"Size": "Tamanho",
+"Small": "Pequeno",
+"Medium": "Médio",
+"Background": "Fundo",
+"Like the preview": "Como a visualização",
+"Transparent": "Transparente",
+"The preview's background, floor and shadow.": "O fundo, o chão e a sombra da visualização.",
+"Only the player, so it can go on top of anything (slides, websites).": "Só o jogador, para colocar sobre qualquer coisa (slides, sites).",
+"The GIF uses the angle shown in the preview. Drag the model first to change it.": "O GIF usa o ângulo da visualização. Arraste o modelo antes para mudá-lo.",
+"Make GIF": "Criar GIF",
+"Drawing frames… {p}%": "Desenhando quadros… {p}%",
+"Making the GIF… {p}%": "Criando o GIF… {p}%",
+"Saved {name} ({kb} KB).": "{name} salvo ({kb} KB).",
+"The GIF couldn't be made. Try a smaller size.": "Não foi possível criar o GIF. Tente um tamanho menor.",
+"That picture isn't a Minecraft skin. Skins are PNG files 64×64 pixels (or 64×32, or HD sizes like 128×128).": "Essa imagem não é uma skin do Minecraft. Skins são arquivos PNG de 64×64 pixels (ou 64×32, ou tamanhos HD como 128×128).",
+"Previewing with your skin (slim arms).": "Visualizando com sua skin (braços finos).",
+"Previewing with your skin (classic arms).": "Visualizando com sua skin (braços clássicos).",
+"That picture couldn't be opened. Try a PNG file.": "Não foi possível abrir essa imagem. Tente um arquivo PNG.",
+"Previewing with the default skin.": "Visualizando com a skin padrão."
 },
 "de": {
 "Skip to the camera": "Zur Kamera springen",
@@ -2573,7 +2661,33 @@ window.MocapStrings = {
 "The Minecraft item held in this hand during the animation.": "Der Minecraft-Gegenstand, der während der Animation in dieser Hand gehalten wird.",
 "Items": "Gegenstände",
 "Tools": "Werkzeuge",
-"The Emote Tool puts these in the player's hands while the emote plays.": "Das Emote Tool gibt sie der Spielfigur in die Hände, solange das Emote läuft."
+"The Emote Tool puts these in the player's hands while the emote plays.": "Das Emote Tool gibt sie der Spielfigur in die Hände, solange das Emote läuft.",
+"Save GIF": "Als GIF speichern",
+"Save the animation as a GIF picture, from the angle shown here.": "Speichert die Animation als GIF-Bild aus dem hier gezeigten Blickwinkel.",
+"Use my skin…": "Meinen Skin verwenden…",
+"Preview with your own Minecraft skin (a PNG file). You can also drop it on the preview.": "Vorschau mit deinem eigenen Minecraft-Skin (eine PNG-Datei). Du kannst ihn auch auf die Vorschau ziehen.",
+"Default skin": "Standard-Skin",
+"Go back to the default skin.": "Zurück zum Standard-Skin.",
+"Save a GIF": "Ein GIF speichern",
+"Size": "Größe",
+"Small": "Klein",
+"Medium": "Mittel",
+"Background": "Hintergrund",
+"Like the preview": "Wie die Vorschau",
+"Transparent": "Transparent",
+"The preview's background, floor and shadow.": "Hintergrund, Boden und Schatten der Vorschau.",
+"Only the player, so it can go on top of anything (slides, websites).": "Nur die Spielfigur, damit sie auf alles passt (Folien, Websites).",
+"The GIF uses the angle shown in the preview. Drag the model first to change it.": "Das GIF nutzt den Blickwinkel der Vorschau. Ziehe vorher am Modell, um ihn zu ändern.",
+"Make GIF": "GIF erstellen",
+"Drawing frames… {p}%": "Bilder werden gezeichnet… {p}%",
+"Making the GIF… {p}%": "GIF wird erstellt… {p}%",
+"Saved {name} ({kb} KB).": "{name} gespeichert ({kb} KB).",
+"The GIF couldn't be made. Try a smaller size.": "Das GIF konnte nicht erstellt werden. Versuche eine kleinere Größe.",
+"That picture isn't a Minecraft skin. Skins are PNG files 64×64 pixels (or 64×32, or HD sizes like 128×128).": "Dieses Bild ist kein Minecraft-Skin. Skins sind PNG-Dateien mit 64×64 Pixeln (oder 64×32, oder HD-Größen wie 128×128).",
+"Previewing with your skin (slim arms).": "Vorschau mit deinem Skin (schmale Arme).",
+"Previewing with your skin (classic arms).": "Vorschau mit deinem Skin (klassische Arme).",
+"That picture couldn't be opened. Try a PNG file.": "Dieses Bild konnte nicht geöffnet werden. Versuche eine PNG-Datei.",
+"Previewing with the default skin.": "Vorschau mit dem Standard-Skin."
 },
 "zh": {
 "Skip to the camera": "跳到摄像头",
@@ -2829,7 +2943,33 @@ window.MocapStrings = {
 "The Minecraft item held in this hand during the animation.": "动画播放时这只手里拿的 Minecraft 物品。",
 "Items": "物品",
 "Tools": "工具",
-"The Emote Tool puts these in the player's hands while the emote plays.": "表情播放期间，Emote Tool 会把它们放到玩家手中。"
+"The Emote Tool puts these in the player's hands while the emote plays.": "表情播放期间，Emote Tool 会把它们放到玩家手中。",
+"Save GIF": "保存 GIF",
+"Save the animation as a GIF picture, from the angle shown here.": "将动画保存为 GIF 图片，使用这里显示的角度。",
+"Use my skin…": "使用我的皮肤…",
+"Preview with your own Minecraft skin (a PNG file). You can also drop it on the preview.": "用你自己的 Minecraft 皮肤（PNG 文件）预览。也可以把它拖放到预览上。",
+"Default skin": "默认皮肤",
+"Go back to the default skin.": "恢复默认皮肤。",
+"Save a GIF": "保存 GIF",
+"Size": "尺寸",
+"Small": "小",
+"Medium": "中",
+"Background": "背景",
+"Like the preview": "与预览相同",
+"Transparent": "透明",
+"The preview's background, floor and shadow.": "预览中的背景、地面和阴影。",
+"Only the player, so it can go on top of anything (slides, websites).": "只有玩家，可以放在任何内容上（幻灯片、网站）。",
+"The GIF uses the angle shown in the preview. Drag the model first to change it.": "GIF 使用预览中显示的角度。想换角度，请先拖动模型。",
+"Make GIF": "生成 GIF",
+"Drawing frames… {p}%": "正在绘制帧… {p}%",
+"Making the GIF… {p}%": "正在生成 GIF… {p}%",
+"Saved {name} ({kb} KB).": "已保存 {name}（{kb} KB）。",
+"The GIF couldn't be made. Try a smaller size.": "无法生成 GIF。请试试更小的尺寸。",
+"That picture isn't a Minecraft skin. Skins are PNG files 64×64 pixels (or 64×32, or HD sizes like 128×128).": "这张图片不是 Minecraft 皮肤。皮肤是 64×64 像素的 PNG 文件（或 64×32，或 128×128 等高清尺寸）。",
+"Previewing with your skin (slim arms).": "正在用你的皮肤预览（纤细手臂）。",
+"Previewing with your skin (classic arms).": "正在用你的皮肤预览（经典手臂）。",
+"That picture couldn't be opened. Try a PNG file.": "无法打开这张图片。请试试 PNG 文件。",
+"Previewing with the default skin.": "正在用默认皮肤预览。"
 }
 };
 </script>
@@ -3058,7 +3198,7 @@ window.MocapStrings = {
     const shadow = new THREE.Mesh(new THREE.PlaneGeometry(22, 22), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(shadowCv), transparent: true, depthWrite: false }));
     shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.05; scene.add(shadow);
 
-    let rig = null, pose = null; const held = { right: null, left: null };
+    let rig = null, pose = null, scratch = null; const held = { right: null, left: null }, stills = {};
     const HOME = { yaw: 192, pitch: 6, dist: 82 };   // nearly straight on, turned just enough to show depth
     const view = { ...HOME };
     function placeCamera() {
@@ -3105,6 +3245,33 @@ window.MocapStrings = {
     return {
       setSkin(cv, slim) { if (rig) { scene.remove(rig.root); rig.dispose(); } rig = makeRig(THREE, cv, slim); scene.add(rig.root); for (const sd of ["right", "left"]) setRigItem(THREE, rig, held[sd], sd); },
       get rig() { return rig; },
+      /** One picture of the model in a pose, from the current view angle (for GIFs).
+       *  transparent: no background, floor grid or shadow. Returns ImageData (w×h). */
+      renderStill(p, w, h, transparent) {
+        const key = transparent ? "clear" : "scene";
+        if (!stills[key]) {
+          const cv = document.createElement("canvas");
+          stills[key] = new THREE.WebGLRenderer({ canvas: cv, antialias: !transparent, alpha: true, preserveDrawingBuffer: true, premultipliedAlpha: false });
+          stills[key].setPixelRatio(1);
+        }
+        const r = stills[key];
+        if (r.domElement.width !== w || r.domElement.height !== h) r.setSize(w, h, false);
+        const cam = camera.clone(); cam.aspect = w / h; cam.updateProjectionMatrix();
+        const bg = scene.background;
+        if (transparent) { scene.background = null; grid.visible = false; shadow.visible = false; r.setClearColor(0x000000, 0); }
+        if (rig) poseRig(rig, p);
+        placeCamera(); cam.quaternion.copy(camera.quaternion);
+        // a square picture is narrower than the preview, so step back a little to keep raised arms and held items in view
+        const target = new THREE.Vector3(0, 17, 0);
+        cam.position.copy(camera.position).sub(target).multiplyScalar(1.3).add(target);
+        r.render(scene, cam);
+        scene.background = bg; grid.visible = true; shadow.visible = true;
+        if (!scratch) scratch = document.createElement("canvas");
+        scratch.width = w; scratch.height = h;
+        const g = scratch.getContext("2d", { willReadFrequently: true });
+        g.clearRect(0, 0, w, h); g.drawImage(r.domElement, 0, 0);
+        return g.getImageData(0, 0, w, h);
+      },
       setItem(side, item) { if (held[side] === item) return; held[side] = item; setRigItem(THREE, rig, item, side); },
       setPose(p) { pose = p; },
       onFrame(fn) { onFrame = fn; },
@@ -3304,6 +3471,125 @@ window.MocapStrings = {
     });
   }
   G.MocapItems = { ITEMS, drawIcon, itemPicture, find: (id) => ITEMS.find((x) => x.id === id) };
+  /* ---------- GIF making ----------
+   * One shared palette of up to 256 colours for the whole animation (median cut over all frames),
+   * then each frame is packed with GIF's LZW compression. With a transparent background, colour 0
+   * is "see-through" and anything less than half covered counts as see-through. */
+  function gifPalette(frames, transparent) {
+    const hist = new Map();
+    for (const f of frames) {
+      const d = f.data;
+      for (let i = 0; i < d.length; i += 4) {
+        if (transparent && d[i + 3] < 128) continue;
+        const k = (d[i] >> 3) << 10 | (d[i + 1] >> 3) << 5 | (d[i + 2] >> 3);
+        let e = hist.get(k); if (!e) hist.set(k, e = [0, 0, 0, 0]);
+        e[0]++; e[1] += d[i]; e[2] += d[i + 1]; e[3] += d[i + 2];
+      }
+    }
+    const entries = [...hist.entries()].map(([k, e]) => ({ k, n: e[0], c: [e[1] / e[0], e[2] / e[0], e[3] / e[0]] }));
+    const want = transparent ? 255 : 256;
+    let boxes = entries.length ? [entries] : [];
+    const spread = (b) => { let best = 0, ch = 0; for (let q = 0; q < 3; q++) { let lo = 255, hi = 0; for (const e of b) { lo = Math.min(lo, e.c[q]); hi = Math.max(hi, e.c[q]); } if (hi - lo > best) { best = hi - lo; ch = q; } } return { best, ch }; };
+    while (boxes.length < want) {
+      let bi = -1, score = 0;
+      boxes.forEach((b, i) => { if (b.length < 2) return; const n = b.reduce((a, e) => a + e.n, 0), sc = spread(b).best * Math.sqrt(n); if (sc > score) { score = sc; bi = i; } });
+      if (bi < 0) break;
+      const b = boxes[bi], { ch } = spread(b);
+      b.sort((x, y) => x.c[ch] - y.c[ch]);
+      const total = b.reduce((a, e) => a + e.n, 0); let acc = 0, cut = 1;
+      for (let i = 0; i < b.length - 1; i++) { acc += b[i].n; if (acc >= total / 2) { cut = i + 1; break; } }
+      boxes.splice(bi, 1, b.slice(0, cut), b.slice(cut));
+    }
+    const pal = boxes.map((b) => { const n = b.reduce((a, e) => a + e.n, 0); return [0, 1, 2].map((q) => Math.round(b.reduce((a, e) => a + e.c[q] * e.n, 0) / n)); });
+    if (transparent) pal.unshift([0, 0, 0]);
+    while (pal.length < 256) pal.push([0, 0, 0]);
+    // every 15-bit colour seen → nearest palette entry
+    const map = new Int16Array(32768).fill(-1), first = transparent ? 1 : 0, used = transparent ? boxes.length + 1 : boxes.length;
+    for (const e of entries) {
+      let bi = first, bd = Infinity;
+      for (let i = first; i < used; i++) { const p = pal[i], dd = (p[0] - e.c[0]) ** 2 + (p[1] - e.c[1]) ** 2 + (p[2] - e.c[2]) ** 2; if (dd < bd) { bd = dd; bi = i; } }
+      map[e.k] = bi;
+    }
+    return { pal, map };
+  }
+  function lzw(indices, out) {
+    const minCode = 8, clear = 256, eoi = 257;
+    out.push(minCode);
+    let block = [], cur = 0, bits = 0, size = minCode + 1, next = eoi + 1;
+    const emit = (code) => { cur |= code << bits; bits += size; while (bits >= 8) { block.push(cur & 255); cur >>>= 8; bits -= 8; if (block.length === 255) { out.push(255, ...block); block = []; } } };
+    let dict = new Map();
+    emit(clear);
+    let prefix = indices[0];
+    for (let i = 1; i < indices.length; i++) {
+      const c = indices[i], key = prefix * 256 + c, hit = dict.get(key);
+      if (hit !== undefined) { prefix = hit; continue; }
+      emit(prefix);
+      if (next < 4096) { dict.set(key, next++); if (next > (1 << size) && size < 12) size++; }
+      else { emit(clear); dict = new Map(); size = minCode + 1; next = eoi + 1; }
+      prefix = c;
+    }
+    emit(prefix); emit(eoi);
+    if (bits > 0) block.push(cur & 255);
+    if (block.length) out.push(block.length, ...block);
+    out.push(0);
+  }
+  /** frames: ImageData[] (same size); delay in 1/100 s. Returns a Blob. */
+  async function encodeGif(frames, { delay = 5, transparent = false, onProgress } = {}) {
+    const w = frames[0].width, h = frames[0].height, { pal, map } = gifPalette(frames, transparent);
+    const out = [];
+    const str = (s) => { for (const ch of s) out.push(ch.charCodeAt(0)); };
+    const u16 = (v) => out.push(v & 255, (v >> 8) & 255);
+    str("GIF89a"); u16(w); u16(h); out.push(0xf7, 0, 0);          // global palette of 256 colours
+    for (const c of pal) out.push(c[0], c[1], c[2]);
+    out.push(0x21, 0xff, 11); str("NETSCAPE2.0"); out.push(3, 1); u16(0); out.push(0);   // loop forever
+    const idx = new Uint8Array(w * h), parts = [];
+    for (let f = 0; f < frames.length; f++) {
+      const d = frames[f].data;
+      for (let i = 0, j = 0; i < d.length; i += 4, j++) {
+        idx[j] = transparent && d[i + 3] < 128 ? 0 : Math.max(0, map[(d[i] >> 3) << 10 | (d[i + 1] >> 3) << 5 | (d[i + 2] >> 3)]);
+      }
+      // frame timing, and (transparent) clear the previous frame first so nothing smears
+      out.push(0x21, 0xf9, 4, transparent ? (2 << 2) | 1 : (1 << 2), delay & 255, delay >> 8, 0, 0);
+      out.push(0x2c); u16(0); u16(0); u16(w); u16(h); out.push(0);
+      lzw(idx, out);
+      if (out.length > 1 << 20) { parts.push(new Uint8Array(out)); out.length = 0; }
+      if (onProgress) onProgress((f + 1) / frames.length);
+      if (f % 4 === 3) await new Promise((r) => setTimeout(r));
+    }
+    out.push(0x3b);
+    parts.push(new Uint8Array(out));
+    return new Blob(parts, { type: "image/gif" });
+  }
+  G.MocapGif = { encodeGif };
+
+  /* ---------- your own skin ----------
+   * Accepts Minecraft skin pictures: square (64×64, or HD 128×128 and up) or the old 2:1 layout
+   * (64×32, upgraded to the square layout by mirroring the right arm and leg onto the left). */
+  function skinFromImage(img) {
+    const w = img.width, h = img.height;
+    if (!(w >= 64 && w <= 4096 && w % 64 === 0 && (h === w || h * 2 === w))) return null;
+    const cv = document.createElement("canvas"); cv.width = w; cv.height = w;
+    const g = cv.getContext("2d"); g.imageSmoothingEnabled = false; g.drawImage(img, 0, 0);
+    if (h * 2 === w) {
+      const k = w / 64;
+      // copy one face, flipped left-right (all sizes in 64-pixel skin units)
+      const flip = (sx, sy, sw, sh, dx, dy) => { g.save(); g.translate((dx + sw) * k, dy * k); g.scale(-1, 1); g.drawImage(img, sx * k, sy * k, sw * k, sh * k, 0, 0, sw * k, sh * k); g.restore(); };
+      for (const [u, v, du, dv] of [[0, 16, 16, 48], [40, 16, 32, 48]]) {
+        flip(u + 4, v, 4, 4, du + 4, dv); flip(u + 8, v, 4, 4, du + 8, dv);              // top, bottom
+        flip(u + 8, v + 4, 4, 12, du, dv + 4); flip(u + 4, v + 4, 4, 12, du + 4, dv + 4);   // outside ↔ inside, front
+        flip(u, v + 4, 4, 12, du + 8, dv + 4); flip(u + 12, v + 4, 4, 12, du + 12, dv + 4); // inside ↔ outside, back
+      }
+    }
+    return cv;
+  }
+  /** Slim (Alex-style) arms leave the outer column of the right arm's front empty. */
+  function looksSlim(cv) {
+    const k = cv.width / 64, d = cv.getContext("2d").getImageData(54 * k, 20 * k, 2 * k, 12 * k).data;
+    for (let i = 3; i < d.length; i += 4) if (d[i] > 0) return false;
+    return true;
+  }
+  G.MocapSkin = { skinFromImage, looksSlim };
+
   G.MocapPreview = { createPreview, loadDefaultSkin, makeRig, poseRig, setRigItem };
 })(window);
 
@@ -3663,7 +3949,7 @@ function rebuild() {
     ? t("{s} s · {b} body parts · {k} keyframes · {kb} KB", { s: S.clip.length.toFixed(2), b: o.bones.length, k: keyCount, kb: size })
     : t("Pick at least one body part to include.");
   $("download").disabled = $("copy").disabled = !o.bones.length;
-  for (const id of ["play", "scrub", "live-btn"]) $(id).disabled = false;
+  for (const id of ["play", "scrub", "live-btn", "gif-btn"]) $(id).disabled = false;
   $("scrub").max = S.clip.length.toFixed(2);
   setStage();
 }
@@ -3733,7 +4019,77 @@ $("copy").onclick = async () => {
 
 /* ---------------- stage ---------------- */
 const preview = window.MocapPreview.createPreview($("stage"), window.THREE);
-async function setSkin() { preview.setSkin(await window.MocapPreview.loadDefaultSkin(S.slim), S.slim); }
+/* Skin: the default Steve/Alex look, or your own skin picture. It's remembered in this browser and
+ * shared with the Emote Tool (same storage key), so a skin picked in either tool shows in both. */
+const SKIN_STORE = "ebb.skin.v1";
+async function setSkin() {
+  preview.setSkin(S.skin || await window.MocapPreview.loadDefaultSkin(S.slim), S.slim);
+  $("arms-classic").setAttribute("aria-pressed", String(!S.slim)); $("arms-slim").setAttribute("aria-pressed", String(S.slim));
+  $("skin-reset").hidden = !S.skin;
+}
+function storeSkin() { try { localStorage.setItem(SKIN_STORE, JSON.stringify({ slim: S.slim, data: S.skin ? S.skin.toDataURL() : null })); } catch { /* not kept */ } }
+const loadImage = (src) => new Promise((ok, bad) => { const img = new Image(); img.onload = () => ok(img); img.onerror = bad; img.src = src; });
+async function useSkinFile(file) {
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  try {
+    const cv = window.MocapSkin.skinFromImage(await loadImage(url));
+    if (!cv) { setStatus("That picture isn't a Minecraft skin. Skins are PNG files 64×64 pixels (or 64×32, or HD sizes like 128×128).", null, "warn"); return; }
+    S.skin = cv; S.slim = window.MocapSkin.looksSlim(cv);
+    await setSkin(); storeSkin();
+    setStatus(S.slim ? "Previewing with your skin (slim arms)." : "Previewing with your skin (classic arms).");
+  } catch { setStatus("That picture couldn't be opened. Try a PNG file.", null, "warn"); }
+  finally { URL.revokeObjectURL(url); }
+}
+$("skin-upload").onclick = () => $("skin-file").click();
+$("skin-file").onchange = (e) => { useSkinFile(e.target.files[0]); e.target.value = ""; };
+$("skin-reset").onclick = async () => { S.skin = null; await setSkin(); storeSkin(); setStatus("Previewing with the default skin."); };
+{ // drop a skin picture on the preview
+  const st = document.querySelector(".stage");
+  st.addEventListener("dragover", (e) => { if ([...e.dataTransfer.items].some((i) => i.type === "image/png")) { e.preventDefault(); st.classList.add("dropping"); } });
+  st.addEventListener("dragleave", () => st.classList.remove("dropping"));
+  st.addEventListener("drop", (e) => { st.classList.remove("dropping"); const f = [...e.dataTransfer.files].find((x) => x.type === "image/png"); if (f) { e.preventDefault(); useSkinFile(f); } });
+}
+async function restoreSkin() {
+  try {
+    const st = JSON.parse(localStorage.getItem(SKIN_STORE) || "null");
+    if (st) { S.slim = !!st.slim; if (st.data) S.skin = window.MocapSkin.skinFromImage(await loadImage(st.data)); }
+  } catch { /* default skin */ }
+  await setSkin();
+}
+
+/* ---------------- GIF ---------------- */
+const GIF = { size: 384, bg: "scene", busy: false };
+for (const [grp, key, attr] of [["gif-size", "size", "size"], ["gif-bg", "bg", "bg"]]) {
+  $(grp).addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b || GIF.busy) return;
+    GIF[key] = key === "size" ? +b.dataset[attr] : b.dataset[attr];
+    $(grp).querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  });
+}
+$("gif-btn").onclick = () => { $("gif-progress").textContent = ""; $("gif-dlg").showModal(); };
+$("gif-close").onclick = () => { if (!GIF.busy) $("gif-dlg").close(); };
+$("gif-dlg").addEventListener("cancel", (e) => { if (GIF.busy) e.preventDefault(); });
+$("gif-make").onclick = async () => {
+  if (!S.clip || GIF.busy) return;
+  GIF.busy = true; $("gif-make").disabled = true;
+  const prog = (key, p) => { $("gif-progress").textContent = t(key, p); };
+  try {
+    const fps = 20, n = Math.max(1, Math.round(S.clip.length * fps) + 1), frames = [], clear = GIF.bg === "clear";
+    for (let i = 0; i < n; i++) {
+      frames.push(preview.renderStill(stagePose(M.sampleClip(S.clip, Math.min(S.clip.length, i / fps))), GIF.size, GIF.size, clear));
+      if (i % 5 === 4) { prog("Drawing frames… {p}%", { p: Math.round(50 * (i + 1) / n) }); await new Promise((r) => setTimeout(r)); }
+    }
+    const blob = await window.MocapGif.encodeGif(frames, { delay: Math.round(100 / fps), transparent: clear,
+      onProgress: (f) => prog("Making the GIF… {p}%", { p: 50 + Math.round(50 * f) }) });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = slug($("opt-name").value) + ".gif";
+    document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    prog("Saved {name} ({kb} KB).", { name: a.download, kb: Math.round(blob.size / 1024) });
+    announce("Saved {name} ({kb} KB).", { name: a.download, kb: Math.round(blob.size / 1024) });
+  } catch (err) { console.error(err); prog("The GIF couldn't be made. Try a smaller size."); }
+  finally { GIF.busy = false; $("gif-make").disabled = false; }
+};
 function setStage() {
   const live = S.mode === "live";
   $("stage-name").textContent = t(live ? "Live view" : "Your recording");
@@ -3759,7 +4115,7 @@ $("scrub").oninput = () => { if (S.mode !== "playback") S.mode = "playback"; S.p
 $("live-btn").onclick = goLive;
 $("reset-view").onclick = () => preview.resetView(S.behind);
 for (const [id, slim] of [["arms-classic", false], ["arms-slim", true]]) $(id).onclick = () => {
-  S.slim = slim; $("arms-classic").setAttribute("aria-pressed", String(!slim)); $("arms-slim").setAttribute("aria-pressed", String(slim)); setSkin();
+  S.slim = slim; setSkin(); storeSkin();
 };
 for (const [id, behind] of [["view-front", false], ["view-back", true]]) $(id).onclick = () => {
   S.behind = behind; $("view-front").setAttribute("aria-pressed", String(!behind)); $("view-back").setAttribute("aria-pressed", String(behind)); preview.setSide(behind);
@@ -3794,20 +4150,19 @@ preview.onFrame((dt) => {
     if (lastTimeText !== "live") { $("time").textContent = t("live"); lastTimeText = "live"; }
   }
   showMove(pose && pose.moves);
-  if (pose) {
-    const out = {};
-    for (const b of M.BONES) if (enabled.includes(b)) out[b === "body" && S.lean === "waist" ? "waist" : b] = pose[b];   // switched-off parts stay in their idle pose
-    out.pos = {};
-    for (const b in pose.pos || {}) if (enabled.includes(b)) out.pos[b] = pose.pos[b];
-    // In the game, an arm holding something is raised a little (the player's own "holding" pose)
-    for (const [side, arm] of [["right", "rightArm"], ["left", "leftArm"]]) if (handItem(side)) { const a = out[arm] || [0, 0, 0]; out[arm] = [a[0] - 18, a[1], a[2]]; }
-    preview.setPose(out);
-  } else {
-    const out = { pos: {} };
-    for (const [side, arm] of [["right", "rightArm"], ["left", "leftArm"]]) if (handItem(side)) out[arm] = [-18, 0, 0];
-    preview.setPose(out.rightArm || out.leftArm ? out : null);
-  }
+  preview.setPose(stagePose(pose));
 });
+/** What the preview model shows for a pose: only the switched-on parts move, and an arm holding
+ *  something is raised a little, as in the game (the player's own "holding" pose). */
+function stagePose(pose) {
+  const enabled = enabledBones(), out = { pos: {} };
+  if (pose) {
+    for (const b of M.BONES) if (enabled.includes(b)) out[b === "body" && S.lean === "waist" ? "waist" : b] = pose[b];   // switched-off parts stay in their idle pose
+    for (const b in pose.pos || {}) if (enabled.includes(b)) out.pos[b] = pose.pos[b];
+  }
+  for (const [side, arm] of [["right", "rightArm"], ["left", "leftArm"]]) if (handItem(side)) { const a = out[arm] || [0, 0, 0]; out[arm] = [a[0] - 18, a[1], a[2]]; }
+  return pose || out.rightArm || out.leftArm ? out : null;
+}
 
 /* Knee-up / kick readout on the stage */
 const MOVE_TEXT = { "right:knee": "Right knee up", "left:knee": "Left knee up", "right:kick": "Right kick", "left:kick": "Left kick" };
@@ -3888,11 +4243,28 @@ $("more-settings").addEventListener("toggle", () => { try { localStorage.setItem
 applyPrefs();
 applyLanguage();
 syncRoving();
-setSkin();
+restoreSkin();
 rebuild();
 loadModel();
 window.__mocap = { S, rebuild, stopRecording, preview };
 
 </script>
+<dialog class="gif-dlg" id="gif-dlg" aria-labelledby="gif-h">
+  <div class="prefs-head"><h2 class="label" id="gif-h" data-i18n>Save a GIF</h2>
+    <button class="btn ghost icon" type="button" id="gif-close" data-tip="Close this panel." aria-label="Close" data-i18n-attr="aria-label">✕</button></div>
+  <div class="field"><span data-i18n>Size</span>
+    <div class="seg" role="group" aria-label="Size" data-i18n-attr="aria-label" id="gif-size">
+      <button type="button" data-size="256" aria-pressed="false" data-i18n>Small</button>
+      <button type="button" data-size="384" aria-pressed="true" data-i18n>Medium</button>
+      <button type="button" data-size="512" aria-pressed="false" data-i18n>Large</button>
+    </div></div>
+  <div class="field"><span data-i18n>Background</span>
+    <div class="seg" role="group" aria-label="Background" data-i18n-attr="aria-label" id="gif-bg">
+      <button type="button" data-bg="scene" aria-pressed="true" data-tip="The preview's background, floor and shadow." data-i18n>Like the preview</button>
+      <button type="button" data-bg="clear" aria-pressed="false" data-tip="Only the player, so it can go on top of anything (slides, websites)." data-i18n>Transparent</button>
+    </div></div>
+  <p class="muted gif-note" data-i18n>The GIF uses the angle shown in the preview. Drag the model first to change it.</p>
+  <div class="gif-actions"><button class="btn primary" type="button" id="gif-make" data-i18n>Make GIF</button><span class="muted" id="gif-progress" role="status"></span></div>
+</dialog>
 </body>
 </html>
