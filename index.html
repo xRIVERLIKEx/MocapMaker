@@ -200,6 +200,10 @@ details.help[open] summary { margin-bottom: 8px; }
 .cam-badges { position: absolute; left: 8px; right: 8px; top: 8px; display: flex; justify-content: space-between; gap: 6px; pointer-events: none; }
 .cam-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .cam-actions .btn { flex: 1 1 auto; }
+.hand-row { display: grid; grid-template-columns: 5.6em 32px minmax(0, 1fr); gap: 8px; align-items: center; }
+.hand-row + input[type=text] { margin-left: calc(5.6em + 48px); width: auto; }
+.hand-label { font-size: 0.86rem; }
+.item-icon { width: 28px; height: 28px; image-rendering: pixelated; background: var(--sunk); border-radius: 6px; padding: 2px; box-sizing: content-box; }
 .status { margin: 0; font-size: 0.84rem; }
 
 /* ---------- stage ---------- */
@@ -377,7 +381,9 @@ details.more[open] > summary::before { transform: rotate(90deg); }
             <li data-i18n="html">Stand <b>2–3 meters</b> from the camera, facing it, with your whole body in the picture.</li>
             <li data-i18n>Bright, even light and a plain background help the most. Baggy clothes can hide your elbows and knees.</li>
             <li data-i18n>Minecraft arms and legs have no elbows or knees, so a bent arm becomes one straight arm pointing at your hand.</li>
-            <li data-i18n>Act in place. Walking, jumping and turning all the way around are not recorded.</li>
+            <li data-i18n>Act in place. Walking and jumping are not recorded. Turn all the way around slowly, so the tracker can follow.</li>
+            <li data-i18n="html">Feet don't fit in the picture? That's fine: <b>feet out of view stay planted</b> and your hips still sway and turn. For kicks and steps, step back or tilt the camera down.</li>
+            <li data-i18n>Only one person in the picture. The tracker can jump to someone walking behind you.</li>
             <li data-i18n>For kicks and knee-ups, turning about 45° from the camera lets it see how high your leg goes.</li>
             <li data-i18n>Start and end with your arms relaxed at your sides so the move blends in smoothly.</li>
           </ul>
@@ -434,8 +440,18 @@ details.more[open] > summary::before { transform: rotate(90deg); }
         <label class="field"><span class="field-head"><span data-i18n>Head nod strength</span><output id="nod-out">1.5×</output></span>
           <input type="range" id="opt-nod" min="0.5" max="3" step="0.1" value="1.5" data-tip="Makes looking up and down bigger or smaller."></label>
         <label class="switch"><input type="checkbox" role="switch" id="opt-mirror" checked><span><b data-i18n>Mirror</b><small data-i18n>Swap left and right.</small></span></label>
+        <fieldset class="field"><legend data-i18n>Items in hands</legend>
+          <div class="hand-row"><span class="hand-label" id="lbl-right" data-i18n>Right hand</span><canvas class="item-icon" id="icon-right" width="16" height="16" aria-hidden="true"></canvas>
+            <select id="item-right" aria-labelledby="lbl-right" data-tip="The Minecraft item held in this hand during the animation."></select></div>
+          <input type="text" id="item-right-id" maxlength="60" autocomplete="off" spellcheck="false" placeholder="minecraft:apple" aria-label="Item ID" data-i18n-attr="aria-label" hidden>
+          <div class="hand-row"><span class="hand-label" id="lbl-left" data-i18n>Left hand</span><canvas class="item-icon" id="icon-left" width="16" height="16" aria-hidden="true"></canvas>
+            <select id="item-left" aria-labelledby="lbl-left" data-tip="The Minecraft item held in this hand during the animation."></select></div>
+          <input type="text" id="item-left-id" maxlength="60" autocomplete="off" spellcheck="false" placeholder="minecraft:shield" aria-label="Item ID" data-i18n-attr="aria-label" hidden>
+          <small id="item-note" data-i18n>The Emote Tool puts these in the player's hands while the emote plays.</small>
+        </fieldset>
         <fieldset class="field"><legend data-i18n>Body parts to include</legend>
           <div class="checks" id="bone-checks">
+            <label data-tip="Turns and tilts the whole player when you turn your body or sway your hips."><input type="checkbox" data-bone="root" checked><span data-i18n>Turn &amp; sway</span></label>
             <label><input type="checkbox" data-bone="head" checked><span data-i18n>Head</span></label>
             <label><input type="checkbox" data-bone="body" checked><span data-i18n>Body</span></label>
             <label><input type="checkbox" data-bone="rightArm" checked><span data-i18n>Right arm</span></label>
@@ -470,7 +486,8 @@ details.more[open] > summary::before { transform: rotate(90deg); }
               <button type="button" data-lean="waist" aria-pressed="true" data-tip="Moves the waist bone, so bows and leans bend at the hips." data-i18n>Hips</button>
             </div></div>
           <label class="switch"><input type="checkbox" role="switch" id="opt-slide" checked><span><b data-i18n>Slide bent arms and legs</b><small data-i18n>Like Minecraft animations: a raised knee lifts the whole leg, and a pulled-back fist slides the arm back.</small></span></label>
-          <label class="switch"><input type="checkbox" role="switch" id="opt-plant" checked><span><b data-i18n>Plant feet</b><small data-i18n>A leg that isn't lifted stays still on the ground.</small></span></label>
+          <label class="switch"><input type="checkbox" role="switch" id="opt-plant" checked><span><b data-i18n>Plant feet</b><small data-i18n>A leg that isn't lifted stays still on the ground. Feet out of view count as planted.</small></span></label>
+          <label class="switch"><input type="checkbox" role="switch" id="opt-spin" checked><span><b data-i18n>Full turns</b><small data-i18n>Turns the player all the way round when you show your back. Switch off if it spins when you didn't.</small></span></label>
           <label class="switch"><input type="checkbox" role="switch" id="opt-flip"><span><b data-i18n>Flip head turns</b><small data-i18n>Use this if the head turns the wrong way in the game.</small></span></label>
           </div>
         </details>
@@ -535,7 +552,7 @@ details.more[open] > summary::before { transform: rotate(90deg); }
   const FAST_IDX = [0,1,2,3,4,5,6,9,10,13,14,15,16,17,18,19,20,21,22,25,26,27,28,29,30,31,32];
   const FACE = [0, 2, 5, 9, 10];
   const FAST_SET = new Set(FAST_IDX);
-  const BONES = ['head','body','rightArm','leftArm','rightLeg','leftLeg'];
+  const BONES = ['root','head','body','rightArm','leftArm','rightLeg','leftLeg'];
   const R2D = 180 / Math.PI;
 
   /* ---------- vectors ---------- */
@@ -611,13 +628,24 @@ details.more[open] > summary::before { transform: rotate(90deg); }
     return e;
   }
   function swap2(n2, pairs) { for (const [a, b] of pairs) for (let k = 0; k < 2; k++) { const t = n2[a*2+k]; n2[a*2+k] = n2[b*2+k]; n2[b*2+k] = t; } }
-  function fixSwapsFrame(cur, prev, vis, img) {
+  const d2 = (n, i, m, j) => Math.hypot(n[i*2] - m[j*2], n[i*2+1] - m[j*2+1]);
+  function pairCost2(cur, prev, pairs, swapped) {
+    let c = 0;
+    for (const [a, b] of pairs) c += swapped ? d2(cur, a, prev, b) + d2(cur, b, prev, a) : d2(cur, a, prev, a) + d2(cur, b, prev, b);
+    return c;
+  }
+  function fixSwapsFrame(cur, prev, vis, img, prevImg) {
     for (const pairs of [PAIRS, ARM_PAIRS, LEG_PAIRS]) {
       // judge only by points the camera can actually see (it invents the rest)
       const seen = vis ? pairs.filter(([a, b]) => vis[a] >= 0.4 && vis[b] >= 0.4) : pairs;
       if (!seen.length) continue;
-      const keep = pairCost(cur, prev, seen, false), sw = pairCost(cur, prev, seen, true);
-      if (!(sw < keep * 0.6 && keep - sw > 0.04 * seen.length)) continue;
+      // The flat camera image is the most reliable place to spot a left/right mix-up: when the
+      // tracker flips the whole person (it thinks you turned around), the 3D depth flips too and
+      // the 3D positions no longer line up, but the image positions simply trade places.
+      const use2D = KN.swap2d && img && prevImg;
+      const keep = use2D ? pairCost2(img, prevImg, seen, false) : pairCost(cur, prev, seen, false);
+      const sw = use2D ? pairCost2(img, prevImg, seen, true) : pairCost(cur, prev, seen, true);
+      if (!(sw < keep * 0.6 && keep - sw > (use2D ? 0.008 : 0.04) * seen.length)) continue;
       // Hands crossing the body (a dab, folded arms) can look like a swap. Only accept a swap that
       // keeps every bone a believable length; a real mix-up makes the bones stretch across the body.
       if (pairs !== PAIRS) {
@@ -627,7 +655,54 @@ details.more[open] > summary::before { transform: rotate(90deg); }
       swapPairs(cur, pairs); if (vis) swapVis(vis, pairs); if (img) swap2(img, pairs);
     }
   }
-  function fixSwaps(frames, vis, imgs) { for (let t = 1; t < frames.length; t++) fixSwapsFrame(frames[t], frames[t-1], vis && vis[t], imgs && imgs[t]); }
+  /* ---------- turning around ----------
+   * Seen from the front or the back, a person looks almost the same to the camera, so the tracker
+   * sometimes mixes the two up for a moment: it swaps left and right and flips near/far, and the
+   * player would snap round 180°. Facing angle seen from above: */
+  function heading(w) {
+    const g = i => P(w, i), l = add(norm(sub(g(I.lHip), g(I.rHip))), norm(sub(g(I.lSh), g(I.rSh))));
+    return Math.atan2(-l[2], l[0]) * R2D;
+  }
+  /** Turn the tracker's guess round: swap left/right and flip near/far (front ↔ back). */
+  function bodyFlip(w, vis, img) {
+    swapPairs(w, PAIRS); for (let i = 0; i < 33; i++) w[i*3+2] = -w[i*3+2];
+    if (vis) swapVis(vis, PAIRS); if (img) swap2(img, PAIRS);
+  }
+  const flippedHeading = (h) => wrap(180 - h);
+  /** For the whole recording, pick for each moment whether to trust the tracker's front/back or
+   *  turn it round, so the facing angle changes smoothly. A real spin (the angle sweeping all the
+   *  way round) is kept; a sudden half-turn snap is undone. Done as a shortest-path search. */
+  function fixTurnFlips(frames, vis, imgs) {
+    const n = frames.length; if (n < 2) return 0;
+    const h = frames.map(heading), sig = 25, switchCost = 3, keepCost = KN.flipKeep;
+    const cand = (t, s) => s ? flippedHeading(h[t]) : h[t];
+    const cost = [[0, switchCost]], from = [[0, 0]];
+    for (let t = 1; t < n; t++) {
+      cost.push([0, 0]); from.push([0, 0]);
+      for (let s = 0; s < 2; s++) {
+        let best = Infinity, arg = 0;
+        for (let q = 0; q < 2; q++) {
+          const c = cost[t-1][q] + (wrap(cand(t, s) - cand(t-1, q)) / sig) ** 2 + (q !== s ? switchCost : 0) + s * keepCost;
+          if (c < best) { best = c; arg = q; }
+        }
+        cost[t][s] = best; from[t][s] = arg;
+      }
+    }
+    let s = cost[n-1][1] < cost[n-1][0] ? 1 : 0, flips = 0;
+    for (let t = n - 1; t >= 0; t--) { if (s) { bodyFlip(frames[t], vis && vis[t], imgs && imgs[t]); flips++; } s = from[t][s]; }
+    return flips;
+  }
+  /** Live version: keep whichever of the two readings continues the last facing angle. */
+  function TurnKeeper() {
+    let last = null;
+    return { push(w, vis, img) {
+      const h = heading(w), f = flippedHeading(h);
+      if (last !== null && Math.abs(wrap(f - last)) + 50 < Math.abs(wrap(h - last))) { bodyFlip(w, vis, img); last = f; }
+      else last = h;
+    }, reset() { last = null; } };
+  }
+
+  function fixSwaps(frames, vis, imgs) { for (let t = 1; t < frames.length; t++) fixSwapsFrame(frames[t], frames[t-1], vis && vis[t], imgs && imgs[t], imgs && imgs[t-1]); }
 
   /** Arms and legs the camera can't see well are filled in from the frames around them. */
   function fillGaps(frames, vis, thr = 0.35, maxGap = 30) {
@@ -773,7 +848,10 @@ details.more[open] > summary::before { transform: rotate(90deg); }
     });
   }
   // Smoothing slider 0–6 → One Euro settings (Hz, and how fast moves loosen the filter)
-  const euroFor = (s) => ({ minCut: EURO.c / (1 + s * EURO.k), beta: EURO.b });
+  // the torso never gets slower than KN.calmFloor Hz, or body turns and hip sways get flattened
+  const euroFor = (s) => ({ minCut: Math.max(KN.calmFloor, EURO.c / (1 + s * EURO.k)), beta: EURO.b });
+  const HIPW = G.__HIPW ?? 0.75;
+  const KN = Object.assign({ fsTrust: 0.7, collide: true, swap2d: false, sinkOk: 0.4, plantSoft: 0.8, plantSpeed: 50, calmFloor: 1, turnDead: 6, tiltDead: 3, feetSlack: 30, flipKeep: 0.1 }, G.__KN || {});
   const LIVE = G.__LIVE || { c: 1.5, k: 0.35, b: 0.8, s: 0.25 };
   const EURO = G.__EURO || { h0: 4, h1: 3, c: 1.0, k: 0.6, b: 0.3, g: 2.0 };
 
@@ -786,14 +864,15 @@ details.more[open] > summary::before { transform: rotate(90deg); }
 
   /* ---------- live filter (camera preview) ---------- */
   function LiveFilter() {
-    let prevRaw = null, lens = null, xPrev = null, tPrev = 0;
-    const sp = new Float64Array(33);
+    let prevRaw = null, prevImg = null, lens = null, xPrev = null, tPrev = 0;
+    const sp = new Float64Array(33), turn = TurnKeeper();
     return {
-      reset() { prevRaw = null; lens = null; xPrev = null; sp.fill(0); },
-      push(w, vis, time, smoothing, img) {
+      reset() { prevRaw = null; lens = null; xPrev = null; sp.fill(0); turn.reset(); },
+      push(w, vis, time, smoothing, img, spin) {
         w = Float32Array.from(w);
-        if (prevRaw) fixSwapsFrame(w, prevRaw, vis, img);
-        prevRaw = Float32Array.from(w);
+        turn.push(w, vis, img, spin);
+        if (prevRaw) fixSwapsFrame(w, prevRaw, vis, img, prevImg);
+        prevRaw = Float32Array.from(w); prevImg = img ? Float32Array.from(img) : null;
         const cur = boneLengths([w]);       // running bone lengths, from clearly visible limbs
         if (!lens) lens = cur;
         else for (const k in cur) { const [a, b] = k.split('-').map(Number); if ((vis?.[a] ?? 1) > 0.6 && (vis?.[b] ?? 1) > 0.6) lens[k] += (cur[k] - lens[k]) * 0.03; }
@@ -899,29 +978,34 @@ details.more[open] > summary::before { transform: rotate(90deg); }
   }
   function clearArm(dir, t, side, headE) {
     const headR = rotM(headE);
-    const start = armSink(dir, t, side, headR);
-    if (start < 0.4) return { dir, t };
-    // One smooth path per situation (so the fix changes gently from frame to frame):
-    //  - an arm reaching across the body (a dab) keeps pointing across, slides forward to pass in
-    //    front of the face and turns forward a little;
-    //  - an arm out to the side or overhead just leans outward, like a Minecraft "arms up" pose.
-    const across = dir[0] * side < 0;
-    const at = across
-      ? (l) => ({ dir: norm(add(dir, [0, 0, -0.5 * l])), t: add(t, [0, 0, -Math.min(6, 4 * l)]) })
-      : (l) => ({ dir: norm(add(dir, [side * 0.8 * l, 0, -0.3 * l])), t });
-    let prev = 0, best = { dir, t }, bestSink = start;
-    for (let l = 0.1; l <= 4.001; l += 0.1) {
-      const q = at(l), sk = armSink(q.dir, q.t, side, headR);
-      if (sk < 0.4) {
-        let lo = prev, hi = l;          // narrow down to the smallest amount that clears
-        for (let it = 0; it < 7; it++) { const m = (lo + hi) / 2; if (armSink(at(m).dir, at(m).t, side, headR) < 0.4) hi = m; else lo = m; }
-        return at(hi);
+    if (armSink(dir, t, side, headR) < KN.sinkOk) return { dir, t };
+    // Two ways to clear, blended by how far the arm reaches across the body, so the fix never
+    // jumps from one to the other as the arm swings past the middle:
+    //  - reaching across (a dab): keep pointing across, slide forward in front of the face;
+    //  - out to the side or overhead: lean out a little, like a Minecraft "arms up" pose.
+    const across = smoothstep(0.25, -0.25, dir[0] * side);
+    const paths = [
+      (l) => ({ dir: norm(add(dir, [0, 0, -0.5 * l])), t: add(t, [0, 0, -Math.min(6, 4 * l)]) }),
+      (l) => ({ dir: norm(add(dir, [side * 0.8 * l, 0, -0.3 * l])), t }),
+    ];
+    const solve = (at) => {
+      let prev = 0;
+      for (let l = 0.1; l <= 4.001; l += 0.1) {
+        if (armSink(at(l).dir, at(l).t, side, headR) < KN.sinkOk) {
+          let lo = prev, hi = l;
+          for (let it = 0; it < 7; it++) { const m = (lo + hi) / 2; if (armSink(at(m).dir, at(m).t, side, headR) < KN.sinkOk) hi = m; else lo = m; }
+          return at(hi);
+        }
+        prev = l;
       }
-      if (sk < bestSink) { bestSink = sk; best = q; }
-      prev = l;
-    }
-    return best;
+      return at(4);
+    };
+    if (across >= 0.999) return solve(paths[0]);
+    if (across <= 0.001) return solve(paths[1]);
+    const A = solve(paths[0]), B = solve(paths[1]);
+    return { dir: norm(add(scale(A.dir, across), scale(B.dir, 1 - across))), t: add(scale(A.t, across), scale(B.t, 1 - across)) };
   }
+
 
   function limitLeg(d, side) {
     d = norm(d);
@@ -936,14 +1020,25 @@ details.more[open] > summary::before { transform: rotate(90deg); }
 
   function solvePose(w, o) {
     o = o || {};
-    const g = i => P(w, i), V = i => (o.vis ? o.vis[i] : 1);
-    const hipVis = Math.min(V(I.lHip), V(I.rHip)), hipSeen = smoothstep(0.3, 0.6, hipVis);
+    // How sure we are the camera sees a point. The tracker often claims it can see hips or knees
+    // that are right at (or past) the bottom of the picture, so points there count as hidden.
+    const edge = i => (o.img ? smoothstep(1.02, 0.94, o.img[i*2+1]) : 1);
+    const g = i => P(w, i), V = i => (o.vis ? o.vis[i] : 1) * edge(i);
+    // A hip line tilted more than ~40° is a tracking glitch (nobody's hips do that), so treat the
+    // hips as unseen for that moment: the body stays upright instead of falling over.
+    const hl = norm(sub(g(I.lHip), g(I.rHip))), hipTilt = Math.asin(clamp1(dot(hl, o.down || [0, 1, 0]))) * R2D;
+    // (and hips drawn above the shoulders in the picture mean the tracker has lost you)
+    const upright2D = o.img ? smoothstep(0.0, 0.06, (o.img[47] + o.img[49] - o.img[23] - o.img[25]) / 2) : 1;
+    const hipVis = Math.min(V(I.lHip), V(I.rHip)) * upright2D, hipSeen = smoothstep(0.3, 0.6, hipVis) * smoothstep(48, 35, Math.abs(hipTilt));
     const shMid = mid(g(I.lSh), g(I.rSh)), hipMid = mid(g(I.lHip), g(I.rHip));
     // hips out of view (sitting close to the camera): assume the body is upright
-    const down = norm(add(scale(norm(sub(hipMid, shMid)), hipSeen), scale([0, 1, 0], 1 - hipSeen)));
+    const G = o.down || [0, 1, 0];                 // which way is really down (cameras are often tilted)
+    const down = norm(add(scale(norm(sub(hipMid, shMid)), hipSeen), scale(G, 1 - hipSeen)));
     const torso = frameLD(sub(g(I.lSh), g(I.rSh)), down);
-    const hips  = hipSeen > 0.01 ? frameLD(add(scale(norm(sub(g(I.lHip), g(I.rHip))), hipSeen), scale(norm(sub(g(I.lSh), g(I.rSh))), 1 - hipSeen)), [0, 1, 0])
-                                 : frameLD(sub(g(I.lSh), g(I.rSh)), [0, 1, 0]);
+    // The hip line is short (~20 cm), so the tracker's depth noise swings its direction around.
+    // Steady it with a little of the much wider shoulder line (HIPW = how much the hips count).
+    const HW = (o.hipWeight ?? HIPW) * hipSeen;
+    const hips  = frameLD(pelvisLine(w, HW, G), G);
     const earMid = mid(g(I.lEar), g(I.rEar));
     const head = frameLB(sub(g(I.lEar), g(I.rEar)), sub(earMid, g(I.nose)));
     const armMode = o.armTarget || 'auto', legMode = o.legTarget || 'auto';
@@ -981,20 +1076,41 @@ details.more[open] > summary::before { transform: rotate(90deg); }
     const rL = leg(I.rHip, I.rKnee, I.rAnk, -1), lL = leg(I.lHip, I.lKnee, I.lAnk, 1);
     const body = limitEuler(eulerZYX(rel(hips, torso)), LIMITS.body).map(v => v * hipSeen);
     if (h2) {
-      // head angles from the camera image, then taken relative to the body bone as it is exported
-      // (if the body isn't animated, e.g. hips out of view, the head carries the whole tilt/turn)
-      const b = o.bodyOff ? [0, 0, 0] : body;
-      he = [(h2.pitch - (o.headNeutral ?? 14)) * (o.headGain ?? 1.5) - (o.headPitchOffset ?? 0) - b[0], h2.yaw - b[1], h2.roll - b[2]];
+      // Head angles from the camera image work best when you face the camera. They're measured
+      // against the camera, so take away the torso's own turn/tilt when the body bone shows it
+      // (if the body isn't animated, e.g. hips out of view, the head carries the whole turn/tilt).
+      const Ls = norm(sub(g(I.lSh), g(I.rSh))), torsoYaw = Math.atan2(-Ls[2], Ls[0]) * R2D;
+      const animated = (!o.bodyOff || o.rootOn !== false) && hipSeen > 0.5;
+      const he2 = [(h2.pitch - (o.headNeutral ?? 14)) * (o.headGain ?? 1.5) - (o.headPitchOffset ?? 0) - (o.bodyOff ? 0 : body[0]),
+                   h2.yaw - (animated ? torsoYaw : 0), h2.roll - (animated ? h2.shoulderRoll : 0)];
+      const facing = smoothstep(55, 30, Math.abs(torsoYaw));          // 1 = facing the camera
+      he = he.map((v, i) => v + (he2[i] - v) * facing);
     }
-    const pose = { head: limitEuler(he, LIMITS.head), body };
-    if (o.flipTurn) for (const b of ['head', 'body']) pose[b] = [pose[b][0], -pose[b][1], -pose[b][2]];
+    // Whole-body turn and sway (the "root" bone turns and tilts the whole player): how the hips
+    // face and tilt compared with standing straight toward the camera. The straight-ahead turn is
+    // learned during the countdown, so a camera off to one side still counts as "facing it".
+    const rootOn = o.rootOn !== false;
+    let root = [0, 0, 0], rootRaw = null;
+    if (rootOn && hipSeen > 0.01) {
+      const r = rootAngles(hips[0], G);
+      // small wobbles from tracking noise are ignored; real turns and sways come through in full
+      const soft = (v, dz) => Math.sign(v) * Math.max(0, Math.abs(v) - dz * (1 - smoothstep(dz, 3 * dz, Math.abs(v))));
+      // hip tilt is hard to read when you're turned side-on, so it fades out as you turn away
+      const sideOn = smoothstep(0.3, 0.65, Math.abs(Math.cos(r.yaw * Math.PI / 180)));
+      // turning all the way round (showing your back) is allowed
+      rootRaw = [0, soft(wrap(r.yaw - (o.turnNeutral ?? 0)), KN.turnDead), soft(clamp(r.tilt - (o.tiltNeutral ?? 0), -25, 25), KN.tiltDead) * sideOn];
+      root = rootRaw.map(v => v * hipSeen);
+    }
+    const pose = { root, head: limitEuler(he, LIMITS.head), body };
+    if (o.flipTurn) for (const b of ['root', 'head', 'body']) pose[b] = [pose[b][0], -pose[b][1], -pose[b][2]];
     // keep the arms out of the head and torso (using the head as it will really be posed)
     const headNow = o.headOff ? [0, 0, 0] : pose.head;
-    Object.assign(rA, clearArm(rA.dir, rA.t, -1, headNow));
-    Object.assign(lA, clearArm(lA.dir, lA.t, 1, headNow));
+    if (KN.collide) { Object.assign(rA, clearArm(rA.dir, rA.t, -1, headNow)); Object.assign(lA, clearArm(lA.dir, lA.t, 1, headNow)); }
     for (const [b, r] of [['rightArm', rA], ['leftArm', lA], ['rightLeg', rL], ['leftLeg', lL]]) pose[b] = swingEuler(r.dir);
     pose.pos = { rightArm: toBedrock3(rA.t), leftArm: toBedrock3(lA.t), rightLeg: toBedrock3(rL.t), leftLeg: toBedrock3(lL.t) };
     pose.legsSeen = (rL.seen + lL.seen) / 2;
+    pose.legSeen = { right: rL.seen, left: lL.seen };
+    pose.rootRaw = rootRaw; pose.rootConf = rootRaw ? hipSeen : 0;
     pose.moves = { right: legMove(hips, g(I.rHip), g(I.rKnee), g(I.rAnk)), left: legMove(hips, g(I.lHip), g(I.lKnee), g(I.lAnk)) };
     // Is each foot on the ground? Lifted = clearly higher than the other foot, or swung forward/back.
     const dR = local(hips, sub(g(I.rAnk), hipMid)), dL = local(hips, sub(g(I.lAnk), hipMid));
@@ -1036,6 +1152,67 @@ details.more[open] > summary::before { transform: rotate(90deg); }
   }
   function mirror2(n2) { const o = Float32Array.from(n2); for (let i = 0; i < 33; i++) o[i*2] = -o[i*2]; swap2(o, PAIRS); return o; }
 
+  /** Which way is really down? Cameras (laptop webcams especially) are often tilted, so the
+   *  camera's own "down" isn't gravity. People stand mostly upright, so over a recording the
+   *  middle (median) shoulder→hip and hip→ankle directions point down. */
+  function downVecs(w, vis) {
+    const V = i => (vis ? vis[i] : 1), g = i => P(w, i), out = [];
+    const hipM = mid(g(I.lHip), g(I.rHip)), shM = mid(g(I.lSh), g(I.rSh));
+    if (Math.min(V(11), V(12), V(23), V(24)) > 0.6) out.push(norm(sub(hipM, shM)));
+    if (Math.min(V(23), V(24), V(25), V(26), V(27), V(28)) > 0.6) out.push(norm(sub(mid(g(I.lAnk), g(I.rAnk)), hipM)));
+    return out;
+  }
+  function downFrom(vs) {
+    if (vs.length < 5) return [0, 1, 0];
+    const d = norm([0, 1, 2].map(k => median(vs.map(v => v[k]))));
+    return angleBetween(d, [0, 1, 0]) > 45 ? [0, 1, 0] : d;   // never trust a wild estimate
+  }
+  const estimateDown = (frames, vis) => downFrom(frames.flatMap((w, t) => downVecs(w, vis && vis[t])));
+  const hipsFrame = (w, down) => frameLD(sub(P(w, I.lHip), P(w, I.rHip)), down || [0, 1, 0]);
+  /** Standing upright, facing the camera (the camera's left-right line, with real "down"). */
+  const uprightFrame = (down) => frameLD([1, 0, 0], down || [0, 1, 0]);
+  /** The hips' left-right line. Its facing (turn) is steadied with a little of the wider shoulder
+   *  line, but its tilt (hip sway) comes from the hips alone, since the shoulders tilt the other way. */
+  function pelvisLine(w, HW, G) {
+    let hip = norm(sub(P(w, I.lHip), P(w, I.rHip)));
+    const sh = norm(sub(P(w, I.lSh), P(w, I.rSh)));
+    // Hips can't face the opposite way to the shoulders. When they seem to (often when you're close
+    // to the camera with your hips at the edge of the picture), and the face agrees with the
+    // shoulders, the hips' front and back were mixed up: turn them round.
+    const flatG = (v) => norm(sub(v, scale(G, dot(v, G))));
+    const fh = flatG(hip), fs = flatG(sh);
+    if (dot(fh, fs) < -0.2) {
+      const face = sub(P(w, I.nose), mid(P(w, I.lEar), P(w, I.rEar)));
+      const fwd = flatG(cross(G, fs));                  // the shoulders' front (left × down = back, so down × left = front)
+      if (dot(flatG(face), fwd) > 0.2) hip = scale(hip, -1);
+    }
+    const blend = add(scale(hip, HW), scale(sh, 1 - HW));
+    const flat = norm(sub(blend, scale(G, dot(blend, G))));
+    const tilt = clamp1(dot(hip, G));
+    return norm(add(scale(flat, Math.sqrt(1 - tilt * tilt)), scale(G, tilt)));
+  }
+  /** How the hips face and tilt against standing upright toward the camera, from the hips'
+   *  left-right line h. turn: + = turned to your own right, any amount up to ±180° (your back to
+   *  the camera). tilt: hip sway, a lean about the camera's forward axis (what the game's root
+   *  bone does with its z angle after the turn). */
+  function rootAngles(h, down) {
+    const v = local(uprightFrame(down), h);
+    const yaw = Math.atan2(-v[2], v[0]) * R2D, c = Math.cos(yaw / R2D);
+    const tilt = (c >= 0 ? Math.atan2(v[1], v[0]) : Math.atan2(-v[1], -v[0])) * R2D;
+    return { yaw, tilt };
+  }
+  /** The body's turn against the camera (degrees, + = turned to your own right). */
+  function turnRaw(w, down) {
+    const G = down || [0, 1, 0];
+    return rootAngles(pelvisLine(w, HIPW, G), G).yaw;
+  }
+  /** Middle of a set of angles (works across ±180°). */
+  function angleMedian(a) {
+    if (!a.length) return 0;
+    const ref = Math.atan2(a.reduce((s, x) => s + Math.sin(x / R2D), 0), a.reduce((s, x) => s + Math.cos(x / R2D), 0)) * R2D;
+    return wrap(ref + median(a.map(x => wrap(x - ref))));
+  }
+
   /** Degrees the face sits below (+) or above (−) the line through the ears. */
   function faceVec(w, F) {
     const f = [0, 0, 0];
@@ -1065,24 +1242,43 @@ details.more[open] > summary::before { transform: rotate(90deg); }
   }
 
   /** Feet that aren't lifted stay planted: the leg holds one steady angle for the whole time the
-   *  foot is down, and blends smoothly into and out of each step. */
+   *  foot is down, and blends smoothly into and out of each step.
+   *  The whole player sways and turns around a point on the floor between the feet, so:
+   *   - sway (tilt): a planted leg keeps its stance angle compared with the hips. The player then
+   *     leans from the ankles and the feet stay where they are, instead of sliding sideways.
+   *   - turn: the feet keep pointing where they were until the hips have turned more than about
+   *     30° away (then they step round), so twisting the hips doesn't swivel the feet. */
   function plantLegs(clip, feet, fps) {
+    const n = clip.times.length;
+    const rz = clip.bones.root ? clip.bones.root.map(r => r[2]) : new Array(n).fill(0);
+    const ry = clip.bones.root ? clip.bones.root.map(r => r[1]) : new Array(n).fill(0);
+    const plantedBy = {};
     for (const [bone, side] of [['rightLeg', 'right'], ['leftLeg', 'left']]) {
-      const vals = clip.bones[bone], n = vals.length;
+      const seen = (clip.legSeen && clip.legSeen[side]) || new Array(n).fill(1);
+      // A seen leg is measured against the tilted hips, so add the tilt back to get its stance
+      // (how far it stands out to the side). A leg out of view is simply standing straight.
+      const vals = clip.bones[bone].map((v, t) => [v[0], v[1], v[2] + rz[t] * seen[t]]);
       const speed = vals.map((v, t) => t ? Math.hypot(...v.map((x, k) => x - vals[t-1][k])) * fps : 0);
-      const down = feet.map((f, t) => !f[side] && speed[t] < 120);
+      const down = feet.map((f, t) => !f[side] && speed[t] < KN.plantSpeed);   // a foot sliding out on purpose (a lunge) is real movement
       // need a few steady frames before calling it planted; lifting releases at once
       const need = Math.max(2, Math.round(fps * 0.1));
       const planted = new Array(n).fill(false);
       for (let t = 0, run = 0; t < n; t++) { run = down[t] ? run + 1 : 0; planted[t] = run >= need; }
       for (let t = n - 1, run = 0; t >= 0; t--) { if (planted[t]) run = need; else if (down[t] && run > 0) planted[t] = true; else run = 0; }
+      plantedBy[side] = planted;
       // one held angle per planted stretch
       const hold = new Array(n).fill(null);
       for (let t = 0; t < n;) {
         if (!planted[t]) { t++; continue; }
         let e = t; while (e < n && planted[e]) e++;
-        const seg = vals.slice(t, e), h = [0, 1, 2].map(k => median(seg.map(v => v[k])));
-        for (let k = t; k < e; k++) hold[k] = h;
+        // inside a planted stretch the leg can still follow slow stance changes (a lunge, widening
+        // the feet), but the quick wobble and sliding are smoothed away
+        const seg = vals.slice(t, e), sig = fps * KN.plantSoft;
+        for (let k = t; k < e; k++) {
+          const h = [0, 0, 0]; let ws = 0;
+          for (let j = t; j < e; j++) { const wg = Math.exp(-((j - k) ** 2) / (2 * sig * sig)); ws += wg; for (let q = 0; q < 3; q++) h[q] += seg[j - t][q] * wg; }
+          hold[k] = h.map(x => x / ws);
+        }
         t = e;
       }
       if (!hold.some(Boolean)) continue;
@@ -1095,8 +1291,23 @@ details.more[open] > summary::before { transform: rotate(90deg); }
         hold[t] = a < 0 ? hold[b] : b < 0 ? hold[a] : (t - a <= b - t ? hold[a] : hold[b]);
       }
       const wgt = gaussian1(planted.map(Number), fps * 0.06);
-      clip.bones[bone] = vals.map((v, t) => hold[t] ? v.map((x, k) => x + (hold[t][k] - x) * wgt[t]) : v);
+      clip.bones[bone] = clip.bones[bone].map((v, t) => (hold[t] ? v.map((x, k) => x + (hold[t][k] - x) * wgt[t]) : v));
       clip.pos[bone] = clip.pos[bone].map((v, t) => v.map(x => x * (1 - wgt[t])));   // planted foot sits on the floor
+      plantedBy[side + 'W'] = wgt;
+    }
+    // Turning: the feet keep their heading while the hips twist, then step round.
+    if (!clip.bones.root || !plantedBy.right) return;
+    const any = plantedBy.right.map((p, t) => p || plantedBy.left[t]);
+    const F = new Array(n); let f = ry[0];
+    for (let t = 0; t < n; t++) {
+      if (any[t]) f = clamp(f, ry[t] - KN.feetSlack, ry[t] + KN.feetSlack);
+      else f += (ry[t] - f) * Math.min(1, 12 / fps);     // a lifted foot turns with you
+      F[t] = f;
+    }
+    const Fs = gaussian1(F, fps * 0.12);
+    for (const [bone, side] of [['rightLeg', 'right'], ['leftLeg', 'left']]) {
+      const wgt = plantedBy[side + 'W']; if (!wgt) continue;
+      clip.bones[bone] = clip.bones[bone].map((v, t) => [v[0], v[1] + (Fs[t] - ry[t]) * wgt[t], v[2]]);
     }
   }
   function gaussian33(frames, sigma) {
@@ -1136,13 +1347,16 @@ details.more[open] > summary::before { transform: rotate(90deg); }
     if (o.mirror) { frames = frames.map(mirror); vis.forEach(v => swapVis(v, PAIRS)); if (imgs) imgs = imgs.map(mirror2); if (preImgs) preImgs = preImgs.map(mirror2); }
     const pack = (arr) => arr && arr.map((w, i) => ({ t: times[i], w }));
     if (o.raw) return { frames: pack(frames), vis: pack(vis), img: pack(imgs), calib: headCalibration(frames, samples.pre, imgs, preImgs) };
+    fixTurnFlips(frames, vis, imgs);
+    // "Full turns" off: always read the body as facing the camera (no spinning round)
+    if (o.spin === false) frames.forEach((w, t) => { if (Math.abs(heading(w)) > 90) bodyFlip(w, vis[t], imgs && imgs[t]); });
     fixSwaps(frames, vis, imgs);
     if (imgs) imgs = hampel(imgs, 3, 3, 0.004);
     fillGaps(frames, vis);
     frames = hampel(frames);
     const lens = boneLengths(frames, vis);
     const ref = gaussian(frames, 3);                    // steady depth signs for the length fix
-    frames.forEach((f, t) => constrainFrame(f, lens, (a, b) => ref[t][b*3+2] - ref[t][a*3+2]));
+    frames.forEach((f, t) => constrainFrame(f, lens, (a, b) => ref[t][b*3+2] - ref[t][a*3+2], KN.fsTrust));
     const s = o.smoothing ?? 2;
     let visOut = vis;
     if (s > 0) {
@@ -1157,12 +1371,16 @@ details.more[open] > summary::before { transform: rotate(90deg); }
       const calm = gaussian(zeroLagSmooth(frames, times, e.minCut, e.beta), EURO.g * Math.min(1, s / 2));
       // Arms and legs move fast: Savitzky–Golay keeps the full height of kicks, knee-ups and waves.
       const half = Math.round(EURO.h0 + s * EURO.h1);
-      const quick = savgol(savgol(frames, half, 3), Math.max(1, Math.round(half / 2)), 2);
+      const heavy = savgol(savgol(frames, half, 3), Math.max(1, Math.round(half / 2)), 2);
+      const quick = heavy;
       frames = calm.map((c, t) => { for (const i of FAST_IDX) for (let q = 0; q < 3; q++) c[i*3+q] = quick[t][i*3+q]; return c; });
     }
     const pre = samples.pre && samples.pre.map(w => o.mirror ? mirror(w) : w);
     visOut = gaussian33(visOut, 4);       // steady "can the camera see it" values, no flicker
-    return { frames: pack(frames), vis: pack(visOut), img: pack(imgs), calib: headCalibration(frames, pre, imgs, preImgs) };
+    const down = estimateDown(frames, visOut);
+    const calFrames = pre && pre.length >= 5 ? pre : frames.slice(0, Math.max(5, Math.round(frames.length * 0.08)));
+    return { frames: pack(frames), vis: pack(visOut), img: pack(imgs),
+             calib: { ...headCalibration(frames, pre, imgs, preImgs), down, ...rootCalibration(frames, visOut, down, calFrames, !!(pre && pre.length >= 5)) } };
   }
 
   function resample(samples, t0, t1, fps) {
@@ -1180,28 +1398,77 @@ details.more[open] > summary::before { transform: rotate(90deg); }
     return out;
   }
 
+  /** Moments where the hips can't be read (out of view, or a tracking glitch) shouldn't snap the
+   *  whole player back to facing forward: they're filled in from the readable moments around them. */
+  function fillRoot(out, raw, conf, fps) {
+    const n = out.length; if (!n) return;
+    const yaw = new Array(n), tilt = new Array(n);
+    for (let t = 0, prev = 0; t < n; t++) {          // unwrap the turn so ±180° stays continuous
+      const r = raw[t]; yaw[t] = r ? near(r[1], prev) : prev; tilt[t] = r ? r[2] : 0;
+      if (r && conf[t] > 0.5) prev = yaw[t];
+    }
+    const sig = fps * 0.4;
+    const den = gaussian1(conf, sig), ny = gaussian1(conf.map((c, t) => c * yaw[t]), sig), nt = gaussian1(conf.map((c, t) => c * tilt[t]), sig);
+    for (let t = 0; t < n; t++) {
+      const c = conf[t], has = den[t] > 0.05;
+      const fy = has ? ny[t] / den[t] : 0, ft = has ? nt[t] / den[t] : 0;
+      // far from any readable moment: ease back to standing straight
+      const keep = has ? Math.min(1, den[t] / 0.3) : 0;
+      out[t] = [0, c * yaw[t] + (1 - c) * fy * keep, c * tilt[t] + (1 - c) * ft * keep];
+      if (t) out[t][1] = near(out[t][1], out[t - 1][1]);
+    }
+  }
+  /** Facing straight ahead and standing level, learned from the moments where the hips are read well
+   *  (tracking glitches at the very start are skipped). Turn: from the countdown or the first
+   *  moments. Level: from the whole recording (hips are level on average; some camera angles
+   *  make them look tilted all the time). */
+  function rootCalibration(frames, vis, down, calFrames, fromCountdown) {
+    const good = (w, v) => {
+      const g = i => P(w, i), hl = norm(sub(g(I.lHip), g(I.rHip)));
+      return Math.abs(Math.asin(clamp1(dot(hl, down))) * R2D) < 25 && (!v || Math.min(v[23], v[24]) > 0.5);
+    };
+    // With a countdown, you were facing the camera just before recording. Without one (a loaded
+    // video), use the direction you faced most of the time, if it's within 60° of the camera.
+    let turns = fromCountdown ? calFrames.filter(w => good(w)).map(w => turnRaw(w, down)) : [];
+    let neutral = turns.length >= 3 ? angleMedian(turns) : null;
+    if (neutral === null) {
+      const hs = frames.filter((w, t) => good(w, vis[t])).map(w => turnRaw(w, down)).filter(x => Math.abs(x) < 60);
+      if (hs.length >= 10) {
+        const bins = new Array(25).fill(0);
+        for (const x of hs) for (let b = 0; b < 25; b++) bins[b] += Math.exp(-(((x + 60 - b * 5) / 8) ** 2));
+        const top = bins.indexOf(Math.max(...bins)) * 5 - 60;
+        neutral = median(hs.filter(x => Math.abs(x - top) < 15));
+      } else neutral = 0;
+    }
+    const all = frames.map((w, t) => ({ w, ok: good(w, vis[t]) })).filter(f => f.ok).map(f => rootAngles(pelvisLine(f.w, HIPW, down), down));
+    const level = all.filter(r => Math.abs(Math.cos(r.yaw / R2D)) > 0.65).map(r => r.tilt);
+    return { turnNeutral: neutral, tiltNeutral: level.length >= 10 ? clamp(median(level), -20, 20) : 0 };
+  }
+
   // samples: [{t, w, v}] → clip {times, length, bones:{name:[[x,y,z],...]}, moves:[...]}
   let cache = { key: null, data: null, src: null };
   function buildClip(samples, t0, t1, o) {
     const fps = o.fps || 20;
-    const key = [o.smoothing, !!o.mirror, !!o.raw, samples.length].join('|');
+    const key = [o.smoothing, !!o.mirror, !!o.raw, o.spin !== false, samples.length].join('|');
     if (cache.src !== samples || cache.key !== key) cache = { key, src: samples, data: cleanSamples(samples, o) };
     const frames = resample(cache.data.frames, t0, t1, fps), visF = resample(cache.data.vis, t0, t1, fps);
     const imgF = cache.data.img ? resample(cache.data.img, t0, t1, fps) : null;
     const bones = {}; BONES.forEach(b => bones[b] = []);
     const pos = { rightArm: [], leftArm: [], rightLeg: [], leftLeg: [] };
-    const moves = [], feet = [];
+    const moves = [], feet = [], legSeen = { right: [], left: [] }, rootConf = [], rootRaw = [];
     const oo = { ...cache.data.calib, ...o };
     let legsSeen = 0;
     frames.forEach((w, k) => {
       const p = solvePose(w, { ...oo, vis: visF[k], img: imgF && imgF[k] });
       legsSeen += p.legsSeen;
-      moves.push(p.moves); feet.push(p.feet);
+      moves.push(p.moves); feet.push(p.feet); legSeen.right.push(p.legSeen.right); legSeen.left.push(p.legSeen.left);
       for (const b of BONES) { const arr = bones[b]; arr.push(continuous(p[b], arr[arr.length - 1])); }
       for (const b in pos) pos[b].push(p.pos[b]);
+      rootConf.push(p.rootConf); rootRaw.push(p.rootRaw);
     });
+    fillRoot(bones.root, rootRaw, rootConf, fps);
     const times = frames.map((_, k) => k / fps);
-    const clip = { times, length: times[times.length - 1], bones, pos, moves, feet, calib: cache.data.calib, legsSeen: legsSeen / frames.length };
+    const clip = { times, length: times[times.length - 1], bones, pos, moves, feet, legSeen, calib: cache.data.calib, legsSeen: legsSeen / frames.length };
     if (o.plant !== false) plantLegs(clip, feet, fps);
     if (o.loop === 'pingpong') backAndForth(clip, fps);
     return clip;
@@ -1257,7 +1524,13 @@ details.more[open] > summary::before { transform: rotate(90deg); }
       bones[b === 'body' && o.lean === 'waist' ? 'waist' : b] = track;
     }
     const loop = o.loop === 'true' || o.loop === 'pingpong' ? true : o.loop === 'false' ? false : o.loop;
-    return { json: { format_version: '1.8.0', animations: { [o.id]: { loop, animation_length: +clip.length.toFixed(4), bones } } }, keyCount };
+    const json = { format_version: '1.8.0', animations: { [o.id]: { loop, animation_length: +clip.length.toFixed(4), bones } } };
+    // For the Emote Tool: the items in the player's hands during this animation. Minecraft ignores
+    // this part; the Emote Tool reads it and leaves it out of the add-on.
+    const items = {};
+    for (const side of ['right', 'left']) if (o.items && o.items[side]) items[side] = o.items[side];
+    if (Object.keys(items).length) json.cleverlike = { items };
+    return { json, keyCount };
   }
   function sampleClip(clip, t) {
     const f = clamp(t / (clip.times[1] || 1), 0, clip.times.length - 1);
@@ -1271,7 +1544,7 @@ details.more[open] > summary::before { transform: rotate(90deg); }
 
   G.MocapMath = { BONES, solvePose, continuous, isLimbBone, buildClip, toBedrock, sampleClip, mirror, reduceKeys,
     LiveFilter, swingEuler, limbAim, limbPose, cleanSamples, _collide: { armSink, rotM },
-    mirrorVis: (v) => { const o = Float32Array.from(v); swapVis(o, PAIRS); return o; }, mirror2, head2D, headPitchRaw, torsoFrame, faceVec, len, median };
+    mirrorVis: (v) => { const o = Float32Array.from(v); swapVis(o, PAIRS); return o; }, mirror2, head2D, downVecs, downFrom, estimateDown, hipsFrame, turnRaw, rootAngles, heading, fixTurnFlips, angleMedian, headPitchRaw, torsoFrame, faceVec, len, median };
 })(globalThis);
 </script>
 
@@ -1327,7 +1600,7 @@ window.MocapStrings = {
 "Stand <b>2–3 meters</b> from the camera, facing it, with your whole body in the picture.": "Ponte a <b>2–3 metros</b> de la cámara, de frente, con todo tu cuerpo a la vista.",
 "Bright, even light and a plain background help the most. Baggy clothes can hide your elbows and knees.": "Lo que más ayuda es una luz fuerte y uniforme y un fondo liso. La ropa holgada puede ocultar tus codos y rodillas.",
 "Minecraft arms and legs have no elbows or knees, so a bent arm becomes one straight arm pointing at your hand.": "Los brazos y piernas de Minecraft no tienen codos ni rodillas, así que un brazo doblado se convierte en un brazo recto que apunta a tu mano.",
-"Act in place. Walking, jumping and turning all the way around are not recorded.": "Actúa sin moverte del sitio. No se graba caminar, saltar ni dar la vuelta completa.",
+"Act in place. Walking and jumping are not recorded. Turn all the way around slowly, so the tracker can follow.": "Actúa en el sitio. No se graba caminar ni saltar. Date la vuelta completa despacio, para que el seguimiento te siga.",
 "Start and end with your arms relaxed at your sides so the move blends in smoothly.": "Empieza y termina con los brazos relajados a los lados para que el movimiento se integre con suavidad.",
 "Live view": "Vista en directo",
 "Drag to turn · scroll to zoom": "Arrastra para girar · desplaza para hacer zoom",
@@ -1473,17 +1746,66 @@ window.MocapStrings = {
 "Head nod strength": "Fuerza del cabeceo",
 "Makes looking up and down bigger or smaller.": "Hace más grande o más pequeño el movimiento de mirar arriba y abajo.",
 "Plant feet": "Pies en el suelo",
-"A leg that isn't lifted stays still on the ground.": "Una pierna que no está levantada se queda quieta en el suelo.",
+"A leg that isn't lifted stays still on the ground. Feet out of view count as planted.": "Una pierna que no se levanta se queda quieta en el suelo. Los pies fuera de la imagen cuentan como plantados.",
 "Straight arm: points at the hand. Bent elbow: follows the forearm and slides back, like a punch wind-up.": "Brazo recto: apunta a la mano. Codo doblado: sigue al antebrazo y se desliza hacia atrás, como al preparar un puñetazo.",
 "Straight leg: points at the foot, like a kick. Bent knee: the leg lifts up, like a knee raise.": "Pierna recta: apunta al pie, como una patada. Rodilla doblada: la pierna sube, como al levantar la rodilla.",
 "Slide bent arms and legs": "Deslizar brazos y piernas doblados",
 "Like Minecraft animations: a raised knee lifts the whole leg, and a pulled-back fist slides the arm back.": "Como en las animaciones de Minecraft: al subir la rodilla se levanta toda la pierna, y al echar el puño atrás el brazo se desliza hacia atrás.",
-"Captured {s} s. Your legs were mostly out of view, so they stay standing still.": "Se capturaron {s} s. Tus piernas casi no se veían, así que se quedan quietas de pie.",
+"Captured {s} s. Your feet were mostly out of view, so they stay planted while your hips sway and turn.": "Se grabaron {s} s. Tus pies quedaron casi siempre fuera de la imagen, así que se quedan plantados mientras tus caderas se balancean y giran.",
 "Drag the two handles. The colored part is kept.": "Arrastra los dos controles. La parte de color es la que se guarda.",
 "Keeping {s} s": "Se guardan {s} s",
 "Back and forth": "Ida y vuelta",
 "Plays forward, then backward, and repeats until the player moves.": "Se reproduce hacia delante, luego hacia atrás, y se repite hasta que el jugador se mueva.",
-"More settings": "Más ajustes"
+"More settings": "Más ajustes",
+"Only one person in the picture. The tracker can jump to someone walking behind you.": "Solo una persona en la imagen. El detector puede saltar a alguien que pase por detrás.",
+"Turn & sway": "Giro y balanceo",
+"Turns and tilts the whole player when you turn your body or sway your hips.": "Gira e inclina todo el jugador cuando giras el cuerpo o mueves la cadera.",
+"Feet don't fit in the picture? That's fine: <b>feet out of view stay planted</b> and your hips still sway and turn. For kicks and steps, step back or tilt the camera down.": "¿No caben los pies en la imagen? No pasa nada: <b>los pies fuera de la imagen se quedan plantados</b> y tus caderas siguen balanceándose y girando. Para patadas y pasos, aléjate o inclina la cámara hacia abajo.",
+"Full turns": "Giros completos",
+"Turns the player all the way round when you show your back. Switch off if it spins when you didn't.": "Gira al jugador por completo cuando muestras la espalda. Desactívalo si gira cuando tú no lo hiciste.",
+"Item ID": "ID del objeto",
+"Other item…": "Otro objeto…",
+"Apple": "Manzana",
+"Golden Apple": "Manzana dorada",
+"Cookie": "Galleta",
+"Bread": "Pan",
+"Carrot": "Zanahoria",
+"Melon Slice": "Rodaja de sandía",
+"Diamond": "Diamante",
+"Emerald": "Esmeralda",
+"Gold Ingot": "Lingote de oro",
+"Iron Ingot": "Lingote de hierro",
+"Snowball": "Bola de nieve",
+"Egg": "Huevo",
+"Slimeball": "Bola de slime",
+"Ender Pearl": "Perla de ender",
+"Heart of the Sea": "Corazón del mar",
+"Wooden Sword": "Espada de madera",
+"Stone Sword": "Espada de piedra",
+"Iron Sword": "Espada de hierro",
+"Golden Sword": "Espada de oro",
+"Diamond Sword": "Espada de diamante",
+"Netherite Sword": "Espada de netherita",
+"Iron Pickaxe": "Pico de hierro",
+"Diamond Pickaxe": "Pico de diamante",
+"Iron Axe": "Hacha de hierro",
+"Diamond Axe": "Hacha de diamante",
+"Iron Shovel": "Pala de hierro",
+"Iron Hoe": "Azada de hierro",
+"Bow": "Arco",
+"Trident": "Tridente",
+"Fishing Rod": "Caña de pescar",
+"Torch": "Antorcha",
+"Stick": "Palo",
+"Book": "Libro",
+"Shield": "Escudo",
+"Items in hands": "Objetos en las manos",
+"Right hand": "Mano derecha",
+"Left hand": "Mano izquierda",
+"The Minecraft item held in this hand during the animation.": "El objeto de Minecraft que se sostiene en esta mano durante la animación.",
+"Items": "Objetos",
+"Tools": "Herramientas",
+"The Emote Tool puts these in the player's hands while the emote plays.": "La Emote Tool los pone en las manos del jugador mientras se reproduce el emote."
 },
 "fr": {
 "Skip to the camera": "Aller à la caméra",
@@ -1534,7 +1856,7 @@ window.MocapStrings = {
 "Stand <b>2–3 meters</b> from the camera, facing it, with your whole body in the picture.": "Place-toi à <b>2–3 mètres</b> de la caméra, face à elle, avec tout ton corps dans l'image.",
 "Bright, even light and a plain background help the most. Baggy clothes can hide your elbows and knees.": "Une lumière vive et uniforme et un fond uni aident le plus. Les vêtements amples peuvent cacher tes coudes et tes genoux.",
 "Minecraft arms and legs have no elbows or knees, so a bent arm becomes one straight arm pointing at your hand.": "Dans Minecraft, les bras et les jambes n'ont ni coudes ni genoux : un bras plié devient un bras droit qui pointe vers ta main.",
-"Act in place. Walking, jumping and turning all the way around are not recorded.": "Reste sur place. Marcher, sauter et faire un tour complet ne sont pas enregistrés.",
+"Act in place. Walking and jumping are not recorded. Turn all the way around slowly, so the tracker can follow.": "Reste sur place. La marche et les sauts ne sont pas enregistrés. Fais un tour complet lentement, pour que le suivi puisse suivre.",
 "Start and end with your arms relaxed at your sides so the move blends in smoothly.": "Commence et termine avec les bras détendus le long du corps pour que le mouvement s'enchaîne en douceur.",
 "Live view": "Vue en direct",
 "Drag to turn · scroll to zoom": "Fais glisser pour tourner · fais défiler pour zoomer",
@@ -1680,17 +2002,66 @@ window.MocapStrings = {
 "Head nod strength": "Ampleur des hochements de tête",
 "Makes looking up and down bigger or smaller.": "Rend les mouvements de tête vers le haut et le bas plus grands ou plus petits.",
 "Plant feet": "Pieds au sol",
-"A leg that isn't lifted stays still on the ground.": "Une jambe qui n’est pas levée reste immobile au sol.",
+"A leg that isn't lifted stays still on the ground. Feet out of view count as planted.": "Une jambe qui n'est pas levée reste immobile au sol. Les pieds hors de l'image comptent comme posés.",
 "Straight arm: points at the hand. Bent elbow: follows the forearm and slides back, like a punch wind-up.": "Bras tendu : il pointe vers la main. Coude plié : il suit l’avant-bras et glisse vers l’arrière, comme pour armer un coup de poing.",
 "Straight leg: points at the foot, like a kick. Bent knee: the leg lifts up, like a knee raise.": "Jambe tendue : elle pointe vers le pied, comme un coup de pied. Genou plié : la jambe monte, comme une montée de genou.",
 "Slide bent arms and legs": "Faire glisser bras et jambes pliés",
 "Like Minecraft animations: a raised knee lifts the whole leg, and a pulled-back fist slides the arm back.": "Comme dans les animations Minecraft : un genou levé soulève toute la jambe, et un poing armé fait glisser le bras vers l’arrière.",
-"Captured {s} s. Your legs were mostly out of view, so they stay standing still.": "{s} s enregistrées. Tes jambes étaient presque toujours hors du cadre, elles restent donc immobiles, debout.",
+"Captured {s} s. Your feet were mostly out of view, so they stay planted while your hips sway and turn.": "{s} s enregistrées. Tes pieds étaient presque toujours hors de l'image, ils restent donc posés pendant que tes hanches se balancent et tournent.",
 "Drag the two handles. The colored part is kept.": "Fais glisser les deux poignées. La partie en couleur est conservée.",
 "Keeping {s} s": "{s} s conservées",
 "Back and forth": "Aller-retour",
 "Plays forward, then backward, and repeats until the player moves.": "Se joue vers l’avant, puis à l’envers, et recommence jusqu’à ce que le joueur bouge.",
-"More settings": "Plus de réglages"
+"More settings": "Plus de réglages",
+"Only one person in the picture. The tracker can jump to someone walking behind you.": "Une seule personne dans l’image. Le suivi peut sauter sur quelqu’un qui passe derrière toi.",
+"Turn & sway": "Rotation et balancement",
+"Turns and tilts the whole player when you turn your body or sway your hips.": "Fait tourner et pencher tout le joueur quand tu tournes le corps ou balances les hanches.",
+"Feet don't fit in the picture? That's fine: <b>feet out of view stay planted</b> and your hips still sway and turn. For kicks and steps, step back or tilt the camera down.": "Tes pieds ne rentrent pas dans l'image ? Pas de souci : <b>les pieds hors de l'image restent posés</b> et tes hanches peuvent toujours se balancer et tourner. Pour les coups de pied et les pas, recule ou incline la caméra vers le bas.",
+"Full turns": "Tours complets",
+"Turns the player all the way round when you show your back. Switch off if it spins when you didn't.": "Fait faire un tour complet au joueur quand tu montres ton dos. Désactive-le s'il tourne alors que tu ne l'as pas fait.",
+"Item ID": "ID de l'objet",
+"Other item…": "Autre objet…",
+"Apple": "Pomme",
+"Golden Apple": "Pomme dorée",
+"Cookie": "Cookie",
+"Bread": "Pain",
+"Carrot": "Carotte",
+"Melon Slice": "Tranche de pastèque",
+"Diamond": "Diamant",
+"Emerald": "Émeraude",
+"Gold Ingot": "Lingot d'or",
+"Iron Ingot": "Lingot de fer",
+"Snowball": "Boule de neige",
+"Egg": "Œuf",
+"Slimeball": "Boule de slime",
+"Ender Pearl": "Perle de l'Ender",
+"Heart of the Sea": "Cœur de la mer",
+"Wooden Sword": "Épée en bois",
+"Stone Sword": "Épée en pierre",
+"Iron Sword": "Épée en fer",
+"Golden Sword": "Épée en or",
+"Diamond Sword": "Épée en diamant",
+"Netherite Sword": "Épée en netherite",
+"Iron Pickaxe": "Pioche en fer",
+"Diamond Pickaxe": "Pioche en diamant",
+"Iron Axe": "Hache en fer",
+"Diamond Axe": "Hache en diamant",
+"Iron Shovel": "Pelle en fer",
+"Iron Hoe": "Houe en fer",
+"Bow": "Arc",
+"Trident": "Trident",
+"Fishing Rod": "Canne à pêche",
+"Torch": "Torche",
+"Stick": "Bâton",
+"Book": "Livre",
+"Shield": "Bouclier",
+"Items in hands": "Objets en main",
+"Right hand": "Main droite",
+"Left hand": "Main gauche",
+"The Minecraft item held in this hand during the animation.": "L'objet Minecraft tenu dans cette main pendant l'animation.",
+"Items": "Objets",
+"Tools": "Outils",
+"The Emote Tool puts these in the player's hands while the emote plays.": "L'Emote Tool les met dans les mains du joueur pendant l'emote."
 },
 "pt": {
 "Skip to the camera": "Pular para a câmera",
@@ -1741,7 +2112,7 @@ window.MocapStrings = {
 "Stand <b>2–3 meters</b> from the camera, facing it, with your whole body in the picture.": "Fique a <b>2–3 metros</b> da câmera, de frente para ela, com o corpo inteiro na imagem.",
 "Bright, even light and a plain background help the most. Baggy clothes can hide your elbows and knees.": "Luz forte e uniforme e um fundo liso ajudam muito. Roupas largas podem esconder seus cotovelos e joelhos.",
 "Minecraft arms and legs have no elbows or knees, so a bent arm becomes one straight arm pointing at your hand.": "Os braços e pernas do Minecraft não têm cotovelos nem joelhos, então um braço dobrado vira um braço reto apontando para a sua mão.",
-"Act in place. Walking, jumping and turning all the way around are not recorded.": "Encene sem sair do lugar. Andar, pular e dar uma volta completa não são gravados.",
+"Act in place. Walking and jumping are not recorded. Turn all the way around slowly, so the tracker can follow.": "Atue no lugar. Andar e pular não são gravados. Dê uma volta completa devagar, para o rastreador acompanhar.",
 "Start and end with your arms relaxed at your sides so the move blends in smoothly.": "Comece e termine com os braços relaxados ao lado do corpo para o movimento se encaixar suavemente.",
 "Live view": "Ao vivo",
 "Drag to turn · scroll to zoom": "Arraste para girar · role para dar zoom",
@@ -1887,17 +2258,66 @@ window.MocapStrings = {
 "Head nod strength": "Força do aceno de cabeça",
 "Makes looking up and down bigger or smaller.": "Deixa o movimento de olhar para cima e para baixo maior ou menor.",
 "Plant feet": "Pés no chão",
-"A leg that isn't lifted stays still on the ground.": "Uma perna que não está levantada fica parada no chão.",
+"A leg that isn't lifted stays still on the ground. Feet out of view count as planted.": "Uma perna que não está levantada fica parada no chão. Pés fora da imagem contam como plantados.",
 "Straight arm: points at the hand. Bent elbow: follows the forearm and slides back, like a punch wind-up.": "Braço esticado: aponta para a mão. Cotovelo dobrado: segue o antebraço e desliza para trás, como ao preparar um soco.",
 "Straight leg: points at the foot, like a kick. Bent knee: the leg lifts up, like a knee raise.": "Perna esticada: aponta para o pé, como um chute. Joelho dobrado: a perna sobe, como ao levantar o joelho.",
 "Slide bent arms and legs": "Deslizar braços e pernas dobrados",
 "Like Minecraft animations: a raised knee lifts the whole leg, and a pulled-back fist slides the arm back.": "Como nas animações do Minecraft: um joelho levantado ergue a perna inteira, e um punho puxado para trás desliza o braço para trás.",
-"Captured {s} s. Your legs were mostly out of view, so they stay standing still.": "{s} s capturados. Suas pernas ficaram quase sempre fora da imagem, então elas ficam paradas em pé.",
+"Captured {s} s. Your feet were mostly out of view, so they stay planted while your hips sway and turn.": "{s} s gravados. Seus pés ficaram quase sempre fora da imagem, então eles ficam plantados enquanto seus quadris balançam e giram.",
 "Drag the two handles. The colored part is kept.": "Arraste as duas alças. A parte colorida é a que fica.",
 "Keeping {s} s": "Mantendo {s} s",
 "Back and forth": "Vai e volta",
 "Plays forward, then backward, and repeats until the player moves.": "Toca para a frente, depois de trás para a frente, e repete até o jogador se mexer.",
-"More settings": "Mais configurações"
+"More settings": "Mais configurações",
+"Only one person in the picture. The tracker can jump to someone walking behind you.": "Só uma pessoa na imagem. O rastreador pode pular para alguém que passe atrás de você.",
+"Turn & sway": "Giro e balanço",
+"Turns and tilts the whole player when you turn your body or sway your hips.": "Gira e inclina o jogador inteiro quando você vira o corpo ou balança o quadril.",
+"Feet don't fit in the picture? That's fine: <b>feet out of view stay planted</b> and your hips still sway and turn. For kicks and steps, step back or tilt the camera down.": "Os pés não cabem na imagem? Tudo bem: <b>pés fora da imagem ficam plantados</b> e seus quadris ainda balançam e giram. Para chutes e passos, afaste-se ou incline a câmera para baixo.",
+"Full turns": "Voltas completas",
+"Turns the player all the way round when you show your back. Switch off if it spins when you didn't.": "Vira o jogador totalmente quando você mostra as costas. Desligue se ele girar quando você não girou.",
+"Item ID": "ID do item",
+"Other item…": "Outro item…",
+"Apple": "Maçã",
+"Golden Apple": "Maçã dourada",
+"Cookie": "Biscoito",
+"Bread": "Pão",
+"Carrot": "Cenoura",
+"Melon Slice": "Fatia de melancia",
+"Diamond": "Diamante",
+"Emerald": "Esmeralda",
+"Gold Ingot": "Barra de ouro",
+"Iron Ingot": "Barra de ferro",
+"Snowball": "Bola de neve",
+"Egg": "Ovo",
+"Slimeball": "Bola de slime",
+"Ender Pearl": "Pérola do Ender",
+"Heart of the Sea": "Coração do mar",
+"Wooden Sword": "Espada de madeira",
+"Stone Sword": "Espada de pedra",
+"Iron Sword": "Espada de ferro",
+"Golden Sword": "Espada de ouro",
+"Diamond Sword": "Espada de diamante",
+"Netherite Sword": "Espada de netherita",
+"Iron Pickaxe": "Picareta de ferro",
+"Diamond Pickaxe": "Picareta de diamante",
+"Iron Axe": "Machado de ferro",
+"Diamond Axe": "Machado de diamante",
+"Iron Shovel": "Pá de ferro",
+"Iron Hoe": "Enxada de ferro",
+"Bow": "Arco",
+"Trident": "Tridente",
+"Fishing Rod": "Vara de pescar",
+"Torch": "Tocha",
+"Stick": "Graveto",
+"Book": "Livro",
+"Shield": "Escudo",
+"Items in hands": "Itens nas mãos",
+"Right hand": "Mão direita",
+"Left hand": "Mão esquerda",
+"The Minecraft item held in this hand during the animation.": "O item do Minecraft segurado nesta mão durante a animação.",
+"Items": "Itens",
+"Tools": "Ferramentas",
+"The Emote Tool puts these in the player's hands while the emote plays.": "A Emote Tool coloca esses itens nas mãos do jogador enquanto o emote toca."
 },
 "de": {
 "Skip to the camera": "Zur Kamera springen",
@@ -1948,7 +2368,7 @@ window.MocapStrings = {
 "Stand <b>2–3 meters</b> from the camera, facing it, with your whole body in the picture.": "Stell dich <b>2–3 Meter</b> vor die Kamera, schau sie an und achte darauf, dass dein ganzer Körper im Bild ist.",
 "Bright, even light and a plain background help the most. Baggy clothes can hide your elbows and knees.": "Helles, gleichmäßiges Licht und ein schlichter Hintergrund helfen am meisten. Weite Kleidung kann Ellbogen und Knie verdecken.",
 "Minecraft arms and legs have no elbows or knees, so a bent arm becomes one straight arm pointing at your hand.": "Arme und Beine in Minecraft haben keine Ellbogen oder Knie. Ein gebeugter Arm wird deshalb zu einem geraden Arm, der auf deine Hand zeigt.",
-"Act in place. Walking, jumping and turning all the way around are not recorded.": "Bleib an deinem Platz. Gehen, Springen und ganze Drehungen werden nicht aufgenommen.",
+"Act in place. Walking and jumping are not recorded. Turn all the way around slowly, so the tracker can follow.": "Bleib an einer Stelle. Gehen und Springen werden nicht aufgenommen. Dreh dich langsam ganz um, damit die Erkennung folgen kann.",
 "Start and end with your arms relaxed at your sides so the move blends in smoothly.": "Beginne und ende mit locker hängenden Armen, damit die Bewegung sanft übergeht.",
 "Live view": "Live-Ansicht",
 "Drag to turn · scroll to zoom": "Ziehen zum Drehen · Scrollen zum Zoomen",
@@ -2094,17 +2514,66 @@ window.MocapStrings = {
 "Head nod strength": "Stärke des Nickens",
 "Makes looking up and down bigger or smaller.": "Macht das Hoch- und Runterschauen größer oder kleiner.",
 "Plant feet": "Füße am Boden",
-"A leg that isn't lifted stays still on the ground.": "Ein Bein, das nicht angehoben ist, bleibt ruhig auf dem Boden.",
+"A leg that isn't lifted stays still on the ground. Feet out of view count as planted.": "Ein Bein, das nicht angehoben ist, bleibt ruhig am Boden. Füße außerhalb des Bildes gelten als fest am Boden.",
 "Straight arm: points at the hand. Bent elbow: follows the forearm and slides back, like a punch wind-up.": "Gestreckter Arm: zeigt auf die Hand. Gebeugter Ellbogen: folgt dem Unterarm und rutscht zurück, wie beim Ausholen zum Schlag.",
 "Straight leg: points at the foot, like a kick. Bent knee: the leg lifts up, like a knee raise.": "Gestrecktes Bein: zeigt auf den Fuß, wie bei einem Tritt. Gebeugtes Knie: das Bein geht nach oben, wie beim Knieheben.",
 "Slide bent arms and legs": "Gebeugte Arme und Beine verschieben",
 "Like Minecraft animations: a raised knee lifts the whole leg, and a pulled-back fist slides the arm back.": "Wie in Minecraft-Animationen: Ein gehobenes Knie hebt das ganze Bein, und eine zurückgezogene Faust schiebt den Arm nach hinten.",
-"Captured {s} s. Your legs were mostly out of view, so they stay standing still.": "{s} s aufgenommen. Deine Beine waren meist nicht im Bild, deshalb bleiben sie ruhig stehen.",
+"Captured {s} s. Your feet were mostly out of view, so they stay planted while your hips sway and turn.": "{s} s aufgenommen. Deine Füße waren meist außerhalb des Bildes, deshalb bleiben sie stehen, während deine Hüften schwingen und sich drehen.",
 "Drag the two handles. The colored part is kept.": "Zieh die beiden Griffe. Der farbige Teil bleibt erhalten.",
 "Keeping {s} s": "{s} s bleiben",
 "Back and forth": "Hin und zurück",
 "Plays forward, then backward, and repeats until the player moves.": "Läuft vorwärts, dann rückwärts, und wiederholt sich, bis der Spieler sich bewegt.",
-"More settings": "Weitere Einstellungen"
+"More settings": "Weitere Einstellungen",
+"Only one person in the picture. The tracker can jump to someone walking behind you.": "Nur eine Person im Bild. Die Erkennung kann zu jemandem springen, der hinter dir vorbeigeht.",
+"Turn & sway": "Drehen & Wiegen",
+"Turns and tilts the whole player when you turn your body or sway your hips.": "Dreht und neigt die ganze Spielfigur, wenn du dich drehst oder die Hüfte schwingst.",
+"Feet don't fit in the picture? That's fine: <b>feet out of view stay planted</b> and your hips still sway and turn. For kicks and steps, step back or tilt the camera down.": "Deine Füße passen nicht ins Bild? Kein Problem: <b>Füße außerhalb des Bildes bleiben stehen</b>, und deine Hüften schwingen und drehen sich trotzdem. Für Tritte und Schritte geh weiter zurück oder neige die Kamera nach unten.",
+"Full turns": "Ganze Drehungen",
+"Turns the player all the way round when you show your back. Switch off if it spins when you didn't.": "Dreht die Spielfigur ganz herum, wenn du deinen Rücken zeigst. Schalte es aus, wenn sie sich dreht, obwohl du es nicht getan hast.",
+"Item ID": "Gegenstands-ID",
+"Other item…": "Anderer Gegenstand…",
+"Apple": "Apfel",
+"Golden Apple": "Goldener Apfel",
+"Cookie": "Keks",
+"Bread": "Brot",
+"Carrot": "Karotte",
+"Melon Slice": "Melonenscheibe",
+"Diamond": "Diamant",
+"Emerald": "Smaragd",
+"Gold Ingot": "Goldbarren",
+"Iron Ingot": "Eisenbarren",
+"Snowball": "Schneeball",
+"Egg": "Ei",
+"Slimeball": "Schleimball",
+"Ender Pearl": "Enderperle",
+"Heart of the Sea": "Herz des Meeres",
+"Wooden Sword": "Holzschwert",
+"Stone Sword": "Steinschwert",
+"Iron Sword": "Eisenschwert",
+"Golden Sword": "Goldschwert",
+"Diamond Sword": "Diamantschwert",
+"Netherite Sword": "Netheritschwert",
+"Iron Pickaxe": "Eisenspitzhacke",
+"Diamond Pickaxe": "Diamantspitzhacke",
+"Iron Axe": "Eisenaxt",
+"Diamond Axe": "Diamantaxt",
+"Iron Shovel": "Eisenschaufel",
+"Iron Hoe": "Eisenhacke",
+"Bow": "Bogen",
+"Trident": "Dreizack",
+"Fishing Rod": "Angel",
+"Torch": "Fackel",
+"Stick": "Stock",
+"Book": "Buch",
+"Shield": "Schild",
+"Items in hands": "Gegenstände in den Händen",
+"Right hand": "Rechte Hand",
+"Left hand": "Linke Hand",
+"The Minecraft item held in this hand during the animation.": "Der Minecraft-Gegenstand, der während der Animation in dieser Hand gehalten wird.",
+"Items": "Gegenstände",
+"Tools": "Werkzeuge",
+"The Emote Tool puts these in the player's hands while the emote plays.": "Das Emote Tool gibt sie der Spielfigur in die Hände, solange das Emote läuft."
 },
 "zh": {
 "Skip to the camera": "跳到摄像头",
@@ -2155,7 +2624,7 @@ window.MocapStrings = {
 "Stand <b>2–3 meters</b> from the camera, facing it, with your whole body in the picture.": "站在离摄像头 <b>2–3 米</b>的地方，面向摄像头，让全身都在画面里。",
 "Bright, even light and a plain background help the most. Baggy clothes can hide your elbows and knees.": "明亮均匀的光线和简单的背景最有帮助。宽松的衣服可能会挡住手肘和膝盖。",
 "Minecraft arms and legs have no elbows or knees, so a bent arm becomes one straight arm pointing at your hand.": "Minecraft 的手臂和腿没有手肘和膝盖，所以弯曲的手臂会变成一条指向你手的直臂。",
-"Act in place. Walking, jumping and turning all the way around are not recorded.": "请在原地表演。走动、跳跃和整圈转身都不会被录下来。",
+"Act in place. Walking and jumping are not recorded. Turn all the way around slowly, so the tracker can follow.": "请在原地表演。走动和跳跃不会被录制。整圈转身时请慢一些，方便追踪器跟上。",
 "Start and end with your arms relaxed at your sides so the move blends in smoothly.": "开始和结束时让双臂自然垂在身体两侧，这样动作衔接更流畅。",
 "Live view": "实时画面",
 "Drag to turn · scroll to zoom": "拖动旋转 · 滚动缩放",
@@ -2301,17 +2770,66 @@ window.MocapStrings = {
 "Head nod strength": "点头幅度",
 "Makes looking up and down bigger or smaller.": "让抬头和低头的动作更大或更小。",
 "Plant feet": "双脚着地",
-"A leg that isn't lifted stays still on the ground.": "没有抬起的腿会稳稳地留在地面上。",
+"A leg that isn't lifted stays still on the ground. Feet out of view count as planted.": "没有抬起的腿会稳稳地站在地上。画面外的脚视为固定在地面上。",
 "Straight arm: points at the hand. Bent elbow: follows the forearm and slides back, like a punch wind-up.": "手臂伸直时指向手；手肘弯曲时跟随前臂并向后滑动，像出拳前的蓄力。",
 "Straight leg: points at the foot, like a kick. Bent knee: the leg lifts up, like a knee raise.": "腿伸直时指向脚，像踢腿；膝盖弯曲时整条腿向上抬，像抬膝。",
 "Slide bent arms and legs": "弯曲的手臂和腿会滑动",
 "Like Minecraft animations: a raised knee lifts the whole leg, and a pulled-back fist slides the arm back.": "像 Minecraft 动画那样：抬膝时整条腿抬起，拳头后拉时手臂向后滑动。",
-"Captured {s} s. Your legs were mostly out of view, so they stay standing still.": "已录制 {s} 秒。你的腿大部分时间不在画面里，所以腿会保持站立不动。",
+"Captured {s} s. Your feet were mostly out of view, so they stay planted while your hips sway and turn.": "已录制 {s} 秒。你的脚大部分时间不在画面里，所以它们会固定在地面上，而臀部照常摆动和转动。",
 "Drag the two handles. The colored part is kept.": "拖动两个手柄，彩色部分会被保留。",
 "Keeping {s} s": "保留 {s} 秒",
 "Back and forth": "来回播放",
 "Plays forward, then backward, and repeats until the player moves.": "先正向播放，再倒着播放，一直重复，直到玩家移动。",
-"More settings": "更多设置"
+"More settings": "更多设置",
+"Only one person in the picture. The tracker can jump to someone walking behind you.": "画面里只能有一个人。追踪器可能会跳到从你身后走过的人身上。",
+"Turn & sway": "转身与摆动",
+"Turns and tilts the whole player when you turn your body or sway your hips.": "当你转身或摆动臀部时，整个玩家会跟着转动和倾斜。",
+"Feet don't fit in the picture? That's fine: <b>feet out of view stay planted</b> and your hips still sway and turn. For kicks and steps, step back or tilt the camera down.": "脚拍不进画面？没关系：<b>画面外的脚会固定在地面上</b>，你的臀部仍然可以摆动和转动。如果要踢腿或迈步，请往后退一些，或把摄像头向下倾斜。",
+"Full turns": "完整转身",
+"Turns the player all the way round when you show your back. Switch off if it spins when you didn't.": "当你背对镜头时，让玩家完整转过身。如果你没转身它却转了，请关闭此项。",
+"Item ID": "物品 ID",
+"Other item…": "其他物品…",
+"Apple": "苹果",
+"Golden Apple": "金苹果",
+"Cookie": "曲奇",
+"Bread": "面包",
+"Carrot": "胡萝卜",
+"Melon Slice": "西瓜片",
+"Diamond": "钻石",
+"Emerald": "绿宝石",
+"Gold Ingot": "金锭",
+"Iron Ingot": "铁锭",
+"Snowball": "雪球",
+"Egg": "鸡蛋",
+"Slimeball": "黏液球",
+"Ender Pearl": "末影珍珠",
+"Heart of the Sea": "海洋之心",
+"Wooden Sword": "木剑",
+"Stone Sword": "石剑",
+"Iron Sword": "铁剑",
+"Golden Sword": "金剑",
+"Diamond Sword": "钻石剑",
+"Netherite Sword": "下界合金剑",
+"Iron Pickaxe": "铁镐",
+"Diamond Pickaxe": "钻石镐",
+"Iron Axe": "铁斧",
+"Diamond Axe": "钻石斧",
+"Iron Shovel": "铁锹",
+"Iron Hoe": "铁锄",
+"Bow": "弓",
+"Trident": "三叉戟",
+"Fishing Rod": "钓鱼竿",
+"Torch": "火把",
+"Stick": "木棍",
+"Book": "书",
+"Shield": "盾牌",
+"Items in hands": "手中的物品",
+"Right hand": "右手",
+"Left hand": "左手",
+"The Minecraft item held in this hand during the animation.": "动画播放时这只手里拿的 Minecraft 物品。",
+"Items": "物品",
+"Tools": "工具",
+"The Emote Tool puts these in the player's hands while the emote plays.": "表情播放期间，Emote Tool 会把它们放到玩家手中。"
 }
 };
 </script>
@@ -2455,6 +2973,8 @@ window.MocapStrings = {
       { name: "rightPants", parent: "rightLeg", pivot: [-1.9, 12, 0], cubes: [{ o: [-3.9, 0, -2], s: [4, 12, 4], uv: [0, 32], i: 0.25 }] },
       { name: "leftLeg", parent: "root", pivot: [1.9, 12, 0], cubes: [{ o: [-0.1, 0, -2], s: [4, 12, 4], uv: [16, 48] }] },
       { name: "leftPants", parent: "leftLeg", pivot: [1.9, 12, 0], cubes: [{ o: [-0.1, 0, -2], s: [4, 12, 4], uv: [0, 48], i: 0.25 }] },
+      { name: "rightItem", parent: "rightArm", pivot: [-6, 15, 1] },
+      { name: "leftItem", parent: "leftArm", pivot: [6, 15, 1] },
     ];
   }
   function cubeGeometry(THREE, c, pivot, texW, texH) {
@@ -2538,7 +3058,7 @@ window.MocapStrings = {
     const shadow = new THREE.Mesh(new THREE.PlaneGeometry(22, 22), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(shadowCv), transparent: true, depthWrite: false }));
     shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.05; scene.add(shadow);
 
-    let rig = null, pose = null;
+    let rig = null, pose = null; const held = { right: null, left: null };
     const HOME = { yaw: 192, pitch: 6, dist: 82 };   // nearly straight on, turned just enough to show depth
     const view = { ...HOME };
     function placeCamera() {
@@ -2583,7 +3103,9 @@ window.MocapStrings = {
     }
     resize(); requestAnimationFrame(frame);
     return {
-      setSkin(cv, slim) { if (rig) { scene.remove(rig.root); rig.dispose(); } rig = makeRig(THREE, cv, slim); scene.add(rig.root); },
+      setSkin(cv, slim) { if (rig) { scene.remove(rig.root); rig.dispose(); } rig = makeRig(THREE, cv, slim); scene.add(rig.root); for (const sd of ["right", "left"]) setRigItem(THREE, rig, held[sd], sd); },
+      get rig() { return rig; },
+      setItem(side, item) { if (held[side] === item) return; held[side] = item; setRigItem(THREE, rig, item, side); },
       setPose(p) { pose = p; },
       onFrame(fn) { onFrame = fn; },
       resetView(behind) { Object.assign(view, HOME); if (behind) view.yaw = HOME.yaw - 180; },
@@ -2594,7 +3116,195 @@ window.MocapStrings = {
       },
     };
   }
-  G.MocapPreview = { createPreview, loadDefaultSkin };
+  /* ---------- items the player can hold ----------
+   * kind "toss": everyday items; kind "tool": tools and weapons (only used to group the list).
+   * Icons are simple shapes drawn here (16×16), only to show which item is picked in the preview. */
+  const MAT = { wooden: "#9b7442", stone: "#8f8f8f", iron: "#e2e2e2", golden: "#f2cf3a", diamond: "#4fe3d8", netherite: "#4a4046" };
+  const TEX = {"apple": "items/apple", "golden_apple": "items/apple_golden", "cookie": "items/cookie", "bread": "items/bread", "carrot": "items/carrot", "melon_slice": "items/melon", "diamond": "items/diamond", "emerald": "items/emerald", "gold_ingot": "items/gold_ingot", "iron_ingot": "items/iron_ingot", "snowball": "items/snowball", "egg": "items/egg", "slime_ball": "items/slimeball", "ender_pearl": "items/ender_pearl", "heart_of_the_sea": "items/heartofthesea_closed", "wooden_sword": "items/wood_sword", "stone_sword": "items/stone_sword", "iron_sword": "items/iron_sword", "golden_sword": "items/gold_sword", "diamond_sword": "items/diamond_sword", "netherite_sword": "items/netherite_sword", "iron_pickaxe": "items/iron_pickaxe", "diamond_pickaxe": "items/diamond_pickaxe", "iron_axe": "items/iron_axe", "diamond_axe": "items/diamond_axe", "iron_shovel": "items/iron_shovel", "iron_hoe": "items/iron_hoe", "bow": "items/bow_standby", "trident": "items/trident", "fishing_rod": "items/fishing_rod_uncast", "torch": "blocks/torch_on", "stick": "items/stick", "book": "items/book_normal", "shield": "entity/shield"};
+  const ITEMS = [
+    ["apple", "Apple", "toss", { s: "fruit", c: "#d8262b" }], ["golden_apple", "Golden Apple", "toss", { s: "fruit", c: "#f2c230" }],
+    ["cookie", "Cookie", "toss", { s: "cookie", c: "#c98a4b" }], ["bread", "Bread", "toss", { s: "oval", c: "#c8893a", w: 7, h: 4 }],
+    ["carrot", "Carrot", "toss", { s: "carrot", c: "#f08a24" }], ["melon_slice", "Melon Slice", "toss", { s: "melon" }],
+    ["diamond", "Diamond", "toss", { s: "gem", c: "#5ff0e6", d: "#22a9bd" }], ["emerald", "Emerald", "toss", { s: "gem", c: "#3fdc74", d: "#1f8f45" }],
+    ["gold_ingot", "Gold Ingot", "toss", { s: "ingot", c: "#f7d548", d: "#c9a227" }], ["iron_ingot", "Iron Ingot", "toss", { s: "ingot", c: "#ececec", d: "#a9a9a9" }],
+    ["snowball", "Snowball", "toss", { s: "ball", c: "#f4f8ff", d: "#c4d3e8" }], ["egg", "Egg", "toss", { s: "oval", c: "#f2e6c9", w: 4, h: 5.5 }],
+    ["slime_ball", "Slimeball", "toss", { s: "ball", c: "#86d95f", d: "#4e9e34" }], ["ender_pearl", "Ender Pearl", "toss", { s: "ball", c: "#2fb3a6", d: "#155a55" }],
+    ["heart_of_the_sea", "Heart of the Sea", "toss", { s: "ball", c: "#3b74e6", d: "#1c3f9c" }],
+    ["wooden_sword", "Wooden Sword", "tool", { s: "sword", c: MAT.wooden }], ["stone_sword", "Stone Sword", "tool", { s: "sword", c: MAT.stone }],
+    ["iron_sword", "Iron Sword", "tool", { s: "sword", c: MAT.iron }], ["golden_sword", "Golden Sword", "tool", { s: "sword", c: MAT.golden }],
+    ["diamond_sword", "Diamond Sword", "tool", { s: "sword", c: MAT.diamond }], ["netherite_sword", "Netherite Sword", "tool", { s: "sword", c: MAT.netherite }],
+    ["iron_pickaxe", "Iron Pickaxe", "tool", { s: "pick", c: MAT.iron }], ["diamond_pickaxe", "Diamond Pickaxe", "tool", { s: "pick", c: MAT.diamond }],
+    ["iron_axe", "Iron Axe", "tool", { s: "axe", c: MAT.iron }], ["diamond_axe", "Diamond Axe", "tool", { s: "axe", c: MAT.diamond }],
+    ["iron_shovel", "Iron Shovel", "tool", { s: "shovel", c: MAT.iron }], ["iron_hoe", "Iron Hoe", "tool", { s: "hoe", c: MAT.iron }],
+    ["bow", "Bow", "tool", { s: "bow" }], ["trident", "Trident", "tool", { s: "trident" }], ["fishing_rod", "Fishing Rod", "tool", { s: "rod" }],
+    ["torch", "Torch", "tool", { s: "torch" }], ["stick", "Stick", "tool", { s: "stick" }], ["book", "Book", "tool", { s: "book" }],
+    ["shield", "Shield", "tool", { s: "shield" }],
+  ].map(([id, name, kind, icon]) => ({ id: "minecraft:" + id, name, kind, icon, tex: TEX[id],
+    hold: /_(sword|pickaxe|axe|shovel|hoe)$|^(stick|trident)$/.test(id) ? "handheld" : id === "fishing_rod" ? "rod" : id === "bow" ? "bow" : id === "shield" ? "shield" : "generated" }));
+  /* How Minecraft holds each kind of item in the right hand, seen by other players (third person):
+   * translation (pixels), rotation (degrees, X then Y then Z) and scale, as in the game's item models. */
+  const HOLD = {
+    generated: { t: [0, 3, 1], r: [0, 0, 0], s: 0.55 },
+    handheld: { t: [0, 4, 0.5], r: [0, -90, 55], s: 0.85 },
+    rod: { t: [0, 4, 2.5], r: [0, 90, 55], s: 0.85 },
+    bow: { t: [-1, -2, 2.5], r: [-80, 260, -40], s: 0.9 },
+    shield: { t: [-1.5, -1, 3], r: [0, -90, -90], s: 0.7 },   // held upright on the outside of the arm
+  };
+  function drawIcon(icon) {
+    const cv = document.createElement("canvas"); cv.width = cv.height = 16;
+    const g = cv.getContext("2d"), px = (x, y, c) => { g.fillStyle = c; g.fillRect(x, y, 1, 1); };
+    const disc = (cx, cy, rx, ry, c) => { for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) if (((x + 0.5 - cx) / rx) ** 2 + ((y + 0.5 - cy) / ry) ** 2 <= 1) px(x, y, c); };
+    const line = (x0, y0, x1, y1, c, w = 1) => { const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) * 2 || 1; for (let i = 0; i <= n; i++) { const x = Math.round(x0 + (x1 - x0) * i / n), y = Math.round(y0 + (y1 - y0) * i / n); g.fillStyle = c; g.fillRect(x, y, w, w); } };
+    const wood = "#6b4a2b", i = icon || {};
+    switch (i.s) {
+      case "fruit": disc(8, 9.5, 5.5, 5, "#3b0d0d"); disc(8, 9.5, 4.8, 4.3, i.c); px(6, 7, "#ffffffaa"); line(8, 2, 8, 5, wood); px(9, 3, "#3fae3f"); px(10, 3, "#3fae3f"); px(10, 2, "#3fae3f"); break;
+      case "cookie": disc(8, 8, 6, 6, "#7a4b22"); disc(8, 8, 5.2, 5.2, i.c); for (const [x, y] of [[6, 6], [10, 7], [7, 10], [10, 10], [8, 8]]) px(x, y, "#4a2a10"); break;
+      case "oval": disc(8, 8, i.w + 0.7, i.h + 0.7, "#5a3a1a55"); disc(8, 8, i.w, i.h, i.c); break;
+      case "carrot": line(4, 12, 11, 5, "#a54f10", 2); line(4, 12, 10, 6, i.c, 2); line(11, 4, 13, 2, "#3fae3f"); line(11, 4, 12, 1, "#3fae3f"); break;
+      case "melon": for (let y = 4; y < 13; y++) for (let x = 3; x < 14; x++) { const d = y - 4 - Math.abs(x - 8.5) * 0.9; if (d >= 0 && y < 13) px(x, y, y >= 11 ? "#2f8a2f" : "#e2453c"); } for (const [x, y] of [[7, 8], [10, 8], [8, 6]]) px(x, y, "#1a1a1a"); break;
+      case "gem": for (let y = 3; y < 14; y++) for (let x = 2; x < 15; x++) { const top = y < 6, w = top ? 3 + (y - 3) * 1.5 : 6.5 - (y - 6) * 0.85; if (Math.abs(x + 0.5 - 8.5) <= w) px(x, y, y < 7 && x > 8 ? "#ffffff" : (x < 8 ? i.d : i.c)); } break;
+      case "ingot": for (let y = 6; y < 12; y++) for (let x = 2; x < 15; x++) { const inset = (11 - y) * 0.6; if (x >= 2 + inset && x <= 13 - inset) px(x, y, y < 8 ? i.c : i.d); } break;
+      case "ball": disc(8, 8, 5.5, 5.5, i.d); disc(7.5, 7.5, 4.6, 4.6, i.c); px(6, 6, "#ffffffbb"); break;
+      case "sword": line(3, 13, 5, 11, wood, 2); line(2, 10, 6, 14, "#3b2a1a"); line(5, 11, 13, 3, i.c, 2); px(13, 2, i.c); break;
+      case "pick": line(3, 13, 11, 5, wood, 2); line(5, 3, 8, 2, i.c, 2); line(8, 2, 12, 3, i.c, 2); line(12, 3, 13, 7, i.c, 2); line(13, 7, 14, 10, i.c, 2); break;
+      case "axe": line(3, 13, 11, 5, wood, 2); disc(11, 5, 3.4, 3, i.c); break;
+      case "shovel": line(3, 13, 10, 6, wood, 2); disc(11.5, 4.5, 2.8, 2.8, i.c); break;
+      case "hoe": line(3, 13, 11, 5, wood, 2); line(9, 3, 13, 3, i.c, 2); line(9, 3, 9, 6, i.c, 2); break;
+      case "bow": line(3, 2, 6, 8, "#7a5531", 2); line(6, 8, 3, 14, "#7a5531", 2); line(4, 2, 4, 14, "#dddddd"); break;
+      case "trident": line(3, 13, 11, 5, "#3fa7a0", 2); line(10, 2, 14, 6, "#3fa7a0"); line(10, 2, 10, 5, "#3fa7a0"); line(14, 6, 11, 6, "#3fa7a0"); line(12, 2, 14, 4, "#7fe0d8"); break;
+      case "rod": line(3, 13, 12, 3, wood, 2); line(13, 3, 13, 11, "#dddddd"); px(13, 12, "#9a9a9a"); break;
+      case "torch": line(7, 14, 7, 6, wood, 2); g.fillStyle = "#ffcc33"; g.fillRect(6, 3, 4, 3); g.fillStyle = "#fff3a0"; g.fillRect(7, 4, 2, 2); break;
+      case "stick": line(4, 13, 12, 4, wood, 2); break;
+      case "book": g.fillStyle = "#8a4b2a"; g.fillRect(3, 3, 10, 11); g.fillStyle = "#f0e6d0"; g.fillRect(11, 4, 2, 9); g.fillStyle = "#c99b3a"; g.fillRect(5, 6, 4, 1); break;
+      case "shield": g.fillStyle = "#cfcfcf"; g.fillRect(3, 2, 10, 12); g.fillStyle = "#9b7442"; g.fillRect(4, 3, 8, 10); g.fillStyle = "#7a5531"; g.fillRect(7, 3, 2, 10); break;
+      default: g.fillStyle = "#8a8a8a"; g.fillRect(4, 4, 8, 8); g.fillStyle = "#ffffff"; g.fillRect(7, 6, 2, 1); g.fillRect(8, 7, 1, 2); g.fillRect(7, 10, 2, 1);
+    }
+    return cv;
+  }
+  /* The real item pictures are loaded when needed from Mojang's own Bedrock sample pack on GitHub
+   * (github.com/Mojang/bedrock-samples), so this page doesn't carry copies of them. Offline, the
+   * simple drawn shapes above are used instead. */
+  const TEX_BASE = "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/";
+  const texCache = new Map();
+  function itemPicture(item) {
+    if (!item || !item.tex) return Promise.resolve(drawIcon(item && item.icon));
+    if (!texCache.has(item.tex)) texCache.set(item.tex, new Promise((resolve) => {
+      const img = new Image(); img.crossOrigin = "anonymous";
+      img.onload = () => {
+        let cv = document.createElement("canvas"), g;
+        if (item.tex === "entity/shield") {            // the shield's front, from its model picture
+          const k = img.width / 64; cv.width = 12 * k; cv.height = 22 * k; g = cv.getContext("2d");
+          g.drawImage(img, 1 * k, 1 * k, 12 * k, 22 * k, 0, 0, 12 * k, 22 * k);
+        } else { cv.width = img.width; cv.height = Math.min(img.height, img.width); g = cv.getContext("2d"); g.drawImage(img, 0, 0); }  // first frame of animated pictures
+        resolve(cv);
+      };
+      img.onerror = () => { texCache.delete(item.tex); resolve(drawIcon(item.icon)); };
+      img.src = TEX_BASE + item.tex + ".png";
+    }));
+    return texCache.get(item.tex);
+  }
+  /** A held item the way Minecraft draws it: the flat picture pushed out into a thin 3D slab, with
+   *  the edge of every pixel filled in. Size: the picture's width in model pixels. */
+  function extrudedItem(THREE, cv, size) {
+    const W = cv.width, H = cv.height, d = cv.getContext("2d").getImageData(0, 0, W, H).data;
+    const solid = (x, y) => x >= 0 && y >= 0 && x < W && y < H && d[(y * W + x) * 4 + 3] > 127;
+    const px = size / W, th = size / 16 / 2;          // half the thickness: one picture pixel of a 16-pixel item
+    const pos = [], uv = [], nrm = [];
+    const quad = (a, b, c, e, n, u0, v0, u1, v1) => {
+      for (const [p, t] of [[a, [u0, v0]], [b, [u1, v0]], [c, [u1, v1]], [a, [u0, v0]], [c, [u1, v1]], [e, [u0, v1]]]) { pos.push(...p); uv.push(...t); nrm.push(...n); }
+    };
+    const X = (x) => (x - W / 2) * px, Y = (y) => (H / 2 - y) * px;
+    // front and back: the whole picture (see-through parts are cut away by the material)
+    quad([X(0), Y(H), th], [X(W), Y(H), th], [X(W), Y(0), th], [X(0), Y(0), th], [0, 0, 1], 0, 0, 1, 1);
+    quad([X(W), Y(H), -th], [X(0), Y(H), -th], [X(0), Y(0), -th], [X(W), Y(0), -th], [0, 0, -1], 1, 0, 0, 1);
+    // edges: a thin side wall wherever a pixel meets empty space, coloured by that pixel
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      if (!solid(x, y)) continue;
+      const u = (x + 0.5) / W, v = 1 - (y + 0.5) / H;
+      if (!solid(x - 1, y)) quad([X(x), Y(y + 1), -th], [X(x), Y(y + 1), th], [X(x), Y(y), th], [X(x), Y(y), -th], [-1, 0, 0], u, v, u, v);
+      if (!solid(x + 1, y)) quad([X(x + 1), Y(y + 1), th], [X(x + 1), Y(y + 1), -th], [X(x + 1), Y(y), -th], [X(x + 1), Y(y), th], [1, 0, 0], u, v, u, v);
+      if (!solid(x, y - 1)) quad([X(x), Y(y), th], [X(x + 1), Y(y), th], [X(x + 1), Y(y), -th], [X(x), Y(y), -th], [0, 1, 0], u, v, u, v);
+      if (!solid(x, y + 1)) quad([X(x), Y(y + 1), -th], [X(x + 1), Y(y + 1), -th], [X(x + 1), Y(y + 1), th], [X(x), Y(y + 1), th], [0, -1, 0], u, v, u, v);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+    geo.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+    geo.setAttribute("normal", new THREE.Float32BufferAttribute(nrm, 3));
+    const tex = new THREE.CanvasTexture(cv);
+    tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.NearestFilter; tex.generateMipmaps = false;
+    return new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ map: tex, alphaTest: 0.5, side: THREE.DoubleSide }));
+  }
+  /** Place an item in the hand the way the game does: the hand's grip point and turn, then the item
+   *  model's own third-person placement. Built in the game's model space (y down, pixels, measured
+   *  from the shoulder pivot) and turned into this preview's space at the end. */
+  function heldTransform(THREE, h, mesh, side) {
+    const D = Math.PI / 180, M4 = () => new THREE.Matrix4(), left = side === "left";
+    // the right hand's placement, measured from the right shoulder pivot
+    const core = M4().makeRotationZ(Math.PI);                 // game model space (y down) → preview space
+    core.multiply(M4().makeRotationX(-90 * D)).multiply(M4().makeRotationY(180 * D));   // the hand turns the item to point forward
+    core.multiply(M4().makeTranslation(1 + h.t[0], 2 + h.t[1], -10 + h.t[2]));        // grip: at the fist, in front of the arm
+    core.multiply(M4().makeRotationX(h.r[0] * D)).multiply(M4().makeRotationY(h.r[1] * D)).multiply(M4().makeRotationZ(h.r[2] * D));
+    core.multiply(M4().makeScale(h.s, h.s, h.s));
+    // the left hand holds things as a true mirror image of the right (picture flipped too)
+    const m = M4().makeTranslation(left ? 1 : -1, 7, -1);     // from the shoulder pivot to the hand's item point
+    if (left) m.multiply(M4().makeScale(-1, 1, 1));
+    m.multiply(core);
+    const holder = new THREE.Group(); holder.matrixAutoUpdate = false; holder.matrix.copy(m); holder.add(mesh);
+    return holder;
+  }
+  /* The shield: the game's own shield model (geometry.shield in Mojang's sample pack: a 12×22×1
+   * board with a 2×6×6 handle on its back), held the way a shield is used: upright, face forward,
+   * handle in the fist, the board just in front of the arm. */
+  let shieldTex = null;
+  function shieldPicture() {
+    if (!shieldTex) shieldTex = new Promise((resolve) => {
+      const img = new Image(); img.crossOrigin = "anonymous";
+      const fallback = () => { const cv = document.createElement("canvas"); cv.width = cv.height = 64; const g = cv.getContext("2d");
+        g.fillStyle = "#9b7442"; g.fillRect(0, 0, 64, 64); g.fillStyle = "#cfcfcf"; g.fillRect(0, 0, 28, 1); g.fillRect(0, 0, 1, 24); resolve(cv); };
+      img.onload = () => { const cv = document.createElement("canvas"); cv.width = img.width; cv.height = img.height; cv.getContext("2d").drawImage(img, 0, 0); resolve(cv); };
+      img.onerror = () => { shieldTex = null; fallback(); };
+      img.src = TEX_BASE + "entity/shield.png";
+    });
+    return shieldTex;
+  }
+  function shieldModel(THREE, cv, side) {
+    const tex = new THREE.CanvasTexture(cv);
+    tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.NearestFilter; tex.generateMipmaps = false;
+    const mat = new THREE.MeshLambertMaterial({ map: tex, alphaTest: 0.5, side: THREE.DoubleSide });
+    const grip = [1, 28, 3];                              // middle of the handle (Bedrock model pixels)
+    const grp = new THREE.Group();
+    for (const c of [{ o: [0, 25, 0], s: [2, 6, 6], uv: [26, 0] }, { o: [-5, 17, -1], s: [12, 22, 1], uv: [0, 0] }])
+      grp.add(new THREE.Mesh(cubeGeometry(THREE, c, grip, 64, 64), mat));
+    // The fist grips the bottom of the handle (as high as the shield can sit and still be held), and
+    // the shield is turned back 18° so it stands straight up while the arm is in the game's
+    // "holding" pose (raised 18°). Size is the game's own: 12×22 pixels, scale 1.
+    grp.position.set(0, -4 + 3, -1);
+    grp.rotation.x = -18 * Math.PI / 180;
+    if (side === "left") grp.scale.set(-1, 1, 1);
+    return grp;
+  }
+  /** Show an item in one of the preview model's hands (side "right" or "left"; null = none). */
+  const itemTokens = { right: 0, left: 0 };
+  function setRigItem(THREE, rig, item, side) {
+    side = side || "right";
+    const hand = rig && rig.bones[side + "Item"]; if (!hand) return;
+    const token = ++itemTokens[side];
+    const clear = () => { for (const c of [...hand.children]) { hand.remove(c); c.traverse((o) => { o.geometry?.dispose(); o.material?.map?.dispose(); o.material?.dispose(); }); } };
+    if (!item) { clear(); return; }
+    if (item.hold === "shield") {                  // the shield is a small 3D model in the game, not a flat picture
+      shieldPicture().then((cv) => { if (token !== itemTokens[side]) return; clear(); hand.add(shieldModel(THREE, cv, side)); });
+      return;
+    }
+    itemPicture(item).then((cv) => {
+      if (token !== itemTokens[side]) return;      // another item was picked meanwhile
+      clear();
+      // the picture as a 16-pixel item (taller pictures, like the shield, keep their shape)
+      const mesh = extrudedItem(THREE, cv, 16 * Math.min(1, cv.width / cv.height));
+      hand.add(heldTransform(THREE, HOLD[item.hold] || HOLD.generated, mesh, side));
+    });
+  }
+  G.MocapItems = { ITEMS, drawIcon, itemPicture, find: (id) => ITEMS.find((x) => x.id === id) };
+  G.MocapPreview = { createPreview, loadDefaultSkin, makeRig, poseRig, setRigItem };
 })(window);
 
 </script>
@@ -2611,7 +3321,7 @@ const S = {
   landmarker: null, vision: null, source: null, stream: null, lastVT: -1, fileName: "",
   recording: false, samples: [], clip: null, json: null, mode: "live", playing: !reduceMotion, playT: 0,
   livePose: null, countdown: null, stopTimer: 0, recStart: 0, trackState: "off",
-  arm: "auto", leg: "auto", lean: "waist", loop: "false", live: M.LiveFilter(), move: "", recent: [], headD: null, headN: null, lastLive: 0, pitchHist: [],
+  arm: "auto", leg: "auto", lean: "waist", loop: "false", live: M.LiveFilter(), move: "", recent: [], headD: null, headN: null, lastLive: 0, pitchHist: [], downHist: [], down: null,
   plant: { right: { hold: null, w: 0 }, left: { hold: null, w: 0 } }, slim: false, behind: false,
 };
 
@@ -2787,27 +3497,87 @@ function stopRecording(silent) {
   S.mode = "playback"; S.playT = 0; S.playing = !reduceMotion;
   rebuild();
   setStatus("Captured {s} s. Check the preview, trim it, then download.", { s: len.toFixed(1) });
-  if (S.clip && S.clip.legsSeen < 0.3) setStatus("Captured {s} s. Your legs were mostly out of view, so they stay standing still.", { s: len.toFixed(1) });
+  if (S.clip && S.clip.legsSeen < 0.3) setStatus("Captured {s} s. Your feet were mostly out of view, so they stay planted while your hips sway and turn.", { s: len.toFixed(1) });
   announce("Recording stopped. Captured {s} seconds.", { s: len.toFixed(1) });
+}
+
+
+/* ---------------- items in the hands ---------------- */
+const ITEMS = window.MocapItems;
+function fillItemSelects() {
+  for (const side of ["right", "left"]) {
+    const sel = $("item-" + side), keep = sel.value;
+    sel.innerHTML = "";
+    const opt = (v, txt) => { const o = document.createElement("option"); o.value = v; o.textContent = txt; return o; };
+    sel.append(opt("", t("None")));
+    for (const [kind, label] of [["toss", "Items"], ["tool", "Tools"]]) {
+      const g = document.createElement("optgroup"); g.label = t(label);
+      for (const it of ITEMS.ITEMS.filter((x) => x.kind === kind)) g.append(opt(it.id, t(it.name)));
+      sel.append(g);
+    }
+    sel.append(opt("other", t("Other item…")));
+    sel.value = keep;
+  }
+}
+/** The item ID picked for a hand, or null. */
+function handItem(side) {
+  const v = $("item-" + side).value;
+  if (v !== "other") return v || null;
+  let id = $("item-" + side + "-id").value.trim().toLowerCase();
+  if (id && !id.includes(":")) id = "minecraft:" + id;
+  return /^[a-z0-9_.-]+:[a-z0-9_./-]+$/.test(id) ? id : null;
+}
+function onHandItem(side) {
+  const v = $("item-" + side).value, it = ITEMS.find(v), box = $("item-" + side + "-id");
+  box.hidden = v !== "other";
+  const icon = $("icon-" + side), g = icon.getContext("2d");
+  g.clearRect(0, 0, 16, 16);
+  if (v) ITEMS.itemPicture(it || null).then((cv) => {
+    if ($("item-" + side).value !== v) return;
+    g.clearRect(0, 0, 16, 16); g.imageSmoothingEnabled = false;
+    const k = Math.min(16 / cv.width, 16 / cv.height), w = cv.width * k, h = cv.height * k;
+    g.drawImage(cv, (16 - w) / 2, (16 - h) / 2, w, h);
+  });
+  preview.setItem(side, v ? (it || { icon: null }) : null);
+  queueRebuild();
+}
+for (const side of ["right", "left"]) {
+  $("item-" + side).addEventListener("change", () => onHandItem(side));
+  $("item-" + side + "-id").addEventListener("input", queueRebuild);
 }
 
 /* ---------------- detection loop ---------------- */
 const enabledBones = () => [...document.querySelectorAll("#bone-checks input:checked")].map((c) => c.dataset.bone);
 function liveOptions() {
   return { headPitchOffset: +$("opt-pitch").value, headGain: +$("opt-nod").value, headDist: S.headD, headNeutral: S.headN ?? undefined,
-    vis: S.visS, img: S.imgS, headOff: !enabledBones().includes("head"),
-    armTarget: S.arm, legTarget: S.leg, slide: $("opt-slide").checked, flipTurn: $("opt-flip").checked, bodyOff: !enabledBones().includes("body") };
+    vis: S.visS, img: S.imgS, down: S.down || undefined, headOff: !enabledBones().includes("head"),
+    armTarget: S.arm, legTarget: S.leg, slide: $("opt-slide").checked, flipTurn: $("opt-flip").checked, bodyOff: !enabledBones().includes("body"),
+    rootOn: enabledBones().includes("root") };
 }
-/** Live foot planting: a foot that isn't lifted holds its leg angle, easing in and out. */
+/** Live foot planting: a foot that isn't lifted holds its leg angle, easing in and out.
+ *  Sway leans the player from the ankles (the feet don't slide), and the feet keep pointing the
+ *  same way while the hips twist, stepping round once you've turned more than about 30°. */
 function plantLive(p, dt) {
+  const on = $("opt-plant").checked, rz = p.root ? p.root[2] : 0, ry = p.root ? p.root[1] : 0;
+  let anyDown = false;
   for (const [bone, side] of [["rightLeg", "right"], ["leftLeg", "left"]]) {
     const st = S.plant[side];
-    if (!$("opt-plant").checked) { st.hold = null; st.w = 0; continue; }
-    if (!p.feet[side]) { if (!st.hold || st.w < 0.5) st.hold = p[bone].slice(); st.w = Math.min(1, st.w + dt * 6); }
+    if (!on) { st.hold = null; st.w = 0; continue; }
+    // a seen leg is measured against the tilted hips: add the tilt back to get its stance
+    const seen = p.legSeen ? p.legSeen[side] : 1;
+    const cur = [p[bone][0], p[bone][1], p[bone][2] + rz * seen];
+    if (!p.feet[side]) { anyDown = true; if (!st.hold || st.w < 0.5) st.hold = cur.slice(); st.w = Math.min(1, st.w + dt * 6); }
     else { st.w = Math.max(0, st.w - dt * 12); if (!st.w) st.hold = null; }
     if (st.hold) p[bone] = p[bone].map((x, k) => x + (st.hold[k] - x) * st.w);
     p.pos[bone] = p.pos[bone].map((x) => x * (1 - st.w));   // planted foot sits on the floor
   }
+  // feet heading: stays put while the hips twist, follows once you turn further
+  const slack = 30;
+  if (S.feetYaw == null || !on) S.feetYaw = ry;
+  else if (anyDown) S.feetYaw = Math.max(ry - slack, Math.min(ry + slack, S.feetYaw));
+  else S.feetYaw += (ry - S.feetYaw) * Math.min(1, dt * 12);
+  S.feetYawS = S.feetYawS == null ? S.feetYaw : S.feetYawS + (S.feetYaw - S.feetYawS) * Math.min(1, dt * 10);
+  if (on) for (const [bone, side] of [["rightLeg", "right"], ["leftLeg", "left"]]) p[bone][1] += (S.feetYawS - ry) * S.plant[side].w;
 }
 function detect() {
   if (!S.landmarker || !S.source || video.readyState < 2 || video.currentTime === S.lastVT) return;
@@ -2839,11 +3609,15 @@ function detect() {
     const mirrored = $("opt-mirror").checked;
     const vv = mirrored ? M.mirrorVis(v) : v;
     const nn = mirrored ? M.mirror2(n) : Float32Array.from(n);
-    const f = S.live.push(mirrored ? M.mirror(w) : w, vv, now, +$("opt-smooth").value, nn);
+    const f = S.live.push(mirrored ? M.mirror(w) : w, vv, now, +$("opt-smooth").value, nn, $("opt-spin").checked);
     // 2D points are steady already; a light filter takes off the last bit of shimmer
     if (!S.imgS) S.imgS = nn; else for (let i = 0; i < 66; i++) S.imgS[i] += (nn[i] - S.imgS[i]) * 0.5;
     // steady "can the camera see it" values, so a leg leaving the frame eases to idle
     if (!S.visS) S.visS = Float32Array.from(vv); else for (let i = 0; i < 33; i++) S.visS[i] += (vv[i] - S.visS[i]) * 0.2;
+    // which way is really down (webcams are often tilted): median body direction over ~8 s
+    for (const d of M.downVecs(f, S.visS)) S.downHist.push({ t: now, d });
+    while (S.downHist.length && now - S.downHist[0].t > 8) S.downHist.shift();
+    S.down = M.downFrom(S.downHist.map((h) => h.d));
     // head: learn face size and the straight-ahead angle (frozen while recording)
     const ear = 0.62 * M.len([f[21] - f[24], f[22] - f[25], f[23] - f[26]]);
     S.headD = S.headD ? S.headD + (ear - S.headD) * 0.05 : ear;
@@ -2867,8 +3641,9 @@ function exportOptions() {
   return {
     fps: +$("opt-fps").value, smoothing: +$("opt-smooth").value, tolerance: +$("opt-tol").value,
     headPitchOffset: +$("opt-pitch").value, headGain: +$("opt-nod").value, armTarget: S.arm, legTarget: S.leg, slide: $("opt-slide").checked, lean: S.lean,
-    mirror: $("opt-mirror").checked, flipTurn: $("opt-flip").checked, plant: $("opt-plant").checked, loop: S.loop, id: animId(),
-    bones: enabledBones(), bodyOff: !enabledBones().includes("body"), headOff: !enabledBones().includes("head"),
+    mirror: $("opt-mirror").checked, spin: $("opt-spin").checked, flipTurn: $("opt-flip").checked, plant: $("opt-plant").checked, loop: S.loop, id: animId(),
+    bones: enabledBones(), bodyOff: !enabledBones().includes("body"), headOff: !enabledBones().includes("head"), rootOn: enabledBones().includes("root"),
+    items: { right: handItem("right"), left: handItem("left") },
   };
 }
 const secs = (v) => `${(+v).toFixed(2)} s`;
@@ -2898,7 +3673,7 @@ function stringify(obj) {
   return JSON.stringify(obj, null, 2).replace(/\[\s+([-\d.e+,\s]+?)\s+\]/g, (_, n) => "[" + n.split(/,\s*/).join(", ") + "]");
 }
 $("opt-name").addEventListener("input", queueRebuild);
-for (const id of ["opt-fps", "opt-mirror", "opt-flip", "opt-plant", "opt-slide"]) $(id).addEventListener("change", queueRebuild);
+for (const id of ["opt-fps", "opt-mirror", "opt-spin", "opt-flip", "opt-plant", "opt-slide"]) $(id).addEventListener("change", queueRebuild);
 for (const [id, out, fmt] of [["opt-smooth", "smooth-out", (v) => v], ["opt-tol", "tol-out", (v) => (+v ? v + "°" : t("off"))], ["opt-pitch", "pitch-out", (v) => v + "°"], ["opt-nod", "nod-out", (v) => (+v).toFixed(1) + "×"]]) {
   const upd = () => { $(out).textContent = fmt($(id).value); $(id).setAttribute("aria-valuetext", $(out).textContent); };
   $(id).addEventListener("input", () => { upd(); queueRebuild(); }); upd();
@@ -3024,8 +3799,14 @@ preview.onFrame((dt) => {
     for (const b of M.BONES) if (enabled.includes(b)) out[b === "body" && S.lean === "waist" ? "waist" : b] = pose[b];   // switched-off parts stay in their idle pose
     out.pos = {};
     for (const b in pose.pos || {}) if (enabled.includes(b)) out.pos[b] = pose.pos[b];
+    // In the game, an arm holding something is raised a little (the player's own "holding" pose)
+    for (const [side, arm] of [["right", "rightArm"], ["left", "leftArm"]]) if (handItem(side)) { const a = out[arm] || [0, 0, 0]; out[arm] = [a[0] - 18, a[1], a[2]]; }
     preview.setPose(out);
-  } else preview.setPose(null);
+  } else {
+    const out = { pos: {} };
+    for (const [side, arm] of [["right", "rightArm"], ["left", "leftArm"]]) if (handItem(side)) out[arm] = [-18, 0, 0];
+    preview.setPose(out.rightArm || out.leftArm ? out : null);
+  }
 });
 
 /* Knee-up / kick readout on the stage */
@@ -3067,6 +3848,7 @@ function applyLanguage() {
   setStatus(statusMsg[0], statusMsg[1], statusKind);
   const st = S.trackState; S.trackState = null; setTrack(st);
   updateSourceButtons(); setStage(); lastTimeText = ""; S.move = null;
+  fillItemSelects();
   for (const id of ["opt-smooth", "opt-tol", "opt-pitch", "opt-nod"]) $(id).dispatchEvent(new Event("input"));
   if (!S.clip) $("export-stats").textContent = t("Record a move first.");
 }
@@ -3109,7 +3891,7 @@ syncRoving();
 setSkin();
 rebuild();
 loadModel();
-window.__mocap = { S, rebuild, stopRecording };
+window.__mocap = { S, rebuild, stopRecording, preview };
 
 </script>
 </body>
